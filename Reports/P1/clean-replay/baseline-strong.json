@@ -1,0 +1,175 @@
+{
+  "binary_sha256": "cce7698cf8de94ac9256547e83c649b3c52377c7fbcd350bb5bdd21e09d49700",
+  "input_sha256": "e2133f763856abe868c6942643ccf224a5624497a3d2f037b023a8c3fb00fc81",
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "runs": [
+    {
+      "gpus": 1,
+      "repeat": 1,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/baseline-timed-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 33.70243782,
+      "sec_per_step": 0.06740487564,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/baseline-strong/1gpu-r1/run.log"
+    },
+    {
+      "gpus": 1,
+      "repeat": 2,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/baseline-timed-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 33.73573004,
+      "sec_per_step": 0.06747146008,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/baseline-strong/1gpu-r2/run.log"
+    },
+    {
+      "gpus": 1,
+      "repeat": 3,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/baseline-timed-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 33.68102894,
+      "sec_per_step": 0.06736205789,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/baseline-strong/1gpu-r3/run.log"
+    },
+    {
+      "gpus": 2,
+      "repeat": 1,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/baseline-timed-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 86.74350639,
+      "sec_per_step": 0.1734870128,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/baseline-strong/2gpu-r1/run.log"
+    },
+    {
+      "gpus": 2,
+      "repeat": 2,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/baseline-timed-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 86.32366323,
+      "sec_per_step": 0.1726473264,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/baseline-strong/2gpu-r2/run.log"
+    },
+    {
+      "gpus": 2,
+      "repeat": 3,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/baseline-timed-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 86.81644179,
+      "sec_per_step": 0.1736328836,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/baseline-strong/2gpu-r3/run.log"
+    },
+    {
+      "gpus": 4,
+      "repeat": 1,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/baseline-timed-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 96.31003804,
+      "sec_per_step": 0.1926200761,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/baseline-strong/4gpu-r1/run.log"
+    },
+    {
+      "gpus": 4,
+      "repeat": 2,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/baseline-timed-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 103.4849914,
+      "sec_per_step": 0.2069699828,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/baseline-strong/4gpu-r2/run.log"
+    },
+    {
+      "gpus": 4,
+      "repeat": 3,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/baseline-timed-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 112.2223283,
+      "sec_per_step": 0.2244446566,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/baseline-strong/4gpu-r3/run.log"
+    }
+  ],
+  "summary": {
+    "1": {
+      "median_sec_per_step": 0.06740487564,
+      "min_sec_per_step": 0.06736205789,
+      "max_sec_per_step": 0.06747146008
+    },
+    "2": {
+      "median_sec_per_step": 0.1734870128,
+      "min_sec_per_step": 0.1726473264,
+      "max_sec_per_step": 0.1736328836
+    },
+    "4": {
+      "median_sec_per_step": 0.2069699828,
+      "min_sec_per_step": 0.1926200761,
+      "max_sec_per_step": 0.2244446566
+    }
+  }
+}

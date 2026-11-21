@@ -1,0 +1,642 @@
+{
+  "binary_sha256": "5642d3bcf1a09f5baa2b92d813aee27b4b5e2bf7991c5fbde8deac7a6d32ddda",
+  "measurements": [
+    {
+      "gpus": 1,
+      "n": 256,
+      "cells": 16777216,
+      "gpu_indices": [
+        0
+      ],
+      "peak_vram_mib": {
+        "0": 24691
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 2.2948587459977716,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-256/inputs"
+      ],
+      "input_sha256": "869da088e7bafce7dc92205535a405952153bc640172d47536fad3504b0e7030",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-256/run.log"
+    },
+    {
+      "gpus": 1,
+      "n": 320,
+      "cells": 32768000,
+      "gpu_indices": [
+        0
+      ],
+      "peak_vram_mib": {
+        "0": 27271
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 3.1419148590648547,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-320/inputs"
+      ],
+      "input_sha256": "c97f9f9c438ebbd8e2d51ebed0618b2372d464e4f0ce8560c6de11483021e070",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-320/run.log"
+    },
+    {
+      "gpus": 1,
+      "n": 384,
+      "cells": 56623104,
+      "gpu_indices": [
+        0
+      ],
+      "peak_vram_mib": {
+        "0": 32451
+      },
+      "completed_ten_steps": false,
+      "returncode": 6,
+      "wall_s": 1.6675326599506661,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-384/inputs"
+      ],
+      "input_sha256": "39a645d3d28180bc9f2e1890ccbc69dfd2e12d97fd1192f095a2b1ff5c2a2535",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-384/run.log"
+    },
+    {
+      "gpus": 1,
+      "n": 352,
+      "cells": 43614208,
+      "gpu_indices": [
+        0
+      ],
+      "peak_vram_mib": {
+        "0": 32495
+      },
+      "completed_ten_steps": false,
+      "returncode": 6,
+      "wall_s": 1.5205191730055958,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-352/inputs"
+      ],
+      "input_sha256": "951c3d74b739938ddd166fca240040a8f5b50fb845a818051d3001e91dea5aa9",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-352/run.log"
+    },
+    {
+      "gpus": 1,
+      "n": 336,
+      "cells": 37933056,
+      "gpu_indices": [
+        0
+      ],
+      "peak_vram_mib": {
+        "0": 32081
+      },
+      "completed_ten_steps": false,
+      "returncode": 6,
+      "wall_s": 1.9621983600081876,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-336/inputs"
+      ],
+      "input_sha256": "cd66a52fe387616e25018b68a4839d258b5481041bde5c1e4e9bebfa283ce326",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-336/run.log"
+    },
+    {
+      "gpus": 1,
+      "n": 328,
+      "cells": 35287552,
+      "gpu_indices": [
+        0
+      ],
+      "peak_vram_mib": {
+        "0": 31095
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 3.8456341890851036,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-328/inputs"
+      ],
+      "input_sha256": "d02a0fdf9463ef809025f029170eac0c11e2d8d1bceb290644ae233b67602d23",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/1gpu-328/run.log"
+    },
+    {
+      "gpus": 2,
+      "n": 256,
+      "cells": 16777216,
+      "gpu_indices": [
+        0,
+        2
+      ],
+      "peak_vram_mib": {
+        "0": 24691,
+        "2": 24691
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 3.6703439820557833,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-256/inputs"
+      ],
+      "input_sha256": "869da088e7bafce7dc92205535a405952153bc640172d47536fad3504b0e7030",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-256/run.log"
+    },
+    {
+      "gpus": 2,
+      "n": 320,
+      "cells": 32768000,
+      "gpu_indices": [
+        0,
+        2
+      ],
+      "peak_vram_mib": {
+        "0": 24693,
+        "2": 24693
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 6.9459240230498835,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-320/inputs"
+      ],
+      "input_sha256": "c97f9f9c438ebbd8e2d51ebed0618b2372d464e4f0ce8560c6de11483021e070",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-320/run.log"
+    },
+    {
+      "gpus": 2,
+      "n": 384,
+      "cells": 56623104,
+      "gpu_indices": [
+        0,
+        2
+      ],
+      "peak_vram_mib": {
+        "0": 24693,
+        "2": 24693
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 8.088751381961629,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-384/inputs"
+      ],
+      "input_sha256": "39a645d3d28180bc9f2e1890ccbc69dfd2e12d97fd1192f095a2b1ff5c2a2535",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-384/run.log"
+    },
+    {
+      "gpus": 2,
+      "n": 448,
+      "cells": 89915392,
+      "gpu_indices": [
+        0,
+        2
+      ],
+      "peak_vram_mib": {
+        "0": 32491,
+        "2": 32491
+      },
+      "completed_ten_steps": false,
+      "returncode": 6,
+      "wall_s": 4.908230306929909,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-448/inputs"
+      ],
+      "input_sha256": "98bb7af536ca4ca641c28a741c4e5b355ad09a8ed0578e33b861e024b5246d7e",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-448/run.log"
+    },
+    {
+      "gpus": 2,
+      "n": 416,
+      "cells": 71991296,
+      "gpu_indices": [
+        0,
+        2
+      ],
+      "peak_vram_mib": {
+        "0": 31205,
+        "2": 30149
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 10.149500153027475,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-416/inputs"
+      ],
+      "input_sha256": "97efd9eb3c40261f0ba69ad15585c379a5d8d182cc73c8e30ebae8fcddacab0e",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-416/run.log"
+    },
+    {
+      "gpus": 2,
+      "n": 432,
+      "cells": 80621568,
+      "gpu_indices": [
+        0,
+        2
+      ],
+      "peak_vram_mib": {
+        "0": 32497,
+        "2": 31877
+      },
+      "completed_ten_steps": false,
+      "returncode": 6,
+      "wall_s": 5.017569967079908,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-432/inputs"
+      ],
+      "input_sha256": "c80b715534d14c63ea9f4342ed22bdecc10268ba4d1a842b7c39e990c580260e",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-432/run.log"
+    },
+    {
+      "gpus": 2,
+      "n": 424,
+      "cells": 76225024,
+      "gpu_indices": [
+        0,
+        2
+      ],
+      "peak_vram_mib": {
+        "0": 32493,
+        "2": 31735
+      },
+      "completed_ten_steps": false,
+      "returncode": 6,
+      "wall_s": 6.272342995973304,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-424/inputs"
+      ],
+      "input_sha256": "401b692f407159ea17ec74c72a099cd1efbd4e379f5c9133c3559b3b400ae0e1",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/2gpu-424/run.log"
+    },
+    {
+      "gpus": 4,
+      "n": 256,
+      "cells": 16777216,
+      "gpu_indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 24691,
+        "1": 24691,
+        "2": 24691,
+        "3": 24691
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 4.529620243003592,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-256/inputs"
+      ],
+      "input_sha256": "869da088e7bafce7dc92205535a405952153bc640172d47536fad3504b0e7030",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-256/run.log"
+    },
+    {
+      "gpus": 4,
+      "n": 320,
+      "cells": 32768000,
+      "gpu_indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 24693,
+        "1": 24693,
+        "2": 24693,
+        "3": 24693
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 7.543627470033243,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-320/inputs"
+      ],
+      "input_sha256": "c97f9f9c438ebbd8e2d51ebed0618b2372d464e4f0ce8560c6de11483021e070",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-320/run.log"
+    },
+    {
+      "gpus": 4,
+      "n": 384,
+      "cells": 56623104,
+      "gpu_indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 24693,
+        "1": 24693,
+        "2": 24693,
+        "3": 24693
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 9.638240908039734,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-384/inputs"
+      ],
+      "input_sha256": "39a645d3d28180bc9f2e1890ccbc69dfd2e12d97fd1192f095a2b1ff5c2a2535",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-384/run.log"
+    },
+    {
+      "gpus": 4,
+      "n": 448,
+      "cells": 89915392,
+      "gpu_indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 24695,
+        "1": 24695,
+        "2": 24693,
+        "3": 24693
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 14.228360388893634,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-448/inputs"
+      ],
+      "input_sha256": "98bb7af536ca4ca641c28a741c4e5b355ad09a8ed0578e33b861e024b5246d7e",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-448/run.log"
+    },
+    {
+      "gpus": 4,
+      "n": 512,
+      "cells": 134217728,
+      "gpu_indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 27949,
+        "1": 27949,
+        "2": 27949,
+        "3": 27949
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 12.314627130981535,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-512/inputs"
+      ],
+      "input_sha256": "043dac9d4be6c90d3d013d05b2e6c78da0c207c48f90f4821121086e0334e59c",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-512/run.log"
+    },
+    {
+      "gpus": 4,
+      "n": 576,
+      "cells": 191102976,
+      "gpu_indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 32471,
+        "1": 32461,
+        "2": 32461,
+        "3": 32461
+      },
+      "completed_ten_steps": false,
+      "returncode": 6,
+      "wall_s": 5.479630487039685,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-576/inputs"
+      ],
+      "input_sha256": "52434d9170ea518c95efd03d2eea29304091247af26f3dd02615915fe492b0c6",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-576/run.log"
+    },
+    {
+      "gpus": 4,
+      "n": 544,
+      "cells": 160989184,
+      "gpu_indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 32489,
+        "1": 31875,
+        "2": 31659,
+        "3": 31659
+      },
+      "completed_ten_steps": false,
+      "returncode": 6,
+      "wall_s": 5.965096472995356,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-544/inputs"
+      ],
+      "input_sha256": "69d5151e38934de4449cf5bf7e849c17b1f77833c4d43dad2665a1817bf2463f",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-544/run.log"
+    },
+    {
+      "gpus": 4,
+      "n": 528,
+      "cells": 147197952,
+      "gpu_indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 32315,
+        "1": 31459,
+        "2": 31485,
+        "3": 30921
+      },
+      "completed_ten_steps": true,
+      "returncode": 0,
+      "wall_s": 15.34425446507521,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-528/inputs"
+      ],
+      "input_sha256": "85611ecbcac4255995ebc071344b014480a224e9d29ee88493f07c48263a732b",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-528/run.log"
+    },
+    {
+      "gpus": 4,
+      "n": 536,
+      "cells": 153990656,
+      "gpu_indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 32495,
+        "1": 32497,
+        "2": 32495,
+        "3": 31927
+      },
+      "completed_ten_steps": false,
+      "returncode": 6,
+      "wall_s": 7.890330699970946,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-536/inputs"
+      ],
+      "input_sha256": "fa381a169081c1eee642d62e2b0eac567abfde01c0fa112198c1e264e458038e",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-capacity/4gpu-536/run.log"
+    }
+  ],
+  "limits": {
+    "1": {
+      "max_success_n": 328,
+      "first_failed_n": 336,
+      "granularity_n": 8
+    },
+    "2": {
+      "max_success_n": 416,
+      "first_failed_n": 424,
+      "granularity_n": 8
+    },
+    "4": {
+      "max_success_n": 528,
+      "first_failed_n": 536,
+      "granularity_n": 8
+    }
+  }
+}

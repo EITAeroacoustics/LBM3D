@@ -1,0 +1,254 @@
+{
+  "binary_sha256": "729b8f8957a0b31d08a77fcf5d6fe76680e21777a70c46f81da020a5bbc45e6e",
+  "duration_s": 1.0,
+  "measurements": [
+    {
+      "gpus": 1,
+      "kind": "fixed",
+      "n": 256,
+      "cells": 16777216,
+      "capacity_fraction": null,
+      "visible_devices": [
+        0
+      ],
+      "peak_vram_mib": {
+        "0": 24691
+      },
+      "solver_elapsed_s": 1.022189119,
+      "completed_steps": 15,
+      "process_wall_s": 8.318411931046285,
+      "plotfiles": [
+        "plt00000",
+        "plt00015"
+      ],
+      "returncode": 0,
+      "complete": true,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/1gpu-fixed-256/inputs",
+        "max_step=100000",
+        "stop_time=100000",
+        "amr.plot_file=plt",
+        "amr.plot_int=100000",
+        "amr.chk_int=-1",
+        "lbm3d.wall_time_limit_s=1.0"
+      ],
+      "input_sha256": "869da088e7bafce7dc92205535a405952153bc640172d47536fad3504b0e7030",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/1gpu-fixed-256/run.log"
+    },
+    {
+      "gpus": 1,
+      "kind": "capacity80",
+      "n": 304,
+      "cells": 28094464,
+      "capacity_fraction": 0.7961579199373197,
+      "visible_devices": [
+        0
+      ],
+      "peak_vram_mib": {
+        "0": 24691
+      },
+      "solver_elapsed_s": 1.079806193,
+      "completed_steps": 9,
+      "process_wall_s": 139.643274081056,
+      "plotfiles": [
+        "plt00000",
+        "plt00009"
+      ],
+      "returncode": 0,
+      "complete": true,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/1gpu-capacity80-304/inputs",
+        "max_step=100000",
+        "stop_time=100000",
+        "amr.plot_file=plt",
+        "amr.plot_int=100000",
+        "amr.chk_int=-1",
+        "lbm3d.wall_time_limit_s=1.0"
+      ],
+      "input_sha256": "eb53148937989171b615db2dd399538823d3b5e783bbe2429256e1f695853bae",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/1gpu-capacity80-304/run.log"
+    },
+    {
+      "gpus": 2,
+      "kind": "fixed",
+      "n": 256,
+      "cells": 16777216,
+      "capacity_fraction": null,
+      "visible_devices": [
+        0,
+        2
+      ],
+      "peak_vram_mib": {
+        "0": 24691,
+        "2": 24691
+      },
+      "solver_elapsed_s": 1.070772832,
+      "completed_steps": 4,
+      "process_wall_s": 142.88119093398564,
+      "plotfiles": [
+        "plt00000",
+        "plt00004"
+      ],
+      "returncode": 0,
+      "complete": true,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/2gpu-fixed-256/inputs",
+        "max_step=100000",
+        "stop_time=100000",
+        "amr.plot_file=plt",
+        "amr.plot_int=100000",
+        "amr.chk_int=-1",
+        "lbm3d.wall_time_limit_s=1.0"
+      ],
+      "input_sha256": "869da088e7bafce7dc92205535a405952153bc640172d47536fad3504b0e7030",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/2gpu-fixed-256/run.log"
+    },
+    {
+      "gpus": 2,
+      "kind": "capacity80",
+      "n": 384,
+      "cells": 56623104,
+      "capacity_fraction": 0.7865270823850706,
+      "visible_devices": [
+        0,
+        2
+      ],
+      "peak_vram_mib": {
+        "0": 24691,
+        "2": 24691
+      },
+      "solver_elapsed_s": 1.008922112,
+      "completed_steps": 1,
+      "process_wall_s": 572.1704928770196,
+      "plotfiles": [
+        "plt00000",
+        "plt00001"
+      ],
+      "returncode": 0,
+      "complete": true,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/2gpu-capacity80-384/inputs",
+        "max_step=100000",
+        "stop_time=100000",
+        "amr.plot_file=plt",
+        "amr.plot_int=100000",
+        "amr.chk_int=-1",
+        "lbm3d.wall_time_limit_s=1.0"
+      ],
+      "input_sha256": "39a645d3d28180bc9f2e1890ccbc69dfd2e12d97fd1192f095a2b1ff5c2a2535",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/2gpu-capacity80-384/run.log"
+    },
+    {
+      "gpus": 4,
+      "kind": "fixed",
+      "n": 256,
+      "cells": 16777216,
+      "capacity_fraction": null,
+      "visible_devices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 24691,
+        "1": 24691,
+        "2": 24691,
+        "3": 24691
+      },
+      "solver_elapsed_s": 1.150386687,
+      "completed_steps": 4,
+      "process_wall_s": 155.41182116803247,
+      "plotfiles": [
+        "plt00000",
+        "plt00004"
+      ],
+      "returncode": 0,
+      "complete": true,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/4gpu-fixed-256/inputs",
+        "max_step=100000",
+        "stop_time=100000",
+        "amr.plot_file=plt",
+        "amr.plot_int=100000",
+        "amr.chk_int=-1",
+        "lbm3d.wall_time_limit_s=1.0"
+      ],
+      "input_sha256": "869da088e7bafce7dc92205535a405952153bc640172d47536fad3504b0e7030",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/4gpu-fixed-256/run.log"
+    },
+    {
+      "gpus": 4,
+      "kind": "capacity80",
+      "n": 488,
+      "cells": 116214272,
+      "capacity_fraction": 0.789510114923338,
+      "visible_devices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "peak_vram_mib": {
+        "0": 24693,
+        "1": 24693,
+        "2": 24693,
+        "3": 24693
+      },
+      "solver_elapsed_s": 1.609254378,
+      "completed_steps": 1,
+      "process_wall_s": 1264.0009280840168,
+      "plotfiles": [
+        "plt00000",
+        "plt00001"
+      ],
+      "returncode": 0,
+      "complete": true,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/4gpu-capacity80-488/inputs",
+        "max_step=100000",
+        "stop_time=100000",
+        "amr.plot_file=plt",
+        "amr.plot_int=100000",
+        "amr.chk_int=-1",
+        "lbm3d.wall_time_limit_s=1.0"
+      ],
+      "input_sha256": "36bc66d9c29fb3f7210fea06e3499000f3f949d12e0ea3cc76389fe3eae07703",
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-stability/4gpu-capacity80-488/run.log"
+    }
+  ]
+}

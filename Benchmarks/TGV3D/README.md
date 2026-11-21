@@ -33,4 +33,8 @@ CUDA_VISIBLE_DEVICES=0 /path/to/ilbmrex_baseline /path/to/inputs_physics_64 > ru
 
 工作站无需安装 Matplotlib 也可用 `plot_svg.py physics 报告.json 曲线.svg` 或 `plot_svg.py strong 报告.json 曲线.svg` 生成可复核的 SVG 曲线；`run_stability.py` 按容量报告选取约 80% 网格，执行六组连续 600 秒运行并记录显存与流场输出。
 
+## P1 之后的测试输出
+
+本目录中的物理、逐位与稳定性输入及脚本用于复现 P1 冻结验收，部分会写全场 plotfile。按后续测试约定，新发起的日常回归和测试智能体运行不得使用这些写盘配置，也不得写全场 checkpoint。强扩展输入 `inputs_strong_256` 已设置 `amr.plot_int = -1`、`amr.chk_int = -1`。后续测试体系将以求解时标量归约、紧凑逐位指纹或进程间比较和日志替代全场文件，并记录输出关闭状态。
+
 `run_p1.py` 是完整 TGV3D 验收入口，接受原始版、模块化版及各自计时版的二进制路径，再依次运行物理、重组前后场值、强扩展、容量、初始化/写盘、逐位一致性和稳定性测试，生成 `index.json`、`summary.md` 与 SVG 图。构建好对应目标后，用 `python3 Benchmarks/TGV3D/run_p1.py --help` 查看参数；完整运行包含六次至少 600 秒的连续测试。上游示例与 IBM 对照使用 `Examples/run_regression.py`。

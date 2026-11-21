@@ -1,0 +1,175 @@
+{
+  "binary_sha256": "5642d3bcf1a09f5baa2b92d813aee27b4b5e2bf7991c5fbde8deac7a6d32ddda",
+  "input_sha256": "e2133f763856abe868c6942643ccf224a5624497a3d2f037b023a8c3fb00fc81",
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "runs": [
+    {
+      "gpus": 1,
+      "repeat": 1,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 34.10354788,
+      "sec_per_step": 0.06820709576,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-strong/1gpu-r1/run.log"
+    },
+    {
+      "gpus": 1,
+      "repeat": 2,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 36.36559824,
+      "sec_per_step": 0.07273119648,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-strong/1gpu-r2/run.log"
+    },
+    {
+      "gpus": 1,
+      "repeat": 3,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 35.5099708,
+      "sec_per_step": 0.07101994159,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-strong/1gpu-r3/run.log"
+    },
+    {
+      "gpus": 2,
+      "repeat": 1,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 74.94604938,
+      "sec_per_step": 0.1498920988,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-strong/2gpu-r1/run.log"
+    },
+    {
+      "gpus": 2,
+      "repeat": 2,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 74.75499443,
+      "sec_per_step": 0.1495099889,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-strong/2gpu-r2/run.log"
+    },
+    {
+      "gpus": 2,
+      "repeat": 3,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 74.85369621,
+      "sec_per_step": 0.1497073924,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-strong/2gpu-r3/run.log"
+    },
+    {
+      "gpus": 4,
+      "repeat": 1,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 101.2865128,
+      "sec_per_step": 0.2025730256,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-strong/4gpu-r1/run.log"
+    },
+    {
+      "gpus": 4,
+      "repeat": 2,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 114.5870833,
+      "sec_per_step": 0.2291741665,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-strong/4gpu-r2/run.log"
+    },
+    {
+      "gpus": 4,
+      "repeat": 3,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 114.642623,
+      "sec_per_step": 0.229285246,
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/full-p1-clean-final/modular-strong/4gpu-r3/run.log"
+    }
+  ],
+  "summary": {
+    "1": {
+      "median_sec_per_step": 0.07101994159,
+      "min_sec_per_step": 0.06820709576,
+      "max_sec_per_step": 0.07273119648
+    },
+    "2": {
+      "median_sec_per_step": 0.1497073924,
+      "min_sec_per_step": 0.1495099889,
+      "max_sec_per_step": 0.1498920988
+    },
+    "4": {
+      "median_sec_per_step": 0.2291741665,
+      "min_sec_per_step": 0.2025730256,
+      "max_sec_per_step": 0.229285246
+    }
+  }
+}
