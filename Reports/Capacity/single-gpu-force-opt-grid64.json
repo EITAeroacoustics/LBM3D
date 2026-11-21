@@ -1,0 +1,71 @@
+{
+  "binary_sha256": "cfd52c98d55499ef8de3ee45526e0b9615914bf1aa4f28e9fc37c59e062fd09b",
+  "gpu": "Tesla V100-SXM2-32GB, 32768 MiB",
+  "capacity_rule": "10 steps, normal exit, no plotfile or checkpoint",
+  "blocking_factor": 8,
+  "measurements": [
+    {
+      "n": 328,
+      "cells": 35287552,
+      "max_grid_size": 64,
+      "completed_steps": true,
+      "target_steps": 10,
+      "returncode": 0,
+      "peak_vram_mib": 29937,
+      "arena_max_allocated_mb": 29356,
+      "arena_max_used_mb": 28828,
+      "out_of_memory": false,
+      "wall_s": 3.592875140020624,
+      "input_sha256": "d02a0fdf9463ef809025f029170eac0c11e2d8d1bceb290644ae233b67602d23",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-force-opt-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-force-opt-grid64/grid64-n328/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-force-opt-grid64/grid64-n328/run.log",
+      "free_gpu_mb_at_exit": 2563,
+      "failed_allocation_bytes": null
+    },
+    {
+      "n": 336,
+      "cells": 37933056,
+      "max_grid_size": 64,
+      "completed_steps": true,
+      "target_steps": 10,
+      "returncode": 0,
+      "peak_vram_mib": 31799,
+      "arena_max_allocated_mb": 31154,
+      "arena_max_used_mb": 30774,
+      "out_of_memory": false,
+      "wall_s": 3.689437893102877,
+      "input_sha256": "cd66a52fe387616e25018b68a4839d258b5481041bde5c1e4e9bebfa283ce326",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-force-opt-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-force-opt-grid64/grid64-n336/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-force-opt-grid64/grid64-n336/run.log",
+      "free_gpu_mb_at_exit": 701,
+      "failed_allocation_bytes": null
+    },
+    {
+      "n": 344,
+      "cells": 40707584,
+      "max_grid_size": 64,
+      "completed_steps": false,
+      "target_steps": 10,
+      "returncode": 6,
+      "peak_vram_mib": 32499,
+      "arena_max_allocated_mb": 31747,
+      "arena_max_used_mb": 31705,
+      "out_of_memory": true,
+      "wall_s": 1.6739522069692612,
+      "input_sha256": "058853186ae647235cb3005c52ec98da83b77bdd763b367a489ffe78a201cd39",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-force-opt-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-force-opt-grid64/grid64-n344/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-force-opt-grid64/grid64-n344/run.log",
+      "free_gpu_mb_at_exit": 1,
+      "failed_allocation_bytes": 8388608
+    }
+  ]
+}

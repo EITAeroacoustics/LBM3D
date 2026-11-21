@@ -39,20 +39,21 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     }
   }
 
-  // local IBM scratch:
-  MultiFab fx_cc(grids[lev], dmap[lev], 1, nghost);
-  MultiFab fy_cc(grids[lev], dmap[lev], 1, nghost);
-  MultiFab fz_cc(grids[lev], dmap[lev], 1, nghost);
-  fx_cc.setVal(0.0);
-  fy_cc.setVal(0.0);
-  fz_cc.setVal(0.0);
-
-  // ---- Prescribed forcing (simple validation / regression test) ----
-  // Applies everywhere on all levels unless you override it via IBM.
-  if (m_use_prescribed_force) {
-    fx_cc.setVal(m_prescribed_force[0]);
-    fy_cc.setVal(m_prescribed_force[1]);
-    fz_cc.setVal(m_prescribed_force[2]);
+  const bool use_force_fields =
+      m_use_cylinder || m_use_prescribed_force || m_force_eval_debug > 0;
+  std::unique_ptr<MultiFab> fx_cc;
+  std::unique_ptr<MultiFab> fy_cc;
+  std::unique_ptr<MultiFab> fz_cc;
+  if (use_force_fields) {
+    fx_cc = std::make_unique<MultiFab>(grids[lev], dmap[lev], 1, nghost);
+    fy_cc = std::make_unique<MultiFab>(grids[lev], dmap[lev], 1, nghost);
+    fz_cc = std::make_unique<MultiFab>(grids[lev], dmap[lev], 1, nghost);
+    const auto force = m_use_prescribed_force
+                           ? m_prescribed_force
+                           : amrex::GpuArray<amrex::Real, 3>{0.0, 0.0, 0.0};
+    fx_cc->setVal(force[0]);
+    fy_cc->setVal(force[1]);
+    fz_cc->setVal(force[2]);
   }
   MultiFab sfSborder(grids[lev], dmap[lev], sF_new.nComp(), sF_new.nGrow());
   MultiFab smSborder(grids[lev], dmap[lev], sM_new.nComp(), sM_new.nGrow());
@@ -87,7 +88,7 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
       prevFzAlias = std::make_unique<MultiFab>(*sForcingPtr, amrex::make_alias, 2, 1);
     }
     // IAMReX-style multi-direct-forcing with delta-kernel
-    m_ibm->update_forcing(rhocc, ucc, vcc, wcc, fx_cc, fy_cc, fz_cc, dt_lev,
+    m_ibm->update_forcing(rhocc, ucc, vcc, wcc, *fx_cc, *fy_cc, *fz_cc, dt_lev,
                           time, prevFxAlias.get(), prevFyAlias.get(),
                           prevFzAlias.get());
   }
@@ -133,9 +134,9 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
       auto Fy = sForcing[mfi].array(1);
       auto Fz = sForcing[mfi].array(2);
 
-      auto fx = fx_cc[mfi].const_array();
-      auto fy = fy_cc[mfi].const_array();
-      auto fz = fz_cc[mfi].const_array();
+      auto fx = (*fx_cc)[mfi].const_array();
+      auto fy = (*fy_cc)[mfi].const_array();
+      auto fz = (*fz_cc)[mfi].const_array();
 
       amrex::ParallelFor(vbx,
                          [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
@@ -158,10 +159,10 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
   if (m_force_eval_debug > 0) {
     // NOTE: `local=true` is per-rank and can print zero on IO rank even when
     // other ranks have nonzero forcing. Report both local and global norms.
-    const Real maxFx_local = fx_cc.norm0(0, 0, true);
-    const Real maxFy_local = fy_cc.norm0(0, 0, true);
-    const Real maxFx_global = fx_cc.norm0(0, 0, false);
-    const Real maxFy_global = fy_cc.norm0(0, 0, false);
+    const Real maxFx_local = fx_cc->norm0(0, 0, true);
+    const Real maxFy_local = fy_cc->norm0(0, 0, true);
+    const Real maxFx_global = fx_cc->norm0(0, 0, false);
+    const Real maxFy_global = fy_cc->norm0(0, 0, false);
     const Real maxF_global = std::max(maxFx_global, maxFy_global);
 
     Real maxFx_packed = Real(0.0);
@@ -189,9 +190,11 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
   // collide kernel touches grown boxes. Without this, ghost cells can retain
   // stale zeros at internal box interfaces and imprint weak grid-aligned
   // artifacts in vorticity.
-  fx_cc.FillBoundary(geom[lev].periodicity());
-  fy_cc.FillBoundary(geom[lev].periodicity());
-  fz_cc.FillBoundary(geom[lev].periodicity());
+  if (use_force_fields) {
+    fx_cc->FillBoundary(geom[lev].periodicity());
+    fy_cc->FillBoundary(geom[lev].periodicity());
+    fz_cc->FillBoundary(geom[lev].periodicity());
+  }
 
   const Real temptau = tau[lev];
 
@@ -213,9 +216,14 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     Array4<Real> w_old = smSborder[mfi].array(3);
     Array4<Real> statein = sfSborder[mfi].array(); // f* (post-collision)
 
-    auto fx = fx_cc[mfi].array(0);
-    auto fy = fy_cc[mfi].array(0);
-    auto fz = fz_cc[mfi].array(0);
+    amrex::Array4<amrex::Real const> fx;
+    amrex::Array4<amrex::Real const> fy;
+    amrex::Array4<amrex::Real const> fz;
+    if (use_force_fields) {
+      fx = (*fx_cc)[mfi].const_array(0);
+      fy = (*fy_cc)[mfi].const_array(0);
+      fz = (*fz_cc)[mfi].const_array(0);
+    }
 
     // Collide only on valid cells.
     // Ghost cells are synchronized from neighboring valid data below via
@@ -233,9 +241,12 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
                                      rho_loc, u_loc, v_loc, w_loc);
           }
 
+          const Real fx_loc = use_force_fields ? fx(i, j, k) : Real(0.0);
+          const Real fy_loc = use_force_fields ? fy(i, j, k) : Real(0.0);
+          const Real fz_loc = use_force_fields ? fz(i, j, k) : Real(0.0);
           collide_forced(i, j, k, statein, feq_loc, ndir_l, temptau, wi_d,
                          dirx_d, diry_d, dirz_d, rho_loc, u_loc, v_loc, w_loc,
-                         fx(i, j, k), fy(i, j, k), fz(i, j, k));
+                         fx_loc, fy_loc, fz_loc);
         });
   }
 
@@ -258,9 +269,14 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     Array4<Real> v = sM_new[mfi].array(2);
     Array4<Real> w = sM_new[mfi].array(3);
 
-    auto fx = fx_cc[mfi].array(0);
-    auto fy = fy_cc[mfi].array(0);
-    auto fz = fz_cc[mfi].array(0);
+    amrex::Array4<amrex::Real const> fx;
+    amrex::Array4<amrex::Real const> fy;
+    amrex::Array4<amrex::Real const> fz;
+    if (use_force_fields) {
+      fx = (*fx_cc)[mfi].const_array(0);
+      fy = (*fy_cc)[mfi].const_array(0);
+      fz = (*fz_cc)[mfi].const_array(0);
+    }
 
     const amrex::Box domain = geom[lev].Domain();
     const amrex::BCRec bc_rec =
@@ -381,8 +397,12 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     // -------- Macros w/ forcing + diagnostics --------
     amrex::ParallelFor(
         vbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-          calculateMacroForcing(i, j, k, stateout, rho, u, v, w, fx, fy, fz,
-                                ndir_l, dirx_d, diry_d, dirz_d);
+          const Real fx_loc = use_force_fields ? fx(i, j, k) : Real(0.0);
+          const Real fy_loc = use_force_fields ? fy(i, j, k) : Real(0.0);
+          const Real fz_loc = use_force_fields ? fz(i, j, k) : Real(0.0);
+          calculateMacroForcing(i, j, k, stateout, rho, u, v, w,
+                                fx_loc, fy_loc, fz_loc, ndir_l,
+                                dirx_d, diry_d, dirz_d);
         });
   }
   const int step_lev = istep[lev];

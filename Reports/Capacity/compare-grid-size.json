@@ -1,0 +1,81 @@
+{
+  "grid": "328 328 328",
+  "gpus": "0",
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "cases": {
+    "left": {
+      "binary": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+      "binary_sha256": "5642d3bcf1a09f5baa2b92d813aee27b4b5e2bf7991c5fbde8deac7a6d32ddda",
+      "input": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D-force-opt/Benchmarks/TGV3D/inputs_strong_single_gpu_328_grid64",
+      "input_sha256": "478bb6b433418c08960ca2f892b25dc521c04c557144b52ac935af6622c6c994",
+      "max_grid_size": "64"
+    },
+    "right": {
+      "binary": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+      "binary_sha256": "5642d3bcf1a09f5baa2b92d813aee27b4b5e2bf7991c5fbde8deac7a6d32ddda",
+      "input": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D-force-opt/Benchmarks/TGV3D/inputs_strong_single_gpu_328_grid192",
+      "input_sha256": "46bb51ae6496f2740dfd796328ffdbb950f1122191015324c9bfc19bb5f31939",
+      "max_grid_size": "192"
+    }
+  },
+  "runs": [
+    {
+      "repeat": 1,
+      "case": "left",
+      "sec_per_step": 0.1541086054,
+      "elapsed_max_s": 77.0543027,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D-force-opt/Benchmarks/TGV3D/inputs_strong_single_gpu_328_grid64"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/compare-grid-size/r1-left/run.log"
+    },
+    {
+      "repeat": 1,
+      "case": "right",
+      "sec_per_step": 0.1101693029,
+      "elapsed_max_s": 55.08465147,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D-force-opt/Benchmarks/TGV3D/inputs_strong_single_gpu_328_grid192"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/compare-grid-size/r1-right/run.log"
+    },
+    {
+      "repeat": 2,
+      "case": "right",
+      "sec_per_step": 0.110231495,
+      "elapsed_max_s": 55.11574752,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D-force-opt/Benchmarks/TGV3D/inputs_strong_single_gpu_328_grid192"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/compare-grid-size/r2-right/run.log"
+    },
+    {
+      "repeat": 2,
+      "case": "left",
+      "sec_per_step": 0.1545154402,
+      "elapsed_max_s": 77.2577201,
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-ON/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/LBM3D-force-opt/Benchmarks/TGV3D/inputs_strong_single_gpu_328_grid64"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/compare-grid-size/r2-left/run.log"
+    }
+  ],
+  "summary": {
+    "left": {
+      "median_sec_per_step": 0.1543120228,
+      "min_sec_per_step": 0.1541086054,
+      "max_sec_per_step": 0.1545154402
+    },
+    "right": {
+      "median_sec_per_step": 0.11020039895,
+      "min_sec_per_step": 0.1101693029,
+      "max_sec_per_step": 0.110231495
+    },
+    "ratio_right_to_left": 0.7141400712038363
+  }
+}

@@ -39,4 +39,6 @@ CUDA_VISIBLE_DEVICES=0 /path/to/ilbmrex_baseline /path/to/inputs_physics_64 > ru
 
 单卡容量细化可用 `probe_single_gpu_capacity.py`。它从入库案例生成输入，强制关闭 plotfile 和 checkpoint，逐个独立进程测量完成步数、显存峰值及 AMReX arena 状态；`--max-grid-sizes`、`--blocking-factor`、`--start/--stop/--step` 和 `--steps` 控制网格与步数。已完成的 V100 结果见 [单卡容量报告](../../Reports/Capacity/single-gpu.md)。
 
+`inputs_capacity_single_gpu_352` 固定网格块 192、阻塞因子 8，供单卡容量复跑；`inputs_capacity_single_gpu_360` 用于无力临时场优化后的边界复核。`compare_single_gpu.py` 以左右交替顺序测两个二进制或两份同网格输入，默认各运行两次，每次预热 100 步并计时 500 步。`inputs_strong_single_gpu_*` 是本轮使用的无全场输出计时输入，分项结果见 [优化复测报告](../../Reports/Capacity/force-field-optimization.md)。这些输入的前两行注释继承自 64³ 模板，实际网格、时间步及输出开关以输入参数为准。
+
 `run_p1.py` 是完整 TGV3D 验收入口，接受原始版、模块化版及各自计时版的二进制路径，再依次运行物理、重组前后场值、强扩展、容量、初始化/写盘、逐位一致性和稳定性测试，生成 `index.json`、`summary.md` 与 SVG 图。构建好对应目标后，用 `python3 Benchmarks/TGV3D/run_p1.py --help` 查看参数；完整运行包含六次至少 600 秒的连续测试。上游示例与 IBM 对照使用 `Examples/run_regression.py`。

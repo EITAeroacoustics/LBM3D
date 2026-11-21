@@ -1,0 +1,53 @@
+{
+  "remote_root": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work",
+  "no_full_field_output": true,
+  "tgv_mass_history": {
+    "256": {
+      "baseline": {
+        "count": 600,
+        "sha256": "f8d1ba5f9ad3b9c7a0b09bf841ae6bff9fe3a339910cc35bf9b87c4a6a5b4460"
+      },
+      "optimized": {
+        "count": 600,
+        "sha256": "f8d1ba5f9ad3b9c7a0b09bf841ae6bff9fe3a339910cc35bf9b87c4a6a5b4460"
+      },
+      "identical": true
+    },
+    "352": {
+      "baseline": {
+        "count": 600,
+        "sha256": "108580f3a068dd8c646cd91c96085fe527a167711bc453baa5e122a7c89b3144"
+      },
+      "optimized": {
+        "count": 600,
+        "sha256": "108580f3a068dd8c646cd91c96085fe527a167711bc453baa5e122a7c89b3144"
+      },
+      "identical": true
+    }
+  },
+  "forced_validation": {
+    "force2d": {
+      "baseline": {
+        "count": 50,
+        "sha256": "f4acd8a213c1d7d39de10f8bb6641d05f949867a26ed063fef4e79a7c8094e97"
+      },
+      "optimized": {
+        "count": 50,
+        "sha256": "f4acd8a213c1d7d39de10f8bb6641d05f949867a26ed063fef4e79a7c8094e97"
+      },
+      "identical": true
+    }
+  },
+  "ibm_forces": {
+    "sphere": {
+      "baseline": "344c0410784e4643437d2fd713ab8c5bfbdc32910b83adfd577fe3709b0c1da3",
+      "optimized": "344c0410784e4643437d2fd713ab8c5bfbdc32910b83adfd577fe3709b0c1da3",
+      "identical": true
+    },
+    "pitching": {
+      "baseline": "05c06dd4bc433ea2f047961261ee52ecfa16d77116dcd84d250d8e77f7f6c013",
+      "optimized": "05c06dd4bc433ea2f047961261ee52ecfa16d77116dcd84d250d8e77f7f6c013",
+      "identical": true
+    }
+  }
+}
