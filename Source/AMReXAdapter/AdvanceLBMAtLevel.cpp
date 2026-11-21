@@ -263,7 +263,7 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
   // The wider FAB ghosts remain available for AMR and IBM operations.
 #if (AMREX_SPACEDIM == 3)
   if (m_use_directional_halo && lev == 0 && finestLevel() == 0 &&
-      geom[lev].isAllPeriodic() && !m_use_cylinder && ndir == 19 &&
+      !m_use_cylinder && ndir == 19 &&
       DirectionalHalo::SupportsStencil(dirx, diry, dirz) &&
       ParallelDescriptor::TeamSize() == 1 &&
       ParallelDescriptor::UseGpuAwareMpi()) {

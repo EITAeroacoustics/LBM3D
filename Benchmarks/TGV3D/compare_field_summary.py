@@ -19,6 +19,8 @@ CONFIGS = {
 SUMMARY = re.compile(r"^FIELD_SUMMARY lev=(\d+) comp=(\d+) "
                      r"sum=(\S+) norm2=(\S+) min=(\S+) max=(\S+) "
                      r"hash0=(\d+) hash1=(\d+)$", re.M)
+HALO_SEND = re.compile(r"LBM_DIRECTIONAL_HALO active=1 .*?"
+                       r"rank0_send_values=(\d+)/(\d+)")
 
 
 def sha256(path: Path) -> str:
@@ -55,15 +57,19 @@ def run(binary: Path, inputs: Path, root: Path, ranks: int,
                          if path.name.startswith(("plt", "chk")))
     if full_fields:
         raise RuntimeError(f"unexpected full-field output in {root}: {full_fields}")
+    log_text = log.read_text(errors="replace")
     summaries = {f"{lev}:{comp}": [total, norm, minimum, maximum,
                                    hash0, hash1]
                  for lev, comp, total, norm, minimum, maximum, hash0, hash1
-                 in SUMMARY.findall(log.read_text(errors="replace"))}
+                 in SUMMARY.findall(log_text)}
     if len(summaries) != 23:
         raise RuntimeError(f"expected 23 final-field summaries, got {len(summaries)}: {log}")
+    halo_send = HALO_SEND.search(log_text)
     return {"command": command, "visible_devices": visible,
             "full_field_outputs": full_fields,
             "log": str(log.resolve()), "log_sha256": sha256(log),
+            "directional_halo_active": halo_send is not None,
+            "rank0_halo_send_values": int(halo_send.group(1)) if halo_send else None,
             "fields": summaries}
 
 
@@ -77,7 +83,10 @@ def main() -> None:
     parser.add_argument("--mpirun", default="mpirun")
     parser.add_argument("--mpi-options", default="")
     parser.add_argument("--rank-wrapper", type=Path)
+    parser.add_argument("--common-option", action="append", default=[])
+    parser.add_argument("--baseline-option", action="append", default=[])
     parser.add_argument("--optimized-option", action="append", default=[])
+    parser.add_argument("--require-directional-halo", action="store_true")
     args = parser.parse_args()
     binaries = {"baseline": args.baseline_binary.resolve(),
                 "optimized": args.optimized_binary.resolve()}
@@ -90,12 +99,24 @@ def main() -> None:
             pair[name] = run(binary, inputs, args.run_root / f"{ranks}gpu" / name,
                              ranks, args.mpirun, args.mpi_options,
                              args.rank_wrapper.resolve() if args.rank_wrapper else None,
-                             args.optimized_option if name == "optimized" else [])
+                             [*args.common_option,
+                              *(args.optimized_option if name == "optimized"
+                                else args.baseline_option)])
+        if args.require_directional_halo:
+            if pair["baseline"]["directional_halo_active"]:
+                raise RuntimeError(f"baseline unexpectedly used directional halo on {ranks} GPU(s)")
+            if not pair["optimized"]["directional_halo_active"]:
+                raise RuntimeError(f"directional halo was inactive on {ranks} GPU(s)")
+            if ranks > 1 and not pair["optimized"]["rank0_halo_send_values"]:
+                raise RuntimeError(f"directional halo sent no remote values on {ranks} GPU(s)")
         pair["summary_equal"] = pair["baseline"]["fields"] == pair["optimized"]["fields"]
         runs[str(ranks)] = pair
         print(f"  summary_equal={pair['summary_equal']}", flush=True)
     report = {"input_sha256": sha256(inputs),
               "binary_sha256": {name: sha256(path) for name, path in binaries.items()},
+              "common_options": args.common_option,
+              "baseline_options": args.baseline_option,
+              "optimized_options": args.optimized_option,
               "runs": runs}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2) + "\n")

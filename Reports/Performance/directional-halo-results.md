@@ -1,10 +1,12 @@
 # D3Q19 方向性 halo：四卡强弱扩展验收（2026-11-22）
 
+后续已移除方向性 halo 的全周期启用条件，并完成非周期数值回归，见[非周期边界回归](directional-halo-nonperiodic.md)。本文的二进制校验值和性能数据保留为修改前全周期 TGV 验收记录。
+
 ## 实现与适用范围
 
 `Source/AMReXAdapter/DirectionalHalo.H/.cpp` 使用 AMReX `getFB(IntVect(1), periodicity)` 的本地、发送、接收标签确定几何相交、周期映射和 rank 归属。D3Q19 pull streaming 在每个面只读取 5 个方向分量，在棱只读取 1 个，在角不读取分量；模块保持现有 `MultiFab` 19 分量布局，每个远端 rank 合并为一条消息。发送 pack 完成后先发出 MPI 请求，再执行同 rank ghost 复制，等待通信后解包；本地复制与 UCX 传输由此重叠。
 
-该路径在**单层、全周期、D3Q19、CUDA-aware MPI、AMReX team size 为 1** 时默认启用，其余情况继续用 AMReX `MultiFab::FillBoundary`。可用 `lbm3d.directional_halo=0` 关闭。`lbm3d.mass_check_interval` 默认 100，首步和末步仍检查质量。代码没有更改分布函数的数据布局或默认 `max_grid_size=64`、`blocking_factor=8`。本机采用 AMReX 26.11、4×V100-SXM2-32GB、CUDA-aware Open MPI 4.1.8 + UCX 1.21.1；`UCX_TLS=self,sm,cuda_copy`，UCX PML，双卡 GPU 0/2，四卡 0/1/2/3，按 NUMA 绑核。`rank_gpu.py` 在 `MPI_Init` 前限定每进程可见 GPU。先前检出的混合 `cuda_ipc` 质量错误配置没有使用。
+本报告验收时，该路径在**单层、全周期、D3Q19、CUDA-aware MPI、AMReX team size 为 1** 时默认启用，其余情况继续用 AMReX `MultiFab::FillBoundary`。可用 `lbm3d.directional_halo=0` 关闭。`lbm3d.mass_check_interval` 默认 100，首步和末步仍检查质量。代码没有更改分布函数的数据布局或默认 `max_grid_size=64`、`blocking_factor=8`。本机采用 AMReX 26.11、4×V100-SXM2-32GB、CUDA-aware Open MPI 4.1.8 + UCX 1.21.1；`UCX_TLS=self,sm,cuda_copy`，UCX PML，双卡 GPU 0/2，四卡 0/1/2/3，按 NUMA 绑核。`rank_gpu.py` 在 `MPI_Init` 前限定每进程可见 GPU。先前检出的混合 `cuda_ipc` 质量错误配置没有使用。
 
 四卡 128³ 的一次性启动日志报告 `LBM_DIRECTIONAL_HALO active=1`，rank 0 的远端发送/接收分量值均为 **165,376 / 652,080**（方向筛选 / 通用 FillBoundary），本地复制为 **81,920 / 311,296**。因此这次通信的分量值数约减少四分之三；这不是逐步传输字节计量，实际加速以计时为准。
 

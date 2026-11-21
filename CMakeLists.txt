@@ -113,4 +113,13 @@ else ()
     if (AMReX_CUDA)
         setup_target_for_cuda_compilation(lbm3d_tgv3d_summary)
     endif ()
+    add_executable(lbm3d_square_duct_summary EXCLUDE_FROM_ALL
+        Benchmarks/TGV3D/field_summary.cpp
+        Examples/Common/ProblemInit.cpp)
+    target_include_directories(lbm3d_square_duct_summary PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/Examples/SquareDuct_flow)
+    target_link_libraries(lbm3d_square_duct_summary PRIVATE lbm3d)
+    if (AMReX_CUDA)
+        setup_target_for_cuda_compilation(lbm3d_square_duct_summary)
+    endif ()
 endif ()
