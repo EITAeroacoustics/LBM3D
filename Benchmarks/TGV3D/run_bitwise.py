@@ -14,7 +14,7 @@ CONFIGS = {
     2: ("0,2", ["mpirun", "--map-by", "ppr:1:numa", "--bind-to", "numa", "-np", "2"]),
     4: ("0,1,2,3", ["mpirun", "--map-by", "ppr:2:numa", "--bind-to", "numa", "-np", "4"]),
 }
-COMPARISON = re.compile(r"BIT_COMPARE var=(\w+) mismatches=(\d+) first_local=\(([^)]+)\)")
+COMPARISON = re.compile(r"BIT_COMPARE var=(\w+) mismatches=(\d+) max_abs=([0-9.eE+-]+) first_local=\(([^)]+)\)")
 
 
 def main() -> None:
@@ -54,8 +54,9 @@ def main() -> None:
             result = subprocess.run([str(comparator), str(reference), str(other)],
                                     text=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
-            fields = {name: {"mismatches": int(count), "first_local": first}
-                      for name, count, first in COMPARISON.findall(result.stdout)}
+            fields = {name: {"mismatches": int(count), "max_abs": float(max_abs),
+                             "first_local": first}
+                      for name, count, max_abs, first in COMPARISON.findall(result.stdout)}
             if len(fields) != 4:
                 raise RuntimeError(f"incomplete comparator output: {result.stdout}")
             comparisons.append({"gpus": ranks, "step": step, "fields": fields,
@@ -69,6 +70,8 @@ def main() -> None:
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2) + "\n")
     print(f"report={args.report}", flush=True)
+    if not all(item["bitwise_equal"] for item in comparisons):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

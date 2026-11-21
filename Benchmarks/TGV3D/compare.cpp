@@ -6,8 +6,11 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <iomanip>
 #include <string>
 
 int main(int argc, char* argv[])
@@ -20,42 +23,50 @@ int main(int argc, char* argv[])
         }
         amrex::PlotFileData reference(amrex::get_command_argument(1));
         amrex::PlotFileData other(amrex::get_command_argument(2));
-        if (reference.finestLevel() != 0 || other.finestLevel() != 0 ||
-            reference.probDomain(0) != other.probDomain(0) ||
-            reference.levelStep(0) != other.levelStep(0)) {
-            amrex::Abort("plotfiles have different grid or output step");
+        if (reference.finestLevel() != other.finestLevel()) {
+            amrex::Abort("plotfiles have different finest levels");
+        }
+        for (int lev = 0; lev <= reference.finestLevel(); ++lev) {
+            if (reference.probDomain(lev) != other.probDomain(lev) ||
+                reference.levelStep(lev) != other.levelStep(lev)) {
+                amrex::Abort("plotfiles have different grid or output step");
+            }
         }
 
         for (auto const& name : {"rho", "ux", "uy", "uz"}) {
-            auto left = reference.get(0, name);
-            auto right = other.get(0, name);
-            amrex::MultiFab host_left(reference.boxArray(0), reference.DistributionMap(0),
-                                      1, 0, amrex::MFInfo().SetArena(amrex::The_Pinned_Arena()));
-            amrex::MultiFab host_right(reference.boxArray(0), reference.DistributionMap(0),
-                                       1, 0, amrex::MFInfo().SetArena(amrex::The_Pinned_Arena()));
-            host_left.ParallelCopy(left, 0, 0, 1);
-            host_right.ParallelCopy(right, 0, 0, 1);
-            amrex::Gpu::streamSynchronize();
             amrex::Long mismatches = 0;
+            double max_abs = 0.0;
             int first_i = -1, first_j = -1, first_k = -1;
-            for (amrex::MFIter mfi(host_left); mfi.isValid(); ++mfi) {
-                const auto a = host_left.const_array(mfi);
-                const auto b = host_right.const_array(mfi);
-                const auto box = mfi.validbox();
-                const auto lo = amrex::lbound(box);
-                const auto hi = amrex::ubound(box);
-                for (int k = lo.z; k <= hi.z; ++k) {
-                    for (int j = lo.y; j <= hi.y; ++j) {
-                        for (int i = lo.x; i <= hi.x; ++i) {
-                            std::uint64_t bits_a, bits_b;
-                            const double value_a = a(i,j,k);
-                            const double value_b = b(i,j,k);
-                            std::memcpy(&bits_a, &value_a, sizeof(bits_a));
-                            std::memcpy(&bits_b, &value_b, sizeof(bits_b));
-                            if (bits_a != bits_b) {
-                                ++mismatches;
-                                if (first_i < 0) {
-                                    first_i = i; first_j = j; first_k = k;
+            for (int lev = 0; lev <= reference.finestLevel(); ++lev) {
+                auto left = reference.get(lev, name);
+                auto right = other.get(lev, name);
+                amrex::MultiFab host_left(reference.boxArray(lev), reference.DistributionMap(lev),
+                                          1, 0, amrex::MFInfo().SetArena(amrex::The_Pinned_Arena()));
+                amrex::MultiFab host_right(reference.boxArray(lev), reference.DistributionMap(lev),
+                                           1, 0, amrex::MFInfo().SetArena(amrex::The_Pinned_Arena()));
+                host_left.ParallelCopy(left, 0, 0, 1);
+                host_right.ParallelCopy(right, 0, 0, 1);
+                amrex::Gpu::streamSynchronize();
+                for (amrex::MFIter mfi(host_left); mfi.isValid(); ++mfi) {
+                    const auto a = host_left.const_array(mfi);
+                    const auto b = host_right.const_array(mfi);
+                    const auto box = mfi.validbox();
+                    const auto lo = amrex::lbound(box);
+                    const auto hi = amrex::ubound(box);
+                    for (int k = lo.z; k <= hi.z; ++k) {
+                        for (int j = lo.y; j <= hi.y; ++j) {
+                            for (int i = lo.x; i <= hi.x; ++i) {
+                                std::uint64_t bits_a, bits_b;
+                                const double value_a = a(i,j,k);
+                                const double value_b = b(i,j,k);
+                                max_abs = std::max(max_abs, std::abs(value_a - value_b));
+                                std::memcpy(&bits_a, &value_a, sizeof(bits_a));
+                                std::memcpy(&bits_b, &value_b, sizeof(bits_b));
+                                if (bits_a != bits_b) {
+                                    ++mismatches;
+                                    if (first_i < 0) {
+                                        first_i = i; first_j = j; first_k = k;
+                                    }
                                 }
                             }
                         }
@@ -63,8 +74,10 @@ int main(int argc, char* argv[])
                 }
             }
             amrex::ParallelDescriptor::ReduceLongSum(mismatches);
+            amrex::ParallelDescriptor::ReduceRealMax(max_abs);
             amrex::Print() << "BIT_COMPARE var=" << name
                            << " mismatches=" << mismatches
+                           << " max_abs=" << std::setprecision(17) << max_abs
                            << " first_local=(" << first_i << ',' << first_j << ','
                            << first_k << ")\n";
             if (mismatches) { status = 1; }

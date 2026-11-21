@@ -1,0 +1,154 @@
+{
+  "binary_sha256": "8771a2002306949cf3d94a0846050ebf7c313882e88fe527127154823f04a62c",
+  "input_sha256": "e78d19c62e1319579eae98c3c444cc15cd2b64337c2281d7b14437ace7d1f61e",
+  "runs": [
+    {
+      "gpus": 1,
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-stability-build-3d/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_bitwise_128"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-10-final-bitwise-128/1gpu/run.log"
+    },
+    {
+      "gpus": 2,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/deps/lbm3d-stability-build-3d/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_bitwise_128"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-10-final-bitwise-128/2gpu/run.log"
+    },
+    {
+      "gpus": 4,
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/deps/lbm3d-stability-build-3d/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_bitwise_128"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-10-final-bitwise-128/4gpu/run.log"
+    }
+  ],
+  "comparisons": [
+    {
+      "gpus": 2,
+      "step": 0,
+      "fields": {
+        "rho": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "ux": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "uy": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "uz": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        }
+      },
+      "bitwise_equal": true
+    },
+    {
+      "gpus": 2,
+      "step": 10,
+      "fields": {
+        "rho": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "ux": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "uy": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "uz": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        }
+      },
+      "bitwise_equal": true
+    },
+    {
+      "gpus": 4,
+      "step": 0,
+      "fields": {
+        "rho": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "ux": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "uy": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "uz": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        }
+      },
+      "bitwise_equal": true
+    },
+    {
+      "gpus": 4,
+      "step": 10,
+      "fields": {
+        "rho": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "ux": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "uy": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        },
+        "uz": {
+          "mismatches": 0,
+          "max_abs": 0.0,
+          "first_local": "-1,-1,-1"
+        }
+      },
+      "bitwise_equal": true
+    }
+  ]
+}

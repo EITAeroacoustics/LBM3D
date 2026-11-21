@@ -24,6 +24,7 @@ CMakeCache.txt
 # Run directories and generated simulation output
 /runs/
 /logs/
+/Deliverables/*.tar.gz
 out_cylinder/
 out_pitching_airfoil/
 plt[0-9]*/

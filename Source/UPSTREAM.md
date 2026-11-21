@@ -11,5 +11,6 @@
 2. 把现有 pitching airfoil 的 `refinement_region`、`build_markers`、`marker_state` 原公式移入 IBM 模块。`pitching_airfoil` 是新的显式输入值；`user_defined`、`custom` 暂保留为同一内置模型的兼容别名，以运行现有示例输入。
 3. 将载荷计算/输出和 plotfile/checkpoint 成员实现按职责移至 `Diagnostics/`，不改计算式和调用顺序。
 4. 将上游对有值 `AMREX_PARTICLES` 的预处理判断改为存在性判断，适配 AMReX 26.11 定义的空宏。
+5. P1-11 增加可选 `lbm3d.wall_time_limit_s`，仅在完成当前整步后停止连续运行验收；未设置时不改变原有步数和物理时间停止逻辑。
 
 本次迁移未改变碰撞、迁移、边界和力学数值公式。重组前后同条件数值与性能正式验收属于 P1-09；本阶段先验证 2D 普通算例、2D pitching airfoil 与 3D TGV 可链接同一求解器库并短程运行。

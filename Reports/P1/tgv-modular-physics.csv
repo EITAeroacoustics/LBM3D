@@ -1,0 +1,7 @@
+step,time,cells,mean_rho,mean_kinetic,init_linf,nonfinite,plotfile,grid
+0,0.0,262144,1.0,5.0000000000001744e-05,1.1102230246251565e-16,False,/home/hanbo/workspace/LBM/runs/lbm3d-tgv3d-physics-64/plt00000,64
+32,32.0,262144,1.000000000000046,4.454771022951617e-05,0.0,False,/home/hanbo/workspace/LBM/runs/lbm3d-tgv3d-physics-64/plt00032,64
+64,64.0,262144,0.9999999999999873,3.985394202893248e-05,0.0,False,/home/hanbo/workspace/LBM/runs/lbm3d-tgv3d-physics-64/plt00064,64
+0,0.0,2097152,1.0,4.999999999997391e-05,2.220446049250313e-16,False,/home/hanbo/workspace/LBM/runs/p1-09-tgv-physics-128/plt00000,128
+64,32.0,2097152,0.999999999999919,4.4718464865773494e-05,0.0,False,/home/hanbo/workspace/LBM/runs/p1-09-tgv-physics-128/plt00064,128
+128,64.0,2097152,1.0000000000001237,4.001481096424532e-05,0.0,False,/home/hanbo/workspace/LBM/runs/p1-09-tgv-physics-128/plt00128,128

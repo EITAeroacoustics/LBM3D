@@ -1,0 +1,320 @@
+{
+  "smoke": [
+    {
+      "dimension": 2,
+      "case": "Cavity_flow",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-build-2d/lbm3d_cavity",
+        "/home/hanbo/workspace/LBM/Examples/Cavity_flow/inputs",
+        "max_step=2",
+        "amr.chk_int=-1",
+        "amr.regrid_int=-1",
+        "amr.plot_int=-1"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-08-regression-with-motion/smoke/Cavity_flow/run.log",
+      "returncode": 0,
+      "complete": true
+    },
+    {
+      "dimension": 2,
+      "case": "Couette_flow",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-build-2d/lbm3d_couette",
+        "/home/hanbo/workspace/LBM/Examples/Couette_flow/inputs",
+        "max_step=2",
+        "amr.chk_int=-1",
+        "amr.regrid_int=-1",
+        "amr.plot_int=-1"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-08-regression-with-motion/smoke/Couette_flow/run.log",
+      "returncode": 0,
+      "complete": true
+    },
+    {
+      "dimension": 2,
+      "case": "Cylinder_flow",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-build-2d/lbm3d_cylinder",
+        "/home/hanbo/workspace/LBM/Examples/Cylinder_flow/inputs",
+        "max_step=2",
+        "amr.chk_int=-1",
+        "amr.regrid_int=-1",
+        "amr.plot_int=-1"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-08-regression-with-motion/smoke/Cylinder_flow/run.log",
+      "returncode": 0,
+      "complete": true
+    },
+    {
+      "dimension": 2,
+      "case": "ForceValidation",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-build-2d/lbm3d_force_validation",
+        "/home/hanbo/workspace/LBM/Examples/ForceValidation/inputs",
+        "max_step=2",
+        "amr.chk_int=-1",
+        "amr.regrid_int=-1",
+        "amr.plot_int=-1"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-08-regression-with-motion/smoke/ForceValidation/run.log",
+      "returncode": 0,
+      "complete": true
+    },
+    {
+      "dimension": 2,
+      "case": "Pitching_airfoil",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-build-2d/lbm3d_pitching_airfoil",
+        "/home/hanbo/workspace/LBM/Examples/Pitching_airfoil/inputs",
+        "max_step=2",
+        "amr.chk_int=-1",
+        "amr.regrid_int=-1",
+        "amr.plot_int=-1"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-08-regression-with-motion/smoke/Pitching_airfoil/run.log",
+      "returncode": 0,
+      "complete": true
+    },
+    {
+      "dimension": 2,
+      "case": "Taylor_Green_Vortex",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-build-2d/lbm3d_taylor_green_2d",
+        "/home/hanbo/workspace/LBM/Examples/Taylor_Green_Vortex/inputs",
+        "max_step=2",
+        "amr.chk_int=-1",
+        "amr.regrid_int=-1",
+        "amr.plot_int=-1"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-08-regression-with-motion/smoke/Taylor_Green_Vortex/run.log",
+      "returncode": 0,
+      "complete": true
+    },
+    {
+      "dimension": 3,
+      "case": "Sphere_flow",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-build-3d/lbm3d_sphere",
+        "/home/hanbo/workspace/LBM/Examples/Sphere_flow/inputs",
+        "max_step=2",
+        "amr.chk_int=-1",
+        "amr.regrid_int=-1",
+        "amr.plot_int=-1"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-08-regression-with-motion/smoke/Sphere_flow/run.log",
+      "returncode": 0,
+      "complete": true
+    },
+    {
+      "dimension": 3,
+      "case": "SquareDuct_flow",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-build-3d/lbm3d_square_duct",
+        "/home/hanbo/workspace/LBM/Examples/SquareDuct_flow/inputs",
+        "max_step=2",
+        "amr.chk_int=-1",
+        "amr.regrid_int=-1",
+        "amr.plot_int=-1"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-08-regression-with-motion/smoke/SquareDuct_flow/run.log",
+      "returncode": 0,
+      "complete": true
+    }
+  ],
+  "ibm_regression": [
+    {
+      "case": "Pitching_airfoil",
+      "dimension": 2,
+      "fields": {
+        "0": {
+          "rho": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "ux": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uy": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uz": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          }
+        },
+        "1": {
+          "rho": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "ux": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uy": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uz": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          }
+        },
+        "2": {
+          "rho": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "ux": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uy": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uz": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          }
+        }
+      },
+      "field_tolerance": 0.0,
+      "upstream_repeat": null,
+      "force_sha256": "05c06dd4bc433ea2f047961261ee52ecfa16d77116dcd84d250d8e77f7f6c013",
+      "force_equal": true
+    },
+    {
+      "case": "Sphere_flow",
+      "dimension": 3,
+      "fields": {
+        "0": {
+          "rho": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "ux": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uy": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uz": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          }
+        },
+        "1": {
+          "rho": {
+            "mismatches": 374,
+            "max_abs": 5.551115123125783e-16
+          },
+          "ux": {
+            "mismatches": 2127,
+            "max_abs": 7.806255641895632e-17
+          },
+          "uy": {
+            "mismatches": 4120,
+            "max_abs": 8.993457020767259e-17
+          },
+          "uz": {
+            "mismatches": 4300,
+            "max_abs": 7.697835424647081e-17
+          }
+        },
+        "2": {
+          "rho": {
+            "mismatches": 21183,
+            "max_abs": 8.881784197001252e-16
+          },
+          "ux": {
+            "mismatches": 36817,
+            "max_abs": 2.220446049250313e-16
+          },
+          "uy": {
+            "mismatches": 45309,
+            "max_abs": 1.986258379993444e-16
+          },
+          "uz": {
+            "mismatches": 45160,
+            "max_abs": 1.986258379993444e-16
+          }
+        }
+      },
+      "field_tolerance": 1e-14,
+      "upstream_repeat": {
+        "0": {
+          "rho": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "ux": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uy": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          },
+          "uz": {
+            "mismatches": 0,
+            "max_abs": 0.0
+          }
+        },
+        "1": {
+          "rho": {
+            "mismatches": 465,
+            "max_abs": 4.440892098500626e-16
+          },
+          "ux": {
+            "mismatches": 2725,
+            "max_abs": 6.938893903907228e-17
+          },
+          "uy": {
+            "mismatches": 5252,
+            "max_abs": 6.245004513516506e-17
+          },
+          "uz": {
+            "mismatches": 5488,
+            "max_abs": 7.690423886358606e-17
+          }
+        },
+        "2": {
+          "rho": {
+            "mismatches": 24870,
+            "max_abs": 8.881784197001252e-16
+          },
+          "ux": {
+            "mismatches": 41737,
+            "max_abs": 2.237793284010081e-16
+          },
+          "uy": {
+            "mismatches": 50470,
+            "max_abs": 2.0383000842727483e-16
+          },
+          "uz": {
+            "mismatches": 50444,
+            "max_abs": 1.8474805019152996e-16
+          }
+        }
+      },
+      "force_sha256": "344c0410784e4643437d2fd713ab8c5bfbdc32910b83adfd577fe3709b0c1da3",
+      "force_equal": true
+    }
+  ],
+  "marker_motion": {
+    "samples": [
+      "MOTION idx=0 time=0 x=91 y=96 z=0 ux=-0 uy=-0.012337005501361697 uz=0",
+      "MOTION idx=1 time=0 x=99 y=97 z=0 ux=-0.0024674011002723392 uy=0.0074022033008170176 uz=0",
+      "MOTION idx=0 time=1 x=91.000015219712111 y=95.987663189657397 z=0 ux=3.0438507491030471e-05 uy=-0.012336420027813913 uz=0",
+      "MOTION idx=1 time=1 x=98.997523506104216 y=97.007399042263131 z=0 ux=-0.0024855471100573797 uy=0.0073957643151901483 uz=0",
+      "MOTION idx=0 time=2 x=91.000060873348303 y=95.975327550234482 z=0 ux=6.0866015073993326e-05 uy=-0.01233466368942234 uz=0",
+      "MOTION idx=1 time=2 x=98.995028986037923 y=97.014791295189653 z=0 ux=-0.0025034523469288712 uy=0.0073886250106386265 uz=0"
+    ],
+    "equal": true
+  }
+}

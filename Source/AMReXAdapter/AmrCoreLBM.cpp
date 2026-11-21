@@ -336,6 +336,9 @@ void AmrCoreLBM::Evolve() {
 
   Real cur_time = t_new[0];
   int last_plot_file_step = 0;
+  Real wall_time_limit_s = 0.0;
+  ParmParse("lbm3d").query("wall_time_limit_s", wall_time_limit_s);
+  const Real wall_start = amrex::second();
 
   for (int step = istep[0]; step < max_step && cur_time < stop_time; ++step) {
     amrex::Print() << "\nCoarse STEP " << step + 1 << " starts ..."
@@ -416,6 +419,16 @@ amrex::Print() << std::setprecision(12)
 
     if (cur_time >= stop_time - 1.e-6 * dt[0])
       break;
+
+    if (wall_time_limit_s > 0.0) {
+      Real elapsed = amrex::second() - wall_start;
+      amrex::ParallelDescriptor::ReduceRealMax(elapsed);
+      if (elapsed >= wall_time_limit_s) {
+        amrex::Print() << "LBM wall time limit reached after " << elapsed
+                       << " s at step " << step + 1 << '\n';
+        break;
+      }
+    }
 
   }
 

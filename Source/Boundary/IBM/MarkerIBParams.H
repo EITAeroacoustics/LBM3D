@@ -48,7 +48,7 @@ struct MarkerIBParams {
   // Marker geometry:
   //   cylinder     : legacy circular/spherical marker shell
   //   box          : axis-aligned marker box (2D cavity-style walls)
-  //   user_defined : geometry and motion supplied by the example directory
+  //   user_defined : built-in pitching-airfoil geometry (legacy enum name)
   int geometry_type{GeometryCylinder};
 
   // Axis-aligned marker box bounds (used when geometry_type=box).

@@ -5,6 +5,7 @@ project(iLBMReXBaseline LANGUAGES CXX)
 set(LBM_DIM 3 CACHE STRING "AMReX spatial dimension (2 or 3)")
 set(LBM_CASE "TGV3D" CACHE STRING "Benchmark case: TGV3D or an iLBMReX example name")
 option(LBM_BASELINE_TIMING "Instrument steps 101-600 in a build-local core copy" OFF)
+option(LBM_BASELINE_IBM "Enable the original IBM coupling for IBM regression cases" OFF)
 if (NOT LBM_DIM MATCHES "^[23]$")
     message(FATAL_ERROR "LBM_DIM must be 2 or 3")
 endif ()
@@ -62,7 +63,11 @@ target_include_directories(ilbmrex_baseline PRIVATE
     "${lbm_source_dir}/LBM"
     "${lbm_source_dir}/LevelSet"
     "${lbm_source_dir}/Utils")
-target_compile_definitions(ilbmrex_baseline PRIVATE LBM_USE_IBM=0)
+if (LBM_BASELINE_IBM)
+    target_compile_definitions(ilbmrex_baseline PRIVATE LBM_USE_IBM=1)
+else ()
+    target_compile_definitions(ilbmrex_baseline PRIVATE LBM_USE_IBM=0)
+endif ()
 target_link_libraries(ilbmrex_baseline PRIVATE AMReX::amrex_${LBM_DIM}d)
 
 if (AMReX_CUDA)

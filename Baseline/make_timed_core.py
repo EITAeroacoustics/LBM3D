@@ -17,9 +17,9 @@ def main() -> None:
                           "#include <AMReX_ParallelDescriptor.H>\n"
                           "#include <AMReX_GpuDevice.H>")
     source = replace_once(source,
-                          "  int last_plot_file_step = 0;\n\n  for (int step =",
+                          "  int last_plot_file_step = 0;\n",
                           "  int last_plot_file_step = 0;\n"
-                          "  double measured_start = 0.0;\n\n  for (int step =")
+                          "  double measured_start = 0.0;\n")
     source = replace_once(source,
                           "    amrex::Print() << \"\\nCoarse STEP \" << step + 1",
                           "    if (step == 100) {\n"

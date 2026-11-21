@@ -30,3 +30,7 @@ CUDA_VISIBLE_DEVICES=0 /path/to/ilbmrex_baseline /path/to/inputs_physics_64 > ru
 `reference_physics.csv` 保存 2026-11-21 在 V100、AMReX 26.11、双精度原始核心上得到的六个小体积参考数值。它供后续回归对照；P1-05 的物理通过结论依据事前冻结的 `protocol.md`，参考数值不充当独立理论真值。
 
 复现脚本：`check_physics.py` 汇总两档网格的六个 plotfile，执行冻结的九项检查并输出 JSON/CSV；`plot_physics.py` 用 Matplotlib 绘制动能曲线；`run_strong.py` 执行 1/2/4 卡各三次强扩展并输出 JSON；`run_capacity.py` 搜索 10 步容量。运行结果始终写入独立工作目录，避免覆盖既有数据。
+
+工作站无需安装 Matplotlib 也可用 `plot_svg.py physics 报告.json 曲线.svg` 或 `plot_svg.py strong 报告.json 曲线.svg` 生成可复核的 SVG 曲线；`run_stability.py` 按容量报告选取约 80% 网格，执行六组连续 600 秒运行并记录显存与流场输出。
+
+`run_p1.py` 是完整 TGV3D 验收入口，接受原始版、模块化版及各自计时版的二进制路径，再依次运行物理、重组前后场值、强扩展、容量、初始化/写盘、逐位一致性和稳定性测试，生成 `index.json`、`summary.md` 与 SVG 图。构建好对应目标后，用 `python3 Benchmarks/TGV3D/run_p1.py --help` 查看参数；完整运行包含六次至少 600 秒的连续测试。上游示例与 IBM 对照使用 `Examples/run_regression.py`。

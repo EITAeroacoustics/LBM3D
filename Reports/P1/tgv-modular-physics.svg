@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="470" viewBox="0 0 720 470">
+<rect width="720" height="470" fill="white"/>
+<text x="360" y="35" text-anchor="middle" font-size="21" font-family="sans-serif">TGV3D energy evolution</text>
+<line x1="90" y1="385" x2="650" y2="385" stroke="#333"/>
+<line x1="90" y1="385" x2="90" y2="75" stroke="#333"/>
+<text x="370" y="448" text-anchor="middle" font-size="15" font-family="sans-serif">Physical time</text>
+<text x="22" y="230" transform="rotate(-90 22 230)" text-anchor="middle" font-size="15" font-family="sans-serif">Mean kinetic energy</text>
+<line x1="85" y1="385" x2="650" y2="385" stroke="#dddddd"/>
+<text x="78" y="390" text-anchor="end" font-size="12" font-family="sans-serif">0</text>
+<line x1="85" y1="323" x2="650" y2="323" stroke="#dddddd"/>
+<text x="78" y="328" text-anchor="end" font-size="12" font-family="sans-serif">1.08e-05</text>
+<line x1="85" y1="261" x2="650" y2="261" stroke="#dddddd"/>
+<text x="78" y="266" text-anchor="end" font-size="12" font-family="sans-serif">2.16e-05</text>
+<line x1="85" y1="199" x2="650" y2="199" stroke="#dddddd"/>
+<text x="78" y="204" text-anchor="end" font-size="12" font-family="sans-serif">3.24e-05</text>
+<line x1="85" y1="137" x2="650" y2="137" stroke="#dddddd"/>
+<text x="78" y="142" text-anchor="end" font-size="12" font-family="sans-serif">4.32e-05</text>
+<line x1="85" y1="75" x2="650" y2="75" stroke="#dddddd"/>
+<text x="78" y="80" text-anchor="end" font-size="12" font-family="sans-serif">5.4e-05</text>
+<text x="90.0" y="407" text-anchor="middle" font-size="12" font-family="sans-serif">0</text>
+<text x="370.0" y="407" text-anchor="middle" font-size="12" font-family="sans-serif">32</text>
+<text x="650.0" y="407" text-anchor="middle" font-size="12" font-family="sans-serif">64</text>
+<polyline points="90.00,97.96 370.00,129.26 650.00,156.21" fill="none" stroke="#2171b5" stroke-width="2.5"/>
+<circle cx="90.00" cy="97.96" r="4" fill="#2171b5"/>
+<circle cx="370.00" cy="129.26" r="4" fill="#2171b5"/>
+<circle cx="650.00" cy="156.21" r="4" fill="#2171b5"/>
+<text x="500" y="65" fill="#2171b5" font-size="14" font-family="sans-serif">64³</text>
+<polyline points="90.00,97.96 370.00,128.28 650.00,155.29" fill="none" stroke="#d95f0e" stroke-width="2.5"/>
+<circle cx="90.00" cy="97.96" r="4" fill="#d95f0e"/>
+<circle cx="370.00" cy="128.28" r="4" fill="#d95f0e"/>
+<circle cx="650.00" cy="155.29" r="4" fill="#d95f0e"/>
+<text x="575" y="65" fill="#d95f0e" font-size="14" font-family="sans-serif">128³</text>
+</svg>

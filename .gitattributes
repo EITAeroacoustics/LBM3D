@@ -1,0 +1,2 @@
+# Preserve vendored upstream example inputs verbatim.
+Examples/**/inputs whitespace=-trailing-space,-blank-at-eof

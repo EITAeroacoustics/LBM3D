@@ -27,4 +27,6 @@ cmake -S . -B build/lbm3d-3d -DCMAKE_BUILD_TYPE=Release \
 cmake --build build/lbm3d-3d --parallel 4
 ```
 
-2D 配置另选 `-DLBM_DIM=2` 与 2D AMReX 安装路径。当前 `Cavity_flow` 和 `Pitching_airfoil` 的 `Prob.H` 沿用上游子模块；全部示例及其输入迁移属于 P1-08。
+2D 配置另选 `-DLBM_DIM=2` 与 2D AMReX 安装路径。八个上游示例的 `Prob.H` 和 `inputs` 已复制到 `Examples/`；求解器库不读取上游子模块。示例来源见 `Examples/README.md`。
+
+连续运行验收可设置 `lbm3d.wall_time_limit_s=600`，求解器在达到墙钟时间后的首个完整步正常结束，并按 `amr.plot_int` 设置写出末步流场。不设置该参数时沿用 `max_step` 与 `stop_time` 的原始停止条件。
