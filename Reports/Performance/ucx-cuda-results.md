@@ -15,6 +15,8 @@
 
 UCX 默认路径已在 1/2/4 卡通过 128³、10 步的 23 分量紧凑场统计，见[结果](ucx-field-summary-128.json)。其四卡 Nsight 跟踪在每步看到约 19.2 MiB 的设备到主机和同量反向拷贝，主机暂存以 512 KiB 分片进行；`MPI_Allreduce` 每步约 1.2 ms（剖析环境估计值）。把 `UCX_RNDV_FRAG_SIZE` 的 host 片段从默认 512 KiB 提至 2 MiB 未改善四卡强扩展。单独将 `UCX_RNDV_SCHEME` 设为 `get_ppln` 保持短算例质量守恒，但强扩展大幅回退，因此不采用。
 
+同一质量检查间隔下，四卡改用每进程绑一个 CPU 核（`--map-by ppr:2:numa:PE=1 --bind-to core`）的强扩展为 15.955 ms/步，与 NUMA 绑核的 15.947 ms/步基本相同；当前没有采用绑核改动。
+
 尝试启用 `cuda_ipc` 与 `cuda_copy` 混合的短算例时，四卡 `Sum(Rho)` 为 16,720,808.3，而正确值为 16,777,216；该配置已排除。当前验证过的路径仅使用 `self,sm,cuda_copy`，不能把有质量错误的混合 IPC 结果作为加速依据。
 
 `AmrCoreLBM::Evolve()` 原本每步执行 `macro_new[0].sum(0)`，产生 GPU 全场规约及 MPI 全局同步。现在 `lbm3d.mass_check_interval` 默认为 100，仍在首步、各间隔、末步以及力验证时检查；设为 1 可恢复逐步检查。四卡强算例用**同一个新二进制**按 1→100→100→1 的顺序配对复测，步时依次为 17.454、16.123、15.967、17.665 ms；两组中位数为 17.560 与 16.045 ms，间隔 100 节省约 **1.51 ms/步（8.6%）**。600 步运行的质量日志分别有 600 和 7 条；间隔 100 的末步 `Sum(Rho)=16,777,216`。四次均未生成全场文件。日志位于工作站 `/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/massinterval/paired-4gpu-mass-*`。
