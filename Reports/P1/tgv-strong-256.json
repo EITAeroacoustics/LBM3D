@@ -1,0 +1,175 @@
+{
+  "binary_sha256": "334e543b04ab4332a6fa3c6c58b98e49af1ee6637da1ccb776b2ceb876bf775e",
+  "input_sha256": "e2133f763856abe868c6942643ccf224a5624497a3d2f037b023a8c3fb00fc81",
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "runs": [
+    {
+      "gpus": 1,
+      "repeat": 1,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/baseline-timed-build-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 33.69151844,
+      "sec_per_step": 0.06738303688,
+      "log": "/home/hanbo/workspace/LBM/runs/tgv-strong-256/1gpu-r1/run.log"
+    },
+    {
+      "gpus": 1,
+      "repeat": 2,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/baseline-timed-build-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 33.68847251,
+      "sec_per_step": 0.06737694501,
+      "log": "/home/hanbo/workspace/LBM/runs/tgv-strong-256/1gpu-r2/run.log"
+    },
+    {
+      "gpus": 1,
+      "repeat": 3,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/baseline-timed-build-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 33.68261562,
+      "sec_per_step": 0.06736523125,
+      "log": "/home/hanbo/workspace/LBM/runs/tgv-strong-256/1gpu-r3/run.log"
+    },
+    {
+      "gpus": 2,
+      "repeat": 1,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/deps/baseline-timed-build-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 75.29173043,
+      "sec_per_step": 0.1505834609,
+      "log": "/home/hanbo/workspace/LBM/runs/tgv-strong-256/2gpu-r1/run.log"
+    },
+    {
+      "gpus": 2,
+      "repeat": 2,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/deps/baseline-timed-build-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 75.0107772,
+      "sec_per_step": 0.1500215544,
+      "log": "/home/hanbo/workspace/LBM/runs/tgv-strong-256/2gpu-r2/run.log"
+    },
+    {
+      "gpus": 2,
+      "repeat": 3,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/deps/baseline-timed-build-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 74.84431996,
+      "sec_per_step": 0.1496886399,
+      "log": "/home/hanbo/workspace/LBM/runs/tgv-strong-256/2gpu-r3/run.log"
+    },
+    {
+      "gpus": 4,
+      "repeat": 1,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/deps/baseline-timed-build-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 93.74110286,
+      "sec_per_step": 0.1874822057,
+      "log": "/home/hanbo/workspace/LBM/runs/tgv-strong-256/4gpu-r1/run.log"
+    },
+    {
+      "gpus": 4,
+      "repeat": 2,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/deps/baseline-timed-build-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 93.72155509,
+      "sec_per_step": 0.1874431102,
+      "log": "/home/hanbo/workspace/LBM/runs/tgv-strong-256/4gpu-r2/run.log"
+    },
+    {
+      "gpus": 4,
+      "repeat": 3,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/deps/baseline-timed-build-3d/ilbmrex_baseline",
+        "/home/hanbo/workspace/LBM/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 93.06938211,
+      "sec_per_step": 0.1861387642,
+      "log": "/home/hanbo/workspace/LBM/runs/tgv-strong-256/4gpu-r3/run.log"
+    }
+  ],
+  "summary": {
+    "1": {
+      "median_sec_per_step": 0.06737694501,
+      "min_sec_per_step": 0.06736523125,
+      "max_sec_per_step": 0.06738303688
+    },
+    "2": {
+      "median_sec_per_step": 0.1500215544,
+      "min_sec_per_step": 0.1496886399,
+      "max_sec_per_step": 0.1505834609
+    },
+    "4": {
+      "median_sec_per_step": 0.1874431102,
+      "min_sec_per_step": 0.1861387642,
+      "max_sec_per_step": 0.1874822057
+    }
+  }
+}
