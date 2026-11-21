@@ -1,6 +1,6 @@
 # 单卡容量优化：网格划分与无力临时场
 
-日期：2026-11-21。目标为 P1 的双精度、无 IBM、周期 D3Q19 TGV3D，单张 V100-SXM2-32GB，AMReX 26.11、CUDA 12.2。基线是固定源码 `995813161540d2a09e57a6571c73ada3fe121c03` 的洁净构建；改进版只修改 `AdvanceLBMAtLevel.cpp` 与 `calculateMacroForcing.H`。两版使用相同 AMReX 安装、Release/CUDA 编译选项及实际 `sm_70` 目标。容量用 10 步正常退出判定；近边界成功尺寸另跑 100 步。所有新测试设置 `amr.plot_int=-1`、`amr.chk_int=-1`；工作站目录未产生全场文件。
+日期：2026-11-21。目标为 P1 的双精度、无 IBM、周期 D3Q19 TGV3D，单张 V100-SXM2-32GB，AMReX 26.11、CUDA 12.2。基线是固定源码 `995813161540d2a09e57a6571c73ada3fe121c03` 的洁净构建；改进版只修改 `AdvanceLBMAtLevel.cpp` 与 `calculateMacroForcing.H`。两版使用相同 AMReX 安装、Release/CUDA 编译选项及实际 `sm_70` 目标。项目默认保持 `max_grid_size=64`、`blocking_factor=8`；192 网格块仅用于容量和性能对照。容量用 10 步正常退出判定；近边界成功尺寸另跑 100 步。所有新测试设置 `amr.plot_int=-1`、`amr.chk_int=-1`；工作站目录未产生全场文件。
 
 ## 分开计算两项收益
 
@@ -37,4 +37,4 @@
 
 ## 使用建议
 
-入库的 `inputs_capacity_single_gpu_352` 固定网格块 192、阻塞因子 8，是目前较有余量的单卡复用案例。`inputs_capacity_single_gpu_360` 用于改进版的上限复核；两个入库文件均直接运行 10 步并正常退出，未产生全场文件。360³ 的显存余量只有 663 MB，362³ 仅 73 MB。长时计算和修改默认求解器配置前，需在无全场落盘条件下补齐更长时间运行、物理标量及逐位比较方法。用户指定的第 3 项整场 staging 优化本轮未开展。
+入库的 `inputs_capacity_single_gpu_352` 固定网格块 192、阻塞因子 8，供单卡容量专项复跑；`inputs_capacity_single_gpu_360` 用于改进版的上限复核。两个入库文件均直接运行 10 步并正常退出，未产生全场文件。360³ 的显存余量只有 663 MB，362³ 仅 73 MB。默认配置保持 64/8，不据此调整。用户指定的第 3 项整场 staging 优化本轮未开展。
