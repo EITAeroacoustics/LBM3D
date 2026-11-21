@@ -1,0 +1,29 @@
+{
+  "binary_sha256": "729b8f8957a0b31d08a77fcf5d6fe76680e21777a70c46f81da020a5bbc45e6e",
+  "gpu": "Tesla V100-SXM2-32GB, 32768 MiB",
+  "capacity_rule": "100 steps, normal exit, no plotfile or checkpoint",
+  "blocking_factor": 1,
+  "measurements": [
+    {
+      "n": 358,
+      "cells": 45882712,
+      "max_grid_size": 192,
+      "completed_steps": true,
+      "target_steps": 100,
+      "returncode": 0,
+      "peak_vram_mib": 32301,
+      "arena_max_allocated_mb": 31971,
+      "arena_max_used_mb": 31621,
+      "out_of_memory": false,
+      "wall_s": 16.13164976995904,
+      "input_sha256": "99dcd6f208942ebcadf044711fc2c0fb2c33825841be94c78c8e8f98ffb2eabf",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling-358-100steps/grid192-n358/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling-358-100steps/grid192-n358/run.log",
+      "free_gpu_mb_at_exit": 199,
+      "failed_allocation_bytes": null
+    }
+  ]
+}

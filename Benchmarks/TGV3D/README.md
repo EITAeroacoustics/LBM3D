@@ -37,4 +37,6 @@ CUDA_VISIBLE_DEVICES=0 /path/to/ilbmrex_baseline /path/to/inputs_physics_64 > ru
 
 本目录中的物理、逐位与稳定性输入及脚本用于复现 P1 冻结验收，部分会写全场 plotfile。按后续测试约定，新发起的日常回归和测试智能体运行不得使用这些写盘配置，也不得写全场 checkpoint。强扩展输入 `inputs_strong_256` 已设置 `amr.plot_int = -1`、`amr.chk_int = -1`。后续测试体系将以求解时标量归约、紧凑逐位指纹或进程间比较和日志替代全场文件，并记录输出关闭状态。
 
+单卡容量细化可用 `probe_single_gpu_capacity.py`。它从入库案例生成输入，强制关闭 plotfile 和 checkpoint，逐个独立进程测量完成步数、显存峰值及 AMReX arena 状态；`--max-grid-sizes`、`--blocking-factor`、`--start/--stop/--step` 和 `--steps` 控制网格与步数。已完成的 V100 结果见 [单卡容量报告](../../Reports/Capacity/single-gpu.md)。
+
 `run_p1.py` 是完整 TGV3D 验收入口，接受原始版、模块化版及各自计时版的二进制路径，再依次运行物理、重组前后场值、强扩展、容量、初始化/写盘、逐位一致性和稳定性测试，生成 `index.json`、`summary.md` 与 SVG 图。构建好对应目标后，用 `python3 Benchmarks/TGV3D/run_p1.py --help` 查看参数；完整运行包含六次至少 600 秒的连续测试。上游示例与 IBM 对照使用 `Examples/run_regression.py`。

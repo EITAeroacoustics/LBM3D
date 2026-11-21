@@ -1,0 +1,260 @@
+{
+  "binary_sha256": "729b8f8957a0b31d08a77fcf5d6fe76680e21777a70c46f81da020a5bbc45e6e",
+  "gpu": "Tesla V100-SXM2-32GB, 32768 MiB",
+  "capacity_rule": "ten steps, normal exit, no plotfile or checkpoint",
+  "measurements": [
+    {
+      "n": 328,
+      "cells": 35287552,
+      "max_grid_size": 64,
+      "returncode": 0,
+      "peak_vram_mib": 31095,
+      "arena_max_allocated_mb": 30460,
+      "arena_max_used_mb": 29935,
+      "out_of_memory": false,
+      "wall_s": 3.7048799890326336,
+      "input_sha256": "d02a0fdf9463ef809025f029170eac0c11e2d8d1bceb290644ae233b67602d23",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid64-n328/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid64-n328/run.log",
+      "free_gpu_mb_at_exit": 1405,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 336,
+      "cells": 37933056,
+      "max_grid_size": 64,
+      "returncode": 6,
+      "peak_vram_mib": 32499,
+      "arena_max_allocated_mb": 31816,
+      "arena_max_used_mb": 31574,
+      "out_of_memory": true,
+      "wall_s": 1.7157854880206287,
+      "input_sha256": "cd66a52fe387616e25018b68a4839d258b5481041bde5c1e4e9bebfa283ce326",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid64-n336/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid64-n336/run.log",
+      "free_gpu_mb_at_exit": 1,
+      "failed_allocation_bytes": 8388608,
+      "completed_steps": false,
+      "target_steps": 10
+    },
+    {
+      "n": 328,
+      "cells": 35287552,
+      "max_grid_size": 128,
+      "returncode": 0,
+      "peak_vram_mib": 26355,
+      "arena_max_allocated_mb": 25993,
+      "arena_max_used_mb": 25817,
+      "out_of_memory": false,
+      "wall_s": 2.8795307150576264,
+      "input_sha256": "f7ecdaf82ffe820a21ffcb9692ff74d2dc0b06d16b2499659b4731466018f2de",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n328/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n328/run.log",
+      "free_gpu_mb_at_exit": 6145,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 336,
+      "cells": 37933056,
+      "max_grid_size": 128,
+      "returncode": 0,
+      "peak_vram_mib": 28257,
+      "arena_max_allocated_mb": 27895,
+      "arena_max_used_mb": 27650,
+      "out_of_memory": false,
+      "wall_s": 2.884436602005735,
+      "input_sha256": "998bf7e0615e9c4fc2e4d6004bbfd27dcfd38d44c3be54d310bc4bf51b825b93",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n336/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n336/run.log",
+      "free_gpu_mb_at_exit": 4243,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 344,
+      "cells": 40707584,
+      "max_grid_size": 128,
+      "returncode": 0,
+      "peak_vram_mib": 30189,
+      "arena_max_allocated_mb": 29800,
+      "arena_max_used_mb": 29569,
+      "out_of_memory": false,
+      "wall_s": 3.1425803049933165,
+      "input_sha256": "f6918d744afe1dc3bfd768b75e0e2f091829443b77eacf7ddc8560f8b3d2bb6e",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n344/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n344/run.log",
+      "free_gpu_mb_at_exit": 2311,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 352,
+      "cells": 43614208,
+      "max_grid_size": 128,
+      "returncode": 0,
+      "peak_vram_mib": 32169,
+      "arena_max_allocated_mb": 31775,
+      "arena_max_used_mb": 31574,
+      "out_of_memory": false,
+      "wall_s": 3.0630680829053745,
+      "input_sha256": "1d4b3f574f2a90545df4b8efbeec1ad198f8bda0c5004481cdbc67db613333e6",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n352/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n352/run.log",
+      "free_gpu_mb_at_exit": 331,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 360,
+      "cells": 46656000,
+      "max_grid_size": 128,
+      "returncode": 6,
+      "peak_vram_mib": 32409,
+      "arena_max_allocated_mb": 32082,
+      "arena_max_used_mb": 32079,
+      "out_of_memory": true,
+      "wall_s": 1.437528416980058,
+      "input_sha256": "3b8dcf5519eeb0d652a62acf650496d4b54c85d33af55c367fabb98363cc0dcf",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n360/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid128-n360/run.log",
+      "free_gpu_mb_at_exit": 91,
+      "failed_allocation_bytes": 96018176,
+      "completed_steps": false,
+      "target_steps": 10
+    },
+    {
+      "n": 328,
+      "cells": 35287552,
+      "max_grid_size": 256,
+      "returncode": 0,
+      "peak_vram_mib": 24959,
+      "arena_max_allocated_mb": 24641,
+      "arena_max_used_mb": 24536,
+      "out_of_memory": false,
+      "wall_s": 2.7438923460431397,
+      "input_sha256": "95b45adabed525d993632df0b96447fec3cbf10d663d52922414227a4aa08e39",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n328/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n328/run.log",
+      "free_gpu_mb_at_exit": 7541,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 336,
+      "cells": 37933056,
+      "max_grid_size": 256,
+      "returncode": 0,
+      "peak_vram_mib": 26923,
+      "arena_max_allocated_mb": 26595,
+      "arena_max_used_mb": 26309,
+      "out_of_memory": false,
+      "wall_s": 2.6891958189662546,
+      "input_sha256": "0f307a6a2eb98264a1e58f7a79585b1981e73ffbdc2f54f224444b152b58cc9d",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n336/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n336/run.log",
+      "free_gpu_mb_at_exit": 5577,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 344,
+      "cells": 40707584,
+      "max_grid_size": 256,
+      "returncode": 0,
+      "peak_vram_mib": 28855,
+      "arena_max_allocated_mb": 28521,
+      "arena_max_used_mb": 28165,
+      "out_of_memory": false,
+      "wall_s": 2.837579579092562,
+      "input_sha256": "bf342ea40712bcff885ba1065beaf55e49491fe9a359db34acbebc9f603431fd",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n344/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n344/run.log",
+      "free_gpu_mb_at_exit": 3645,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 352,
+      "cells": 43614208,
+      "max_grid_size": 256,
+      "returncode": 0,
+      "peak_vram_mib": 30665,
+      "arena_max_allocated_mb": 30335,
+      "arena_max_used_mb": 30107,
+      "out_of_memory": false,
+      "wall_s": 2.8381799480412155,
+      "input_sha256": "7e12964b2cdffdb9d5da7db22d0f8bbd2987b6e1574e0bdd12c7e88f9ed7dc72",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n352/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n352/run.log",
+      "free_gpu_mb_at_exit": 1835,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 360,
+      "cells": 46656000,
+      "max_grid_size": 256,
+      "returncode": 6,
+      "peak_vram_mib": 32487,
+      "arena_max_allocated_mb": 32152,
+      "arena_max_used_mb": 31784,
+      "out_of_memory": true,
+      "wall_s": 1.7512976391008124,
+      "input_sha256": "31ea9917fba251d9d6d4909fe9101a32caacc3f52dadae8b544d774a3c9dd60e",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n360/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling/grid256-n360/run.log",
+      "free_gpu_mb_at_exit": 13,
+      "failed_allocation_bytes": 188583168,
+      "completed_steps": false,
+      "target_steps": 10
+    }
+  ],
+  "blocking_factor": 8
+}

@@ -1,0 +1,50 @@
+{
+  "binary_sha256": "729b8f8957a0b31d08a77fcf5d6fe76680e21777a70c46f81da020a5bbc45e6e",
+  "gpu": "Tesla V100-SXM2-32GB, 32768 MiB",
+  "capacity_rule": "ten steps, normal exit, no plotfile or checkpoint",
+  "measurements": [
+    {
+      "n": 352,
+      "cells": 43614208,
+      "max_grid_size": 192,
+      "returncode": 0,
+      "peak_vram_mib": 30665,
+      "arena_max_allocated_mb": 30335,
+      "arena_max_used_mb": 30107,
+      "out_of_memory": false,
+      "wall_s": 2.990570019930601,
+      "input_sha256": "3f2f7f5a7dd9fba35b92177f50a258ec450a45eb38910040eb70c0b3aaf4ec29",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling-grid192/grid192-n352/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling-grid192/grid192-n352/run.log",
+      "free_gpu_mb_at_exit": 1835,
+      "failed_allocation_bytes": null,
+      "completed_steps": true,
+      "target_steps": 10
+    },
+    {
+      "n": 360,
+      "cells": 46656000,
+      "max_grid_size": 192,
+      "returncode": 6,
+      "peak_vram_mib": 32487,
+      "arena_max_allocated_mb": 32152,
+      "arena_max_used_mb": 31784,
+      "out_of_memory": true,
+      "wall_s": 1.6653626409824938,
+      "input_sha256": "e33c2366256c8cd4dd662c50e32a879069132e153d17635c9b65ce2f4e60e184",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/lbm3d-analysis-OFF/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling-grid192/grid192-n360/inputs"
+      ],
+      "log": "/home/hanbo/workspace/LBM/runs/p1-13-offline-import/LBM3D-offline/work/single-gpu-ceiling-grid192/grid192-n360/run.log",
+      "free_gpu_mb_at_exit": 13,
+      "failed_allocation_bytes": 188583168,
+      "completed_steps": false,
+      "target_steps": 10
+    }
+  ],
+  "blocking_factor": 8
+}
