@@ -17,7 +17,8 @@ CONFIGS = {
     4: ("0,1,2,3", ["mpirun", "--map-by", "ppr:2:numa", "--bind-to", "numa", "-np", "4"]),
 }
 SUMMARY = re.compile(r"^FIELD_SUMMARY lev=(\d+) comp=(\d+) "
-                     r"sum=(\S+) norm2=(\S+) min=(\S+) max=(\S+)$", re.M)
+                     r"sum=(\S+) norm2=(\S+) min=(\S+) max=(\S+) "
+                     r"hash0=(\d+) hash1=(\d+)$", re.M)
 
 
 def sha256(path: Path) -> str:
@@ -54,8 +55,9 @@ def run(binary: Path, inputs: Path, root: Path, ranks: int,
                          if path.name.startswith(("plt", "chk")))
     if full_fields:
         raise RuntimeError(f"unexpected full-field output in {root}: {full_fields}")
-    summaries = {f"{lev}:{comp}": [total, norm, minimum, maximum]
-                 for lev, comp, total, norm, minimum, maximum
+    summaries = {f"{lev}:{comp}": [total, norm, minimum, maximum,
+                                   hash0, hash1]
+                 for lev, comp, total, norm, minimum, maximum, hash0, hash1
                  in SUMMARY.findall(log.read_text(errors="replace"))}
     if len(summaries) != 23:
         raise RuntimeError(f"expected 23 final-field summaries, got {len(summaries)}: {log}")

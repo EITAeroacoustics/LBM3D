@@ -1,4 +1,5 @@
 #include "AmrCoreLBM.H"
+#include "DirectionalHalo.H"
 
 #ifndef LBM_USE_IBM
 #define LBM_USE_IBM 1
@@ -260,7 +261,27 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
 
   // D2Q9, D3Q19 and D3Q27 streaming reads only the nearest neighbor.
   // The wider FAB ghosts remain available for AMR and IBM operations.
+#if (AMREX_SPACEDIM == 3)
+  if (m_use_directional_halo && lev == 0 && finestLevel() == 0 &&
+      geom[lev].isAllPeriodic() && !m_use_cylinder && ndir == 19 &&
+      DirectionalHalo::SupportsStencil(dirx, diry, dirz) &&
+      ParallelDescriptor::TeamSize() == 1 &&
+      ParallelDescriptor::UseGpuAwareMpi()) {
+    if (!m_directional_halo || !m_directional_halo->matches(sfSborder)) {
+      m_directional_halo = std::make_unique<DirectionalHalo>(
+          sfSborder, geom[lev], dirx, diry, dirz);
+    }
+    if (m_directional_halo->safe()) {
+      m_directional_halo->Fill(sfSborder);
+    } else {
+      sfSborder.FillBoundary(IntVect(1), geom[lev].periodicity());
+    }
+  } else {
+    sfSborder.FillBoundary(IntVect(1), geom[lev].periodicity());
+  }
+#else
   sfSborder.FillBoundary(IntVect(1), geom[lev].periodicity());
+#endif
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())

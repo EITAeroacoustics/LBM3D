@@ -32,6 +32,7 @@ endif ()
 add_library(lbm3d STATIC
     ${lbm_core_file}
     Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
+    Source/AMReXAdapter/DirectionalHalo.cpp
     Source/Boundary/BC/bc_val.cpp
     Source/Boundary/IBM/IBMarkerDF.cpp
     Source/Boundary/IBM/IBForceEval.cpp

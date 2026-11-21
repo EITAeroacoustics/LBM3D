@@ -1,0 +1,44 @@
+{
+  "binary_sha256": "040613166e43cc607e28aaec29e07e14d825c953b1599ce5f8fe66a5067aafae",
+  "input_sha256": "e2133f763856abe868c6942643ccf224a5624497a3d2f037b023a8c3fb00fc81",
+  "gpus": 4,
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "mass_check_interval": 100,
+  "ucx_tls": "self,sm,cuda_copy",
+  "run_order": ["off", "on", "on", "off"],
+  "runs": [
+    {
+      "directional_halo": false,
+      "sec_per_step": 0.01556739311,
+      "final_sum_rho": 16777216,
+      "full_field_outputs": [],
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/directional-halo/paired-final-1-off/run.log",
+      "log_sha256": "f42dcdfdbceb2b91c24241d4b9f1e47bccb0051d40842e53d8a2309d6032a532"
+    },
+    {
+      "directional_halo": true,
+      "sec_per_step": 0.01161275256,
+      "final_sum_rho": 16777216,
+      "full_field_outputs": [],
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/directional-halo/paired-final-2-on/run.log",
+      "log_sha256": "e0c7206fd2ad0354ee7c06a3a457b92c48482f997009c531ec9e41912dea9772"
+    },
+    {
+      "directional_halo": true,
+      "sec_per_step": 0.01164634948,
+      "final_sum_rho": 16777216,
+      "full_field_outputs": [],
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/directional-halo/paired-final-3-on/run.log",
+      "log_sha256": "7fe7828e4002b6d8b0fd3b4232502f4c960ad996ca4f9b3b7d815da87e88807f"
+    },
+    {
+      "directional_halo": false,
+      "sec_per_step": 0.01542532431,
+      "final_sum_rho": 16777216,
+      "full_field_outputs": [],
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/directional-halo/paired-final-4-off/run.log",
+      "log_sha256": "c552f27f49722222d99f9240243da255f95ba7d6ea4722234a8c0926e6eb5ba4"
+    }
+  ]
+}

@@ -35,6 +35,7 @@ def main() -> None:
     parser.add_argument("--mpi-options", default="")
     parser.add_argument("--rank-wrapper", type=Path)
     parser.add_argument("--mass-check-interval", type=int)
+    parser.add_argument("--input-option", action="append", default=[])
     args = parser.parse_args()
     binary = args.binary.resolve()
     input_path = args.input.resolve()
@@ -52,6 +53,7 @@ def main() -> None:
             application = [str(binary), str(input_path)]
             if args.mass_check_interval is not None:
                 application.append(f"lbm3d.mass_check_interval={args.mass_check_interval}")
+            application.extend(args.input_option)
             if launcher and args.rank_wrapper:
                 application = ["python3", str(args.rank_wrapper.resolve()),
                                *application]
@@ -90,6 +92,7 @@ def main() -> None:
                                "max_sec_per_step": max(times)}
     report = {"binary_sha256": sha256(binary), "input_sha256": sha256(input_path),
               "mass_check_interval": args.mass_check_interval,
+              "input_options": args.input_option,
               "warmup_steps": 100, "timed_steps": 500,
               "run_order": [list(order) for order in RUN_ORDER[:args.repeats]],
               "runs": runs,

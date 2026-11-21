@@ -1,5 +1,6 @@
 
 #include <AMReX_FillPatchUtil.H>
+#include "DirectionalHalo.H"
 #include <AMReX_MultiFabUtil.H>
 #include <AMReX_ParallelDescriptor.H>
 #include <AMReX_ParmParse.H>
@@ -962,6 +963,7 @@ void AmrCoreLBM::ReadParameters() {
       ParmParse pp("lbm3d");
 
       pp.query("ndir", ndir);
+      pp.query("directional_halo", m_use_directional_halo);
       pp.queryarr("wis", wis);
       pp.queryarr("wim", wim);
       pp.queryarr("dirx", dirx);
