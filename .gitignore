@@ -1,0 +1,38 @@
+# Build directories and CMake state
+/build/
+/build-*/
+/cmake-build-*/
+tmp_build_dir/
+CMakeFiles/
+CMakeCache.txt
+
+# Compiler and linker outputs
+*.d
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.lib
+*.exe
+*.ex
+*.out
+*.dSYM/
+
+# Run directories and generated simulation output
+/runs/
+/logs/
+out_cylinder/
+out_pitching_airfoil/
+plt[0-9]*/
+chk[0-9]*/
+force.dat
+force-analysis.txt
+run.log
+Backtrace.*
+
+# Python caches
+__pycache__/
+.ipynb_checkpoints/
