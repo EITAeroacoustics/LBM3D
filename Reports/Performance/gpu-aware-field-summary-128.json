@@ -1,0 +1,29 @@
+{
+  "baseline_report": "field-summary-128.json",
+  "binary_sha256": "61c290e39d29a8e42db5ecf113afaebe5252046c90ff0b1a62f69021716d2bb7",
+  "mpi": "Open MPI 4.1.8 CUDA-aware smcuda, CUDA IPC disabled",
+  "input_sha256": "0ab865aae8bd14c569d7fdeda4187529aa8e4cfb048ff4a554229572aa5ffd75",
+  "runs": {
+    "1": {
+      "summary_equal": true,
+      "component_count": 23,
+      "log_sha256": "58343cb3f0f7bcf440d6427b8f12cc382e004f1b246d9f1d8b00d56ce1f96a6f",
+      "workstation_log": "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/field-128/1gpu/run.log",
+      "mismatched_components": []
+    },
+    "2": {
+      "summary_equal": true,
+      "component_count": 23,
+      "log_sha256": "43e7d5d454673439c3a575c7724f54ad70af4d03adb97f0bcea203f3e60529b0",
+      "workstation_log": "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/field-128/2gpu/run.log",
+      "mismatched_components": []
+    },
+    "4": {
+      "summary_equal": true,
+      "component_count": 23,
+      "log_sha256": "e67cee6e15f6d9f0ea4ba089354039077436dee77a81a14733ad6c3edfbcbc3c",
+      "workstation_log": "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/field-128/4gpu/run.log",
+      "mismatched_components": []
+    }
+  }
+}

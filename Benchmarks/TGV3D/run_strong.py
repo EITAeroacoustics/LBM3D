@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import statistics
 import subprocess
 from pathlib import Path
@@ -28,6 +29,10 @@ def main() -> None:
     parser.add_argument("input", type=Path)
     parser.add_argument("run_root", type=Path)
     parser.add_argument("report", type=Path)
+    parser.add_argument("--repeats", type=int, choices=(1, 2, 3), default=3)
+    parser.add_argument("--mpirun", default="mpirun")
+    parser.add_argument("--mpi-options", default="")
+    parser.add_argument("--rank-wrapper", type=Path)
     args = parser.parse_args()
     binary = args.binary.resolve()
     input_path = args.input.resolve()
@@ -35,13 +40,21 @@ def main() -> None:
     runs = []
 
     for ranks, (visible, launcher) in CONFIGS.items():
-        for repeat in (1, 2, 3):
+        for repeat in range(1, args.repeats + 1):
             run_dir = args.run_root / f"{ranks}gpu-r{repeat}"
             run_dir.mkdir(exist_ok=True)
             log = run_dir / "run.log"
-            command = [*launcher, str(binary), str(input_path)]
+            mpi_launcher = ([args.mpirun, *shlex.split(args.mpi_options),
+                             *launcher[1:]] if launcher else [])
+            application = [str(binary), str(input_path)]
+            if launcher and args.rank_wrapper:
+                application = ["python3", str(args.rank_wrapper.resolve()),
+                               *application]
+            command = [*mpi_launcher, *application]
             env = os.environ.copy()
             env["CUDA_VISIBLE_DEVICES"] = visible
+            if args.rank_wrapper:
+                env["LBM_GPU_MAP"] = visible
             print(f"running {ranks} GPU repeat {repeat}: {' '.join(command)}", flush=True)
             with log.open("w") as output:
                 result = subprocess.run(command, cwd=run_dir, env=env,
@@ -51,11 +64,17 @@ def main() -> None:
             match = TIMING.search(log.read_text(errors="replace"))
             if not match:
                 raise RuntimeError(f"missing synchronized 500-step timing: {log}")
+            full_fields = sorted(str(path.relative_to(run_dir))
+                                 for path in run_dir.iterdir()
+                                 if path.name.startswith(("plt", "chk")))
+            if full_fields:
+                raise RuntimeError(f"unexpected full-field output in {run_dir}: {full_fields}")
             runs.append({"gpus": ranks, "repeat": repeat,
                          "visible_devices": visible, "command": command,
                          "elapsed_max_s": float(match.group(1)),
                          "sec_per_step": float(match.group(2)),
-                         "log": str(log.resolve())})
+                         "log": str(log.resolve()), "log_sha256": sha256(log),
+                         "full_field_outputs": full_fields})
             print(f"  {float(match.group(2)):.6g} sec/step", flush=True)
 
     summary = {}

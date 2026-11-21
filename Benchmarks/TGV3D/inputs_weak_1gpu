@@ -1,0 +1,37 @@
+# D3Q19 periodic TGV weak scaling: 1 GPU, 256^3 cells per GPU.
+# dx = dy = dz = 0.25; 100 warmup + 500 timed steps; no full-field output.
+max_step = 600
+stop_time = 1.e30
+
+geometry.prob_lo = 0 0 0
+geometry.prob_hi = 64 64 64
+geometry.is_periodic = 1 1 1
+
+amr.n_cell = 256 256 256
+amr.max_level = 0
+amr.blocking_factor_x = 8
+amr.blocking_factor_y = 8
+amr.blocking_factor_z = 8
+amr.max_grid_size = 64
+amr.regrid_int = -1
+amr.v = 0
+amr.plot_file = plt
+amr.plot_int = -1
+amr.chk_file = chk
+amr.chk_int = -1
+
+lbmPhysicalParameters.nu = 0.06
+lbmPhysicalParameters.nmac = 6
+lbmPhysicalParameters.U0 = 0.02
+
+lbm3d.ndir = 19
+lbm3d.wis  = 12 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1
+lbm3d.wim  = 36 36 36 36 36 36 36 36 36 36 36 36 36 36 36 36 36 36 36
+lbm3d.dirx = 0 1 -1 0 0 0 0 1 -1 1 -1 1 -1 1 -1 0 0 0 0
+lbm3d.diry = 0 0 0 1 -1 0 0 1 -1 -1 1 0 0 0 0 1 -1 1 -1
+lbm3d.dirz = 0 0 0 0 0 1 -1 0 0 0 0 1 -1 -1 1 1 -1 -1 1
+
+amrbc.bc_lo = 0 0 0
+amrbc.bc_hi = 0 0 0
+ibm.use_cylinder = 0
+ibm.method = 0

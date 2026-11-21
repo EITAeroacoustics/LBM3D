@@ -1,0 +1,71 @@
+{
+  "source_reports": [
+    "multigpu-communication.json",
+    "multigpu-communication-paired.json"
+  ],
+  "binary_sha256": "35362bb770ca4bff5dfafbc08d87184f4c77ec3c169870d1e8e1f1c62f9a17fc",
+  "input_sha256": "e2133f763856abe868c6942643ccf224a5624497a3d2f037b023a8c3fb00fc81",
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "runs": [
+    {
+      "gpus": 1,
+      "repeat": 1,
+      "sec_per_step": 0.05087915055,
+      "log": "validcopy/1gpu/run.log",
+      "log_sha256": "e46a910e341b8a74ca1aac628b8a4b4e95385a347512ea8ae4c1e4cdccd70520"
+    },
+    {
+      "gpus": 1,
+      "repeat": 2,
+      "sec_per_step": 0.05088250711,
+      "log": "paired-r2/1gpu/optimized/run.log",
+      "log_sha256": "b245857873b6424c6b50e5f18d21c491d85eddee68ace82add403355e7d68e65"
+    },
+    {
+      "gpus": 2,
+      "repeat": 1,
+      "sec_per_step": 0.04182230863,
+      "log": "validcopy/2gpu/run.log",
+      "log_sha256": "b2f2a8415dc76ebf2b1b6d5b405b45af09c5421550587aa07d1570840839d44f"
+    },
+    {
+      "gpus": 2,
+      "repeat": 2,
+      "sec_per_step": 0.04184520459,
+      "log": "paired-r2/2gpu/optimized/run.log",
+      "log_sha256": "046ce81f0594d8e07d2e97251e4c11352ad9fb09a1b7047ade878ce18f203efc"
+    },
+    {
+      "gpus": 4,
+      "repeat": 1,
+      "sec_per_step": 0.03702082805,
+      "log": "validcopy/4gpu/run.log",
+      "log_sha256": "bdd69b8509386218ce836e83f480bdb07b179ea40a1f4dceabdca8696a71d226"
+    },
+    {
+      "gpus": 4,
+      "repeat": 2,
+      "sec_per_step": 0.03692399537,
+      "log": "paired-r2/4gpu/optimized/run.log",
+      "log_sha256": "0b554d95f5b7edb887adaff8f9916bc94156d0e34bd5c82b8192da382a8c1f18"
+    }
+  ],
+  "summary": {
+    "1": {
+      "median_sec_per_step": 0.05088082883,
+      "min_sec_per_step": 0.05087915055,
+      "max_sec_per_step": 0.05088250711
+    },
+    "2": {
+      "median_sec_per_step": 0.041833756609999995,
+      "min_sec_per_step": 0.04182230863,
+      "max_sec_per_step": 0.04184520459
+    },
+    "4": {
+      "median_sec_per_step": 0.03697241171,
+      "min_sec_per_step": 0.03692399537,
+      "max_sec_per_step": 0.03702082805
+    }
+  }
+}

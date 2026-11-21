@@ -1,0 +1,109 @@
+{
+  "binary_sha256": "de2fca18a7422885008bbffa5c188901e8a73347e458bfb930269edce5056379",
+  "input_sha256": {
+    "1": "f5dea55260cf85f94e7267d3ce4b32bd0243f55285a6b66200e40d6479841576",
+    "2": "98cf2948f0d1ca95ce014ea5512a11c3001fe234e049664b34430554ad2b2650",
+    "4": "846a7df1cba8dbaa35acea244602482d6be141020fe2819c22980edf9bf2c6ed"
+  },
+  "cells_per_gpu": 16777216,
+  "max_grid_size": 64,
+  "blocking_factor": 8,
+  "cell_size": [
+    0.25,
+    0.25,
+    0.25
+  ],
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "run_order": [
+    [
+      1,
+      2,
+      4
+    ]
+  ],
+  "runs": [
+    {
+      "gpus": 1,
+      "repeat": 1,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/multigpu-opt-20261121/build-overlap/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/inputs_weak_1gpu",
+        "amr.plot_int=-1",
+        "amr.chk_int=-1"
+      ],
+      "elapsed_max_s": 27.38469685,
+      "sec_per_step": 0.0547693937,
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/weak-overlap-r1/1gpu-r1/run.log",
+      "log_sha256": "1f8a32313648850f7733911a147fda060b5a1109571f1ba7f9a18874b365b6ad",
+      "full_field_outputs": []
+    },
+    {
+      "gpus": 2,
+      "repeat": 1,
+      "visible_devices": "0,2",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "/home/hanbo/workspace/LBM/runs/multigpu-opt-20261121/build-overlap/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/inputs_weak_2gpu",
+        "amr.plot_int=-1",
+        "amr.chk_int=-1"
+      ],
+      "elapsed_max_s": 35.41900842,
+      "sec_per_step": 0.07083801685,
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/weak-overlap-r1/2gpu-r1/run.log",
+      "log_sha256": "a10ede52644125cd705019e49edc6295bc8bbfdb89ef273df9bc915ff8372808",
+      "full_field_outputs": []
+    },
+    {
+      "gpus": 4,
+      "repeat": 1,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "mpirun",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "/home/hanbo/workspace/LBM/runs/multigpu-opt-20261121/build-overlap/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/inputs_weak_4gpu",
+        "amr.plot_int=-1",
+        "amr.chk_int=-1"
+      ],
+      "elapsed_max_s": 52.71765162,
+      "sec_per_step": 0.1054353032,
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/weak-overlap-r1/4gpu-r1/run.log",
+      "log_sha256": "aaa986c9e0ccfe5647ef96ae2b376ab067ddc32ee538a93e69b240180614adc4",
+      "full_field_outputs": []
+    }
+  ],
+  "summary": {
+    "1": {
+      "median_sec_per_step": 0.0547693937,
+      "min_sec_per_step": 0.0547693937,
+      "max_sec_per_step": 0.0547693937,
+      "weak_efficiency": 1.0
+    },
+    "2": {
+      "median_sec_per_step": 0.07083801685,
+      "min_sec_per_step": 0.07083801685,
+      "max_sec_per_step": 0.07083801685,
+      "weak_efficiency": 0.7731638481067952
+    },
+    "4": {
+      "median_sec_per_step": 0.1054353032,
+      "min_sec_per_step": 0.1054353032,
+      "max_sec_per_step": 0.1054353032,
+      "weak_efficiency": 0.5194597258956809
+    }
+  }
+}
