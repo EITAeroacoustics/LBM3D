@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-21",
+  "case": "D3Q19 periodic TGV3D, 256^3, no IBM",
+  "max_grid_size": 64,
+  "blocking_factor": 8,
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "plot_int": -1,
+  "chk_int": -1,
+  "hardware": "4 x Tesla V100-SXM2-32GB",
+  "software": "AMReX 26.11, CUDA 12.2, Open MPI 4.1.2, Release sm_70, -O3 -DNDEBUG",
+  "input_sha256": "e2133f763856abe868c6942643ccf224a5624497a3d2f037b023a8c3fb00fc81",
+  "optimized_source_sha256": "05a41e04b4f6d82a927b65acf4c8f9273b9e8bb9d68084410886ff49f3a2a385",
+  "binary_sha256": {
+    "baseline": "e769c48b7d987f466f70fb60b247ebad07eebe66f9a658da0361b5d8e96a4664",
+    "optimized": "35362bb770ca4bff5dfafbc08d87184f4c77ec3c169870d1e8e1f1c62f9a17fc"
+  },
+  "workstation_run_root": "/home/hanbo/workspace/LBM/runs/multigpu-opt-20261121",
+  "runs": [
+    {
+      "gpus": 1,
+      "visible_devices": "0",
+      "baseline": {
+        "seconds_per_step": 0.06384057468,
+        "log": "baseline/1gpu/run.log",
+        "log_sha256": "32182335791c3cfd29d0b1a2ae12754e802471deea2684fb6421edbba86967ea"
+      },
+      "optimized": {
+        "seconds_per_step": 0.05087915055,
+        "log": "validcopy/1gpu/run.log",
+        "log_sha256": "e46a910e341b8a74ca1aac628b8a4b4e95385a347512ea8ae4c1e4cdccd70520"
+      }
+    },
+    {
+      "gpus": 2,
+      "visible_devices": "0,2",
+      "mpi_mapping": "--map-by ppr:1:numa --bind-to numa",
+      "baseline": {
+        "seconds_per_step": 0.1435683828,
+        "log": "baseline/2gpu/run.log",
+        "log_sha256": "51d7fca703acd2f9fa19dc5b44b39f7933645fb5c52dc5e94b5e01b1d59cead1"
+      },
+      "optimized": {
+        "seconds_per_step": 0.04182230863,
+        "log": "validcopy/2gpu/run.log",
+        "log_sha256": "b2f2a8415dc76ebf2b1b6d5b405b45af09c5421550587aa07d1570840839d44f"
+      }
+    },
+    {
+      "gpus": 4,
+      "visible_devices": "0,1,2,3",
+      "mpi_mapping": "--map-by ppr:2:numa --bind-to numa",
+      "baseline": {
+        "seconds_per_step": 0.180257571,
+        "log": "baseline/4gpu/run.log",
+        "log_sha256": "d457185c2e57f6ea2bfe6d08eaab880278a1e7a2153ecb1b2860f5e508b8e3fe"
+      },
+      "optimized": {
+        "seconds_per_step": 0.03702082805,
+        "log": "validcopy/4gpu/run.log",
+        "log_sha256": "bdd69b8509386218ce836e83f480bdb07b179ea40a1f4dceabdca8696a71d226"
+      }
+    }
+  ]
+}

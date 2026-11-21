@@ -41,4 +41,6 @@ CUDA_VISIBLE_DEVICES=0 /path/to/ilbmrex_baseline /path/to/inputs_physics_64 > ru
 
 项目默认保持 `max_grid_size=64`、`blocking_factor=8`。`inputs_capacity_single_gpu_352` 固定网格块 192、阻塞因子 8，供单卡容量专项复跑；`inputs_capacity_single_gpu_360` 用于无力临时场优化后的边界复核，均不改变默认配置。`compare_single_gpu.py` 以左右交替顺序测两个二进制或两份同网格输入，默认各运行两次，每次预热 100 步并计时 500 步。`inputs_strong_single_gpu_*` 是本轮使用的无全场输出计时输入，分项结果见 [优化复测报告](../../Reports/Capacity/force-field-optimization.md)。这些输入的前两行注释继承自 64³ 模板，实际网格、时间步及输出开关以输入参数为准。
 
+多卡通信改动的无全场写盘回归使用 `lbm3d_tgv3d_summary` 和 `compare_field_summary.py`。给脚本传入原版、优化版二进制、`inputs_physics_128`、独立运行目录和报告 JSON 路径；脚本固定运行 10 步并覆盖 `amr.plot_int=-1`、`amr.chk_int=-1`，在 1/2/4 卡上比较最终密度、速度及 19 个分布函数分量的求和、二范数、极值。派生涡量与压力在无输出运行中不刷新，故不纳入比较。场统计一致可检测数值回归，但不等同于全场逐位证明；[本轮结果](../../Reports/Performance/multigpu-communication.md)保留命令、二进制与输入校验值。
+
 `run_p1.py` 是完整 TGV3D 验收入口，接受原始版、模块化版及各自计时版的二进制路径，再依次运行物理、重组前后场值、强扩展、容量、初始化/写盘、逐位一致性和稳定性测试，生成 `index.json`、`summary.md` 与 SVG 图。构建好对应目标后，用 `python3 Benchmarks/TGV3D/run_p1.py --help` 查看参数；完整运行包含六次至少 600 秒的连续测试。上游示例与 IBM 对照使用 `Examples/run_regression.py`。

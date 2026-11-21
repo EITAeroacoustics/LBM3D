@@ -57,8 +57,16 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
   }
   MultiFab sfSborder(grids[lev], dmap[lev], sF_new.nComp(), sF_new.nGrow());
   MultiFab smSborder(grids[lev], dmap[lev], sM_new.nComp(), sM_new.nGrow());
-  FillPatchMesoscopic(lev, time, sfSborder, 0, sfSborder.nComp());
-  FillPatchMacro(lev, time, smSborder, 0, smSborder.nComp());
+  if (lev == 0 && finestLevel() == 0 && geom[lev].isAllPeriodic() &&
+      !m_use_cylinder) {
+    // Collision reads valid cells only. The post-collision FillBoundary below
+    // supplies the one-cell halo needed by streaming.
+    MultiFab::Copy(sfSborder, f_old[lev], 0, 0, sfSborder.nComp(), 0);
+    MultiFab::Copy(smSborder, macro_old[lev], 0, 0, smSborder.nComp(), 0);
+  } else {
+    FillPatchMesoscopic(lev, time, sfSborder, 0, sfSborder.nComp());
+    FillPatchMacro(lev, time, smSborder, 0, smSborder.nComp());
+  }
 
   // Alias macro fields from the macro staging MultiFab.
   MultiFab rhocc(smSborder, amrex::make_alias, 0, 1); // rho
@@ -250,9 +258,9 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
         });
   }
 
-  // Synchronize post-collision populations across FAB interfaces so pull
-  // streaming always sees neighbor-valid values in ghost cells.
-  sfSborder.FillBoundary(geom[lev].periodicity());
+  // D2Q9, D3Q19 and D3Q27 streaming reads only the nearest neighbor.
+  // The wider FAB ghosts remain available for AMR and IBM operations.
+  sfSborder.FillBoundary(IntVect(1), geom[lev].periodicity());
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())

@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-21",
+  "first_round": "multigpu-communication.json",
+  "run_order": [
+    "4gpu optimized", "4gpu baseline",
+    "2gpu optimized", "2gpu baseline",
+    "1gpu optimized", "1gpu baseline"
+  ],
+  "workstation_run_root": "/home/hanbo/workspace/LBM/runs/multigpu-opt-20261121",
+  "runs": [
+    {
+      "gpus": 1,
+      "visible_devices": "0",
+      "optimized": {
+        "seconds_per_step": 0.05088250711,
+        "log": "paired-r2/1gpu/optimized/run.log",
+        "log_sha256": "b245857873b6424c6b50e5f18d21c491d85eddee68ace82add403355e7d68e65"
+      },
+      "baseline": {
+        "seconds_per_step": 0.06382979905,
+        "log": "paired-r2/1gpu/baseline/run.log",
+        "log_sha256": "11a7fbd0436d7c99b0de613fa5c9e807d218bda71e3f1e33e2c49515c152c3e5"
+      }
+    },
+    {
+      "gpus": 2,
+      "visible_devices": "0,2",
+      "mpi_mapping": "--map-by ppr:1:numa --bind-to numa",
+      "optimized": {
+        "seconds_per_step": 0.04184520459,
+        "log": "paired-r2/2gpu/optimized/run.log",
+        "log_sha256": "046ce81f0594d8e07d2e97251e4c11352ad9fb09a1b7047ade878ce18f203efc"
+      },
+      "baseline": {
+        "seconds_per_step": 0.1442725889,
+        "log": "paired-r2/2gpu/baseline/run.log",
+        "log_sha256": "5c33fcc58984e925d6f801a3d916674bb2d2c006e263b9be16b98eca9c6fcecd"
+      }
+    },
+    {
+      "gpus": 4,
+      "visible_devices": "0,1,2,3",
+      "mpi_mapping": "--map-by ppr:2:numa --bind-to numa",
+      "optimized": {
+        "seconds_per_step": 0.03692399537,
+        "log": "paired-r2/4gpu/optimized/run.log",
+        "log_sha256": "0b554d95f5b7edb887adaff8f9916bc94156d0e34bd5c82b8192da382a8c1f18"
+      },
+      "baseline": {
+        "seconds_per_step": 0.1812994523,
+        "log": "paired-r2/4gpu/baseline/run.log",
+        "log_sha256": "03ceed95c3390b9ed768dfb47f0dfcbdd265ff8dafe8399137853ce5858659df"
+      }
+    }
+  ]
+}
