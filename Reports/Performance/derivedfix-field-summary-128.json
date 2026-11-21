@@ -1,0 +1,28 @@
+{
+  "baseline_report": "field-summary-128.json",
+  "binary_sha256": "acf1d44215fa6212dc40b231cbd8dee9a2c3c91abb46409c935084184a98150a",
+  "input_sha256": "0ab865aae8bd14c569d7fdeda4187529aa8e4cfb048ff4a554229572aa5ffd75",
+  "runs": {
+    "1": {
+      "summary_equal": true,
+      "component_count": 23,
+      "log_sha256": "95ea95d9ed73f4c46922907071b62f31ea734c27ff0240e144f8e719fb70f028",
+      "workstation_log": "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/field-derivedfix-128/1gpu/run.log",
+      "mismatched_components": []
+    },
+    "2": {
+      "summary_equal": true,
+      "component_count": 23,
+      "log_sha256": "afaed3f75154aa62952e71b08dd051faee03533b38c078d842e9aa185a6e8f9a",
+      "workstation_log": "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/field-derivedfix-128/2gpu/run.log",
+      "mismatched_components": []
+    },
+    "4": {
+      "summary_equal": true,
+      "component_count": 23,
+      "log_sha256": "da5f7c71b5a257e976a809390c6ca1e80652141fe54a8507e78a4a27d03efb27",
+      "workstation_log": "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/field-derivedfix-128/4gpu/run.log",
+      "mismatched_components": []
+    }
+  }
+}

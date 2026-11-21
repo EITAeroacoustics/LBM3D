@@ -414,8 +414,11 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
         });
   }
   const int step_lev = istep[lev];
-  const bool do_vorticity = (((step_lev + 1) % regrid_int) == 0) ||
-                            ((plot_int > 0) && (((step_lev + 1) % plot_int) == 0));
+  // Negative intervals disable derived-field refreshes between outputs.
+  const bool do_vorticity =
+      ((regrid_int > 0) && (((step_lev + 1) % regrid_int) == 0)) ||
+      ((plot_int > 0) && (((step_lev + 1) % plot_int) == 0)) ||
+      ((chk_int > 0) && (((step_lev + 1) % chk_int) == 0));
 
   if (do_vorticity) {
     UpdateDerivedMacroFields(lev, t_new[lev]);

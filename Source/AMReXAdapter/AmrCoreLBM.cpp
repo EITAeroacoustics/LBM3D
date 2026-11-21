@@ -338,7 +338,12 @@ void AmrCoreLBM::Evolve() {
   int last_plot_file_step = 0;
   Real wall_time_limit_s = 0.0;
   ParmParse("lbm3d").query("wall_time_limit_s", wall_time_limit_s);
+  int mass_check_interval = 100;
+  ParmParse("lbm3d").query("mass_check_interval", mass_check_interval);
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(mass_check_interval > 0,
+                                   "lbm3d.mass_check_interval must be positive");
   const Real wall_start = amrex::second();
+  const int first_step = istep[0];
 
   for (int step = istep[0]; step < max_step && cur_time < stop_time; ++step) {
     amrex::Print() << "\nCoarse STEP " << step + 1 << " starts ..."
@@ -351,8 +356,17 @@ void AmrCoreLBM::Evolve() {
 
     cur_time += dt[0];
 
-    // sum rho to check conservation
-    Real sum_rho = macro_new[0].sum(0);
+    // The global mass reduction synchronizes all GPUs. Sample it at a
+    // configurable interval while retaining the first and final checks.
+    const bool check_mass =
+        (step == first_step) || ((step + 1) % mass_check_interval == 0) ||
+        (step + 1 == max_step) ||
+        (cur_time >= stop_time - 1.e-6 * dt[0]) ||
+        (m_force_validation && m_use_prescribed_force);
+    Real sum_rho = 0.0;
+    if (check_mass) {
+      sum_rho = macro_new[0].sum(0);
+    }
 
     // Simple forcing validation: for a fully periodic box with spatially
     // uniform forcing and initially uniform fields, the domain-averaged
@@ -387,8 +401,11 @@ amrex::Print() << std::setprecision(12)
     }
 
     amrex::Print() << "Coarse STEP " << step + 1 << " ends."
-                   << " TIME = " << cur_time << " DT = " << dt[0]
-                   << " Sum(Rho) = " << sum_rho << std::endl;
+                   << " TIME = " << cur_time << " DT = " << dt[0];
+    if (check_mass) {
+      amrex::Print() << " Sum(Rho) = " << sum_rho;
+    }
+    amrex::Print() << std::endl;
 
     // sync up time
     for (lev = 0; lev <= finest_level; ++lev) {

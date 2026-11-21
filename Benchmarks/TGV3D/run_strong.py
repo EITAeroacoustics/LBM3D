@@ -17,6 +17,7 @@ CONFIGS = {
     2: ("0,2", ["mpirun", "--map-by", "ppr:1:numa", "--bind-to", "numa", "-np", "2"]),
     4: ("0,1,2,3", ["mpirun", "--map-by", "ppr:2:numa", "--bind-to", "numa", "-np", "4"]),
 }
+RUN_ORDER = ((1, 2, 4), (4, 2, 1), (1, 2, 4))
 
 
 def sha256(path: Path) -> str:
@@ -33,20 +34,24 @@ def main() -> None:
     parser.add_argument("--mpirun", default="mpirun")
     parser.add_argument("--mpi-options", default="")
     parser.add_argument("--rank-wrapper", type=Path)
+    parser.add_argument("--mass-check-interval", type=int)
     args = parser.parse_args()
     binary = args.binary.resolve()
     input_path = args.input.resolve()
     args.run_root.mkdir(parents=True, exist_ok=True)
     runs = []
 
-    for ranks, (visible, launcher) in CONFIGS.items():
-        for repeat in range(1, args.repeats + 1):
+    for repeat, order in enumerate(RUN_ORDER[:args.repeats], start=1):
+        for ranks in order:
+            visible, launcher = CONFIGS[ranks]
             run_dir = args.run_root / f"{ranks}gpu-r{repeat}"
             run_dir.mkdir(exist_ok=True)
             log = run_dir / "run.log"
             mpi_launcher = ([args.mpirun, *shlex.split(args.mpi_options),
                              *launcher[1:]] if launcher else [])
             application = [str(binary), str(input_path)]
+            if args.mass_check_interval is not None:
+                application.append(f"lbm3d.mass_check_interval={args.mass_check_interval}")
             if launcher and args.rank_wrapper:
                 application = ["python3", str(args.rank_wrapper.resolve()),
                                *application]
@@ -84,7 +89,10 @@ def main() -> None:
                                "min_sec_per_step": min(times),
                                "max_sec_per_step": max(times)}
     report = {"binary_sha256": sha256(binary), "input_sha256": sha256(input_path),
-              "warmup_steps": 100, "timed_steps": 500, "runs": runs,
+              "mass_check_interval": args.mass_check_interval,
+              "warmup_steps": 100, "timed_steps": 500,
+              "run_order": [list(order) for order in RUN_ORDER[:args.repeats]],
+              "runs": runs,
               "summary": summary}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2) + "\n")

@@ -39,6 +39,7 @@ def main() -> None:
     parser.add_argument("--mpirun", default="mpirun")
     parser.add_argument("--mpi-options", default="")
     parser.add_argument("--rank-wrapper", type=Path)
+    parser.add_argument("--mass-check-interval", type=int)
     args = parser.parse_args()
 
     binary = args.binary.resolve()
@@ -57,6 +58,8 @@ def main() -> None:
                              *launcher[1:]] if launcher else [])
             application = [str(binary), str(inputs[ranks]),
                            "amr.plot_int=-1", "amr.chk_int=-1"]
+            if args.mass_check_interval is not None:
+                application.append(f"lbm3d.mass_check_interval={args.mass_check_interval}")
             if launcher and args.rank_wrapper:
                 application = ["python3", str(args.rank_wrapper.resolve()),
                                *application]
@@ -97,6 +100,7 @@ def main() -> None:
                                "max_sec_per_step": max(times),
                                "weak_efficiency": single / median}
     report = {"binary_sha256": sha256(binary),
+              "mass_check_interval": args.mass_check_interval,
               "input_sha256": {str(ranks): sha256(path)
                                for ranks, path in inputs.items()},
               "cells_per_gpu": 256**3, "max_grid_size": 64,

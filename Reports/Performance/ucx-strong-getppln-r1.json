@@ -1,0 +1,103 @@
+{
+  "binary_sha256": "e3c6e68084a2d887f781f0d587d5947c68902d422fffc2621cc695ef0f70678f",
+  "input_sha256": "e2133f763856abe868c6942643ccf224a5624497a3d2f037b023a8c3fb00fc81",
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "runs": [
+    {
+      "gpus": 1,
+      "repeat": 1,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/build/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/multigpu-opt-20261121/source-baseline-summary/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 23.4263132,
+      "sec_per_step": 0.0468526264,
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/strong-getppln-r1/1gpu-r1/run.log",
+      "log_sha256": "4abbe2245196d1b4bf9bf38822f1077872829c6e8d38586f112f8f312f46d4ce",
+      "full_field_outputs": []
+    },
+    {
+      "gpus": 2,
+      "repeat": 1,
+      "visible_devices": "0,2",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+        "--mca",
+        "pml",
+        "ucx",
+        "--mca",
+        "pml_ucx_tls",
+        "any",
+        "--mca",
+        "btl",
+        "^uct",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "python3",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/rank_gpu.py",
+        "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/build/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/multigpu-opt-20261121/source-baseline-summary/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 33.54581507,
+      "sec_per_step": 0.06709163013,
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/strong-getppln-r1/2gpu-r1/run.log",
+      "log_sha256": "4d6f8dafc54521a8e32f41e93aa43d40d3cd4cc284a87e34e63d4bc934df9b1a",
+      "full_field_outputs": []
+    },
+    {
+      "gpus": 4,
+      "repeat": 1,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+        "--mca",
+        "pml",
+        "ucx",
+        "--mca",
+        "pml_ucx_tls",
+        "any",
+        "--mca",
+        "btl",
+        "^uct",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "python3",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/rank_gpu.py",
+        "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/build/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/multigpu-opt-20261121/source-baseline-summary/Benchmarks/TGV3D/inputs_strong_256"
+      ],
+      "elapsed_max_s": 30.81026546,
+      "sec_per_step": 0.06162053092,
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-ucx-cuda/strong-getppln-r1/4gpu-r1/run.log",
+      "log_sha256": "05b650e76a94941bf6a03205e0e0d52358155064aa893831c7cb6dc0b3a7abec",
+      "full_field_outputs": []
+    }
+  ],
+  "summary": {
+    "1": {
+      "median_sec_per_step": 0.0468526264,
+      "min_sec_per_step": 0.0468526264,
+      "max_sec_per_step": 0.0468526264
+    },
+    "2": {
+      "median_sec_per_step": 0.06709163013,
+      "min_sec_per_step": 0.06709163013,
+      "max_sec_per_step": 0.06709163013
+    },
+    "4": {
+      "median_sec_per_step": 0.06162053092,
+      "min_sec_per_step": 0.06162053092,
+      "max_sec_per_step": 0.06162053092
+    }
+  }
+}

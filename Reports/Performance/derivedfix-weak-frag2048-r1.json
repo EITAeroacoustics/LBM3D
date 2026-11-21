@@ -1,0 +1,137 @@
+{
+  "binary_sha256": "acf1d44215fa6212dc40b231cbd8dee9a2c3c91abb46409c935084184a98150a",
+  "input_sha256": {
+    "1": "f5dea55260cf85f94e7267d3ce4b32bd0243f55285a6b66200e40d6479841576",
+    "2": "98cf2948f0d1ca95ce014ea5512a11c3001fe234e049664b34430554ad2b2650",
+    "4": "846a7df1cba8dbaa35acea244602482d6be141020fe2819c22980edf9bf2c6ed"
+  },
+  "cells_per_gpu": 16777216,
+  "max_grid_size": 64,
+  "blocking_factor": 8,
+  "cell_size": [
+    0.25,
+    0.25,
+    0.25
+  ],
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "run_order": [
+    [
+      1,
+      2,
+      4
+    ]
+  ],
+  "runs": [
+    {
+      "gpus": 1,
+      "repeat": 1,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/build-derivedfix/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/inputs_weak_1gpu",
+        "amr.plot_int=-1",
+        "amr.chk_int=-1"
+      ],
+      "elapsed_max_s": 23.42360208,
+      "sec_per_step": 0.04684720416,
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/weak-derivedfix-frag2048-r1/1gpu-r1/run.log",
+      "log_sha256": "23801fce516475b57e27d1f7ccf89d59c38eac7875b21d37d91163daafc670eb",
+      "full_field_outputs": []
+    },
+    {
+      "gpus": 2,
+      "repeat": 1,
+      "visible_devices": "0,2",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-cuda/bin/mpirun",
+        "--mca",
+        "pml",
+        "ob1",
+        "--mca",
+        "btl",
+        "self,smcuda,tcp",
+        "--mca",
+        "btl_smcuda_use_cuda_ipc",
+        "0",
+        "--mca",
+        "btl_smcuda_cuda_max_send_size",
+        "2097152",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "python3",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/rank_gpu.py",
+        "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/build-derivedfix/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/inputs_weak_2gpu",
+        "amr.plot_int=-1",
+        "amr.chk_int=-1"
+      ],
+      "elapsed_max_s": 24.38808947,
+      "sec_per_step": 0.04877617895,
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/weak-derivedfix-frag2048-r1/2gpu-r1/run.log",
+      "log_sha256": "65ed9c1dbbd1ea19bbad170f7f62f6ff9f1967bcc4123831e05e610990b7a1b7",
+      "full_field_outputs": []
+    },
+    {
+      "gpus": 4,
+      "repeat": 1,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-cuda/bin/mpirun",
+        "--mca",
+        "pml",
+        "ob1",
+        "--mca",
+        "btl",
+        "self,smcuda,tcp",
+        "--mca",
+        "btl_smcuda_use_cuda_ipc",
+        "0",
+        "--mca",
+        "btl_smcuda_cuda_max_send_size",
+        "2097152",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "python3",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/rank_gpu.py",
+        "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/build-derivedfix/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/runs/multigpu-scaling-20261121/inputs/inputs_weak_4gpu",
+        "amr.plot_int=-1",
+        "amr.chk_int=-1"
+      ],
+      "elapsed_max_s": 35.39322506,
+      "sec_per_step": 0.07078645012,
+      "log": "/home/hanbo/workspace/LBM/runs/multigpu-mpi-cuda/weak-derivedfix-frag2048-r1/4gpu-r1/run.log",
+      "log_sha256": "1de066e8859ea8c4b65a6d6239be4ff762498f94bf3265c4294a5daed757e6c1",
+      "full_field_outputs": []
+    }
+  ],
+  "summary": {
+    "1": {
+      "median_sec_per_step": 0.04684720416,
+      "min_sec_per_step": 0.04684720416,
+      "max_sec_per_step": 0.04684720416,
+      "weak_efficiency": 1.0
+    },
+    "2": {
+      "median_sec_per_step": 0.04877617895,
+      "min_sec_per_step": 0.04877617895,
+      "max_sec_per_step": 0.04877617895,
+      "weak_efficiency": 0.9604525235160923
+    },
+    "4": {
+      "median_sec_per_step": 0.07078645012,
+      "min_sec_per_step": 0.07078645012,
+      "max_sec_per_step": 0.07078645012,
+      "weak_efficiency": 0.6618103334830715
+    }
+  }
+}
