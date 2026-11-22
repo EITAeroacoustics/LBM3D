@@ -1,0 +1,144 @@
+{
+  "commit": "80790bde96d9447ee55a4a4a1296ea3a0db39725",
+  "source_manifest_files": 267,
+  "performance": {
+    "strong": {
+      "runs": [
+        {
+          "gpus": 1,
+          "repeat": 1,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 2,
+          "repeat": 1,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 4,
+          "repeat": 1,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 4,
+          "repeat": 2,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 2,
+          "repeat": 2,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 1,
+          "repeat": 2,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 1,
+          "repeat": 3,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 2,
+          "repeat": 3,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 4,
+          "repeat": 3,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        }
+      ],
+      "all_valid": true
+    },
+    "weak": {
+      "runs": [
+        {
+          "gpus": 1,
+          "repeat": 1,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 2,
+          "repeat": 1,
+          "final_mass": 33554432.0,
+          "expected_mass": 33554432,
+          "valid": true
+        },
+        {
+          "gpus": 4,
+          "repeat": 1,
+          "final_mass": 67108864.0,
+          "expected_mass": 67108864,
+          "valid": true
+        },
+        {
+          "gpus": 4,
+          "repeat": 2,
+          "final_mass": 67108864.0,
+          "expected_mass": 67108864,
+          "valid": true
+        },
+        {
+          "gpus": 2,
+          "repeat": 2,
+          "final_mass": 33554432.0,
+          "expected_mass": 33554432,
+          "valid": true
+        },
+        {
+          "gpus": 1,
+          "repeat": 2,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 1,
+          "repeat": 3,
+          "final_mass": 16777216.0,
+          "expected_mass": 16777216,
+          "valid": true
+        },
+        {
+          "gpus": 2,
+          "repeat": 3,
+          "final_mass": 33554432.0,
+          "expected_mass": 33554432,
+          "valid": true
+        },
+        {
+          "gpus": 4,
+          "repeat": 3,
+          "final_mass": 67108864.0,
+          "expected_mass": 67108864,
+          "valid": true
+        }
+      ],
+      "all_valid": true
+    }
+  },
+  "full_field_paths": [],
+  "passed": true
+}

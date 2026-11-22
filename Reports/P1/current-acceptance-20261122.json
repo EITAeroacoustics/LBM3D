@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-22",
+  "snapshot_commit": "80790bde96d9447ee55a4a4a1296ea3a0db39725",
+  "historical_p1_acceptance_commit": "995813161540d2a09e57a6571c73ada3fe121c03",
+  "source_integrity": {
+    "method": "git archive from snapshot commit; compare SHA-256 of every regular file on workstation",
+    "files": 267,
+    "missing": 0,
+    "extra": 0,
+    "changed": 0,
+    "manifest_sha256": "31de04bedfd512e8d022f4a7135656034ec9135c2e9df91a68669e240eb36cba"
+  },
+  "environment": {
+    "gpu": "4 x Tesla V100-SXM2-32GB",
+    "cuda": "12.2.140",
+    "amrex": "26.11; 3D CUDA",
+    "mpi": "Open MPI 4.1.8 + UCX",
+    "build": "Release; sm_70; LBM_ENABLE_IBM=ON; LBM_TIMING=ON",
+    "max_grid_size": 64,
+    "blocking_factor": 8,
+    "mpi_gpu_map": {
+      "1": "0",
+      "2": "0,2",
+      "4": "0,1,2,3"
+    }
+  },
+  "binary_sha256": {
+    "tgv_timed": "cabdfff6f078d29f1e6e31c9ec6f2a8223d44a2b04cb95274a8d7f38fd488d07",
+    "tgv_summary": "162ffec0525ddb6b76d228e3339615f83d2ac4299622886eb9d29f0f7c5bf018",
+    "sphere_summary": "e9110c825372d7fcdf8b612b0acd328ccd1919daeb40f9aa5e735c54fb6c97a4"
+  },
+  "performance": {
+    "runs": 18,
+    "repeats_per_config": 3,
+    "warmup_steps": 100,
+    "timed_steps": 500,
+    "mass_checks_passed": true,
+    "median_ms_per_step": {
+      "strong": {
+        "1": 31.56401093,
+        "2": 15.95214843,
+        "4": 8.896021072
+      },
+      "weak": {
+        "1": 31.572058719999998,
+        "2": 31.68871594,
+        "4": 32.7232732
+      }
+    },
+    "efficiency": {
+      "strong": {
+        "2": 0.9893341661315019,
+        "4": 0.8870260837552115
+      },
+      "weak": {
+        "2": 0.9963186510863714,
+        "4": 0.9648197026940446
+      }
+    },
+    "target_strictly_above": 0.85,
+    "passed": true
+  },
+  "numeric": {
+    "tgv": {
+      "fields": 23,
+      "gpus": [
+        1,
+        2,
+        4
+      ],
+      "all_summaries_equal": true,
+      "passed": true
+    },
+    "sphere": {
+      "fields": 24,
+      "gpus": [
+        1,
+        2,
+        4
+      ],
+      "absolute_tolerance": 1e-12,
+      "maximum_abs_difference": 3.7708551559045844e-16,
+      "passed": true
+    }
+  },
+  "full_field_outputs": [],
+  "remote_test_root": "/home/hanbo/workspace/LBM/deps/lbm3d-p1-current-80790bd-20261122/runs",
+  "evidence_files": [
+    "current-acceptance-20261122-strong.json",
+    "current-acceptance-20261122-weak.json",
+    "current-acceptance-20261122-scaling.json",
+    "current-acceptance-20261122-tgv.json",
+    "current-acceptance-20261122-sphere.json",
+    "current-acceptance-20261122-verification.json"
+  ],
+  "passed": true
+}
