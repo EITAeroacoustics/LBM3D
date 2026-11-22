@@ -47,6 +47,6 @@ CUDA_VISIBLE_DEVICES=0 /path/to/ilbmrex_baseline /path/to/inputs_physics_64 > ru
 
 两种扩展脚本都接受 `--mpirun`、`--mpi-options`、`--rank-wrapper`、`--mass-check-interval` 和可重复的 `--input-option`；使用可能在 `MPI_Init` 初始化 CUDA 的 MPI 时，传 `rank_gpu.py` 使每个进程在进入求解器前只看到分配给自己的 GPU。求解器默认每 100 步做一次全局质量检查，且总在首步和末步检查；需要逐步诊断时设置 `lbm3d.mass_check_interval=1`。扩展测量建议显式传 `--mass-check-interval 100`，让报告记录这一条件。MPI 栈与拓扑参数应按工作站实际配置，见[CUDA-aware MPI 对照](../../Reports/Performance/gpu-aware-mpi-results.md)。
 
-单层全周期 D3Q19 的方向性 halo 默认启用，当前 V100 工作站的三轮强弱扩展验收见[方向性 halo 报告](../../Reports/Performance/directional-halo-results.md)。没有 CUDA-aware MPI 时求解器回退到普通 `FillBoundary`；需要对照时可传 `lbm3d.directional_halo=0`。
+当前三维求解固定使用单层 D3Q19 方向性 halo；全周期 TGV、非周期方管和球体 IBM 的回归入口见[方向性 halo 回归](../DirectionalHalo/README.md)。[全周期 TGV 的三轮强弱扩展报告](../../Reports/Performance/directional-halo-results.md)记录的是先前版本及其二进制，不能直接当作当前提交的性能结果。
 
-`run_p1.py` 是完整 TGV3D 验收入口，接受原始版、模块化版及各自计时版的二进制路径，再依次运行物理、重组前后场值、强扩展、容量、初始化/写盘、逐位一致性和稳定性测试，生成 `index.json`、`summary.md` 与 SVG 图。构建好对应目标后，用 `python3 Benchmarks/TGV3D/run_p1.py --help` 查看参数；完整运行包含六次至少 600 秒的连续测试。上游示例与 IBM 对照使用 `Examples/run_regression.py`。
+`run_p1.py` 是第一阶段的历史验收入口，接受原始版、模块化版及各自计时版的二进制路径，再依次运行物理、重组前后场值、强扩展、容量、初始化/写盘、逐位一致性和稳定性测试，生成 `index.json`、`summary.md` 与 SVG 图。该流程含全场输出，不用于第一阶段之后的新测试；后续通信回归使用上面的内存场摘要。上游示例与 IBM 的历史迁移对照脚本是 `Examples/run_regression.py`。

@@ -1,6 +1,6 @@
 # 上游示例兼容集
 
-本目录的八个 `Prob.H` 与 `inputs` 来自 iLBMReX 提交 `a8c7c89ccac0c90c84f3ebbf6ad59ce94a38df95` 的对应示例，原许可见 `../Source/UPSTREAM_LICENSE`。唯一输入改动是 `Pitching_airfoil/inputs` 显式使用库内置的 `ibm.marker_geometry=pitching_airfoil`；旧的 `user_defined` 值仍可运行。原上游 `IBMUserDefinedGeometry.H` 的公式已移入 `Source/Boundary/IBM/PitchingAirfoilGeometry.H`，示例无须包含它。
+本目录的八个 `Prob.H` 与初始 `inputs` 来自 iLBMReX 提交 `a8c7c89ccac0c90c84f3ebbf6ad59ce94a38df95` 的对应示例，原许可见 `../Source/UPSTREAM_LICENSE`。`Pitching_airfoil/inputs` 显式使用库内置的 `ibm.marker_geometry=pitching_airfoil`；旧的 `user_defined` 值仍可运行。原上游 `IBMUserDefinedGeometry.H` 的公式已移入 `Source/Boundary/IBM/PitchingAirfoilGeometry.H`。后续三维架构固定为单层 D3Q19，`Sphere_flow/inputs` 因此改为单层和 D3Q19；原始多层 D3Q27 配置仍可从上游提交追溯。
 
 | 维度 | 示例目录 | 构建目标 |
 |---|---|---|
@@ -17,4 +17,4 @@
 
 短程运行使用各目录的 `inputs`，命令行覆盖 `max_step=2 amr.plot_int=-1 amr.chk_int=-1`，在独立工作目录保存日志和载荷文件。完整算例输入保持上游参数，不把短程测试覆盖写回案例文件。
 
-`run_regression.py` 可一次运行八个示例，并在两个额外原始基线构建启用 `-DLBM_BASELINE_IBM=ON` 后，对 `Pitching_airfoil`、`Sphere_flow` 的步 0/1/2 多层流场和 `force.dat` 做对照。翼型要求场值与载荷逐位一致；球体的 IBM 力散布含 GPU 原子累加，原始版重复运行已出现约 `1e-15` 的场值末位差异，因此球体场值采用固定 `1e-14` 最大绝对误差阈值，同时保存逐位不一致格点数和原始版重复运行结果；载荷文件仍要求完全一致。命令行参数见 `python3 Examples/run_regression.py --help`；结果写入指定工作目录的 `examples-report.json`。
+`run_regression.py` 是第一阶段迁移时的历史验收脚本，当时对 `Pitching_airfoil`、原始多层 `Sphere_flow` 的流场和 `force.dat` 做对照；球体 IBM 力散布含 GPU 原子累加，旧版重复运行已有浮点末位差异。该脚本会写出全场数据，不用于第一阶段之后的新测试。当前单层 D3Q19 的无全场回归入口见 [`Benchmarks/DirectionalHalo/README.md`](../Benchmarks/DirectionalHalo/README.md)。

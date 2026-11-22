@@ -270,7 +270,6 @@ private:
   amrex::Gpu::DeviceVector<amrex::Real> diry_dev;
   amrex::Gpu::DeviceVector<amrex::Real> dirz_dev;
 
-  bool m_use_directional_halo{true};
   std::unique_ptr<DirectionalHalo> m_directional_halo;
 
   amrex::Real nu;

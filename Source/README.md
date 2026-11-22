@@ -16,7 +16,7 @@
 
 AMReXAdapter 组织 LBM、边界和诊断代码；LBM 核函数不依赖算例或层级管理。诊断成员实现虽然放在独立目录，仍是同一 `AmrCoreLBM` 类的函数，当前只生成一个库目标，不形成目标级循环依赖。完整来源、许可和迁移改动见 `UPSTREAM.md`。
 
-`AMReXAdapter/DirectionalHalo` 在单层、D3Q19、无圆柱 IBM、CUDA-aware MPI 且 AMReX team size 为 1 时，默认只交换 pull streaming 实际读取的单层分布函数 ghost 分量，适用于周期和非周期网格；几何相交、周期映射和 rank 归属仍来自 AMReX 的 FillBoundary 元数据。非周期物理边界仍由 FillPatch 和边界条件处理。其他条件不满足时继续使用 `MultiFab::FillBoundary`，也可用 `lbm3d.directional_halo=0` 关闭该路径。`lbm3d.mass_check_interval` 默认每 100 步做一次全局质量检查，首步和末步始终检查；设为 1 可逐步检查。
+`AMReXAdapter/DirectionalHalo` 是三维单层 D3Q19 求解的固定通信路径，只交换 pull streaming 实际读取的单层分布函数 ghost 分量。几何相交、周期映射和 rank 归属来自 AMReX 的 FillBoundary 元数据；非周期物理边界仍由 FillPatch 和边界条件处理。方向性 halo 不因 IBM、周期性、MPI 传输方式或 AMReX team size 切换为普通 `FillBoundary`，也不提供运行时开关。历史二维示例保留其原有通信路径。`lbm3d.mass_check_interval` 默认每 100 步做一次全局质量检查，首步和末步始终检查；设为 1 可逐步检查。
 
 公开入口是 `AMReXAdapter/AmrCoreLBM.H` 的 `AmrCoreLBM` 和 `AMReXAdapter/ProblemInit.H` 的 `ProblemInit`。`Boundary/IBM/MarkerIBParams.H` 供库内网格适配和 IBM 实现共享；`LBM/`、`Boundary/BC/`、`Diagnostics/`、`Utils/` 的头文件保持库内使用。依赖顺序为示例 → `lbm3d` → AMReX；库内由 AMReXAdapter 调用 LBM、Boundary、Diagnostics。各示例仅编译 `Examples/Common/main.cpp` 与各自的 `ProblemInit.cpp`，核心库源码只编译一次。
 

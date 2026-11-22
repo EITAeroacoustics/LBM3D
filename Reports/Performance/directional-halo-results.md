@@ -1,6 +1,6 @@
 # D3Q19 方向性 halo：四卡强弱扩展验收（2026-11-22）
 
-后续已移除方向性 halo 的全周期启用条件，并完成非周期数值回归，见[非周期边界回归](directional-halo-nonperiodic.md)。本文的二进制校验值和性能数据保留为修改前全周期 TGV 验收记录。
+后续已固定三维单层 D3Q19 方向性 halo 路径，见[新版回归](directional-halo-fixed-d3q19.md)。本文的二进制校验值和性能数据保留为修改前全周期 TGV 验收记录；中间版本的[非周期边界回归](directional-halo-nonperiodic.md)亦保留。
 
 ## 实现与适用范围
 

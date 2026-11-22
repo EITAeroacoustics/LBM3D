@@ -85,28 +85,24 @@ DirectionalHalo::DirectionalHalo(MultiFab const& f, Geometry const& geom,
     : m_boxes(f.boxArray()), m_distribution(f.DistributionMap()) {
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(SupportsStencil(dirx, diry, dirz),
                                    "DirectionalHalo requires D3Q19.");
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(f.nComp() == 19,
+                                   "DirectionalHalo requires 19 distribution components.");
   for (int q = 0; q < 19; ++q) {
     m_direction[q] = {static_cast<int>(dirx[q]), static_cast<int>(diry[q]),
                       static_cast<int>(dirz[q])};
   }
 
   auto const& fb = f.getFB(IntVect(1), geom.periodicity());
-  m_safe = fb.m_threadsafe_loc && fb.m_threadsafe_rcv;
-#ifdef AMREX_USE_MPI
-  int const local_safe = m_safe ? 1 : 0;
-  int all_safe = 0;
-  BL_MPI_REQUIRE(MPI_Allreduce(&local_safe, &all_safe, 1, MPI_INT, MPI_MIN,
-                               ParallelContext::CommunicatorSub()));
-  m_safe = (all_safe != 0);
-#endif
-  if (!m_safe) {
-    Print() << "LBM_DIRECTIONAL_HALO active=0 reason=overlapping_tags\n";
-    return;
-  }
+  m_serial_local = !fb.m_threadsafe_loc;
+  m_serial_recv = !fb.m_threadsafe_rcv;
   Long generic_local_count = 0;
   Long generic_send_count = 0;
   Long generic_recv_count = 0;
   for (auto const& tag : *fb.m_LocTags) {
+    // AMReX team members share local tags, but each rank writes its own FABs.
+    if (m_distribution[tag.dstIndex] != ParallelDescriptor::MyProc()) {
+      continue;
+    }
     generic_local_count += tag.dbox.numPts() * f.nComp();
     AddTag(m_local, tag, m_boxes[tag.dstIndex], m_local_count);
   }
@@ -137,6 +133,12 @@ DirectionalHalo::DirectionalHalo(MultiFab const& f, Geometry const& geom,
   m_recv_tags.resize(m_recv.size());
   m_send_buffer.resize(m_send_count);
   m_recv_buffer.resize(m_recv_count);
+#ifdef AMREX_USE_MPI
+  if (!ParallelDescriptor::UseGpuAwareMpi()) {
+    m_send_host_buffer.resize(m_send_count);
+    m_recv_host_buffer.resize(m_recv_count);
+  }
+#endif
   Print() << "LBM_DIRECTIONAL_HALO active=1 rank0_local_values="
           << m_local_count << '/' << generic_local_count
           << " rank0_send_values=" << m_send_count << '/'
@@ -200,7 +202,7 @@ void DirectionalHalo::CopySegments(MultiFab& f,
                                     std::vector<Segment> const& segments,
                                     Gpu::HostVector<lbm3d::detail::DirectionalHaloTag>& host_tags,
                                     Gpu::DeviceVector<lbm3d::detail::DirectionalHaloTag>& device_tags,
-                                    Real* buffer, int operation) {
+                                    Real* buffer, int operation, bool serial) {
   if (segments.empty()) { return; }
 
   Long total_cells = 0;
@@ -210,7 +212,7 @@ void DirectionalHalo::CopySegments(MultiFab& f,
     if (operation != 2) { tag.src = f.const_array(segment.tag.srcIndex); }
     if (operation != 0) { tag.dst = f.array(segment.tag.dstIndex); }
     tag.offset = segment.offset;
-    tag.cell_offset = total_cells;
+    tag.cell_offset = serial ? 0 : total_cells;
     tag.npts = segment.box.numPts();
     total_cells += tag.npts;
     tag.nq = segment.nq;
@@ -225,41 +227,71 @@ void DirectionalHalo::CopySegments(MultiFab& f,
   Gpu::copyAsync(Gpu::hostToDevice, host_tags.begin(), host_tags.end(),
                  device_tags.begin());
 
-  lbm3d::detail::LaunchDirectionalHalo(
-      total_cells, static_cast<int>(segments.size()), device_tags.data(),
-      buffer, operation);
+  if (serial) {
+    for (std::size_t t = 0; t < segments.size(); ++t) {
+      lbm3d::detail::LaunchDirectionalHalo(
+          segments[t].box.numPts(), 1, device_tags.data() + t, buffer,
+          operation);
+      Gpu::streamSynchronize();
+    }
+  } else {
+    lbm3d::detail::LaunchDirectionalHalo(
+        total_cells, static_cast<int>(segments.size()), device_tags.data(),
+        buffer, operation);
+  }
 }
 
 void DirectionalHalo::Fill(MultiFab& f) {
+#ifdef BL_USE_TEAM
+  if (ParallelDescriptor::TeamSize() > 1) {
+    Gpu::streamSynchronize();
+    ParallelDescriptor::MyTeam().MemoryBarrier();
+  }
+#endif
 #ifdef AMREX_USE_MPI
+  bool const device_mpi = ParallelDescriptor::UseGpuAwareMpi();
   int const tag = ParallelDescriptor::SeqNum();
   MPI_Comm const comm = ParallelContext::CommunicatorSub();
   std::vector<ParallelDescriptor::Message> receives;
   receives.reserve(m_recv_peers.size());
   for (auto const& peer : m_recv_peers) {
     int const rank = ParallelContext::global_to_local_rank(peer.rank);
+    Real* const buffer = device_mpi ? m_recv_buffer.data()
+                                    : m_recv_host_buffer.data();
     receives.push_back(ParallelDescriptor::Arecv(
-        m_recv_buffer.data() + peer.offset, peer.count, rank, tag, comm));
+        buffer + peer.offset, peer.count, rank, tag, comm));
   }
 #endif
 
   CopySegments(f, m_send, m_send_host_tags, m_send_tags,
-               m_send_buffer.data(), 0);
+               m_send_buffer.data(), 0, false);
   // Send as soon as the packed device buffer is ready. Local ghost copies
   // can run while MPI transfers the remote halo.
-  if (!m_send.empty()) { Gpu::streamSynchronize(); }
+  if (!m_send.empty()) {
+    Gpu::streamSynchronize();
+#ifdef AMREX_USE_MPI
+    if (!device_mpi) {
+      Gpu::copyAsync(Gpu::deviceToHost, m_send_buffer.begin(),
+                     m_send_buffer.end(), m_send_host_buffer.begin());
+      Gpu::streamSynchronize();
+    }
+#endif
+  }
 
 #ifdef AMREX_USE_MPI
   std::vector<ParallelDescriptor::Message> sends;
   sends.reserve(m_send_peers.size());
   for (auto const& peer : m_send_peers) {
     int const rank = ParallelContext::global_to_local_rank(peer.rank);
+    Real* const buffer = device_mpi ? m_send_buffer.data()
+                                    : m_send_host_buffer.data();
     sends.push_back(ParallelDescriptor::Asend(
-        m_send_buffer.data() + peer.offset, peer.count, rank, tag, comm));
+        buffer + peer.offset, peer.count, rank, tag, comm));
   }
 #endif
 
-  CopySegments(f, m_local, m_local_host_tags, m_local_tags, nullptr, 1);
+  CopySegments(f, m_local, m_local_host_tags, m_local_tags, nullptr, 1,
+               m_serial_local);
 
 #ifdef AMREX_USE_MPI
   for (auto& receive : receives) { receive.wait(); }
@@ -268,7 +300,18 @@ void DirectionalHalo::Fill(MultiFab& f) {
 
   // Finish local writes before unpacking remote data into ghost cells.
   Gpu::streamSynchronize();
+#ifdef AMREX_USE_MPI
+  if (!device_mpi && !m_recv.empty()) {
+    Gpu::copyAsync(Gpu::hostToDevice, m_recv_host_buffer.begin(),
+                   m_recv_host_buffer.end(), m_recv_buffer.begin());
+  }
+#endif
   CopySegments(f, m_recv, m_recv_host_tags, m_recv_tags,
-               m_recv_buffer.data(), 2);
+               m_recv_buffer.data(), 2, m_serial_recv);
   Gpu::streamSynchronize();
+#ifdef BL_USE_TEAM
+  if (ParallelDescriptor::TeamSize() > 1) {
+    ParallelDescriptor::MyTeam().MemoryBarrier();
+  }
+#endif
 }

@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import shlex
@@ -31,9 +32,17 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def max_numeric_difference(baseline: dict, optimized: dict) -> float:
+    if baseline.keys() != optimized.keys():
+        return math.inf
+    differences = [abs(float(baseline[key][i]) - float(optimized[key][i]))
+                   for key in baseline for i in range(4)]
+    return max(differences) if all(math.isfinite(value) for value in differences) else math.inf
+
+
 def run(binary: Path, inputs: Path, root: Path, ranks: int,
         mpirun: str, mpi_options: str, rank_wrapper: Optional[Path],
-        input_options: list[str]) -> dict:
+        input_options: list[str], expected_fields: int) -> dict:
     visible, launcher = CONFIGS[ranks]
     root.mkdir(parents=True, exist_ok=True)
     log = root / "run.log"
@@ -62,8 +71,9 @@ def run(binary: Path, inputs: Path, root: Path, ranks: int,
                                    hash0, hash1]
                  for lev, comp, total, norm, minimum, maximum, hash0, hash1
                  in SUMMARY.findall(log_text)}
-    if len(summaries) != 23:
-        raise RuntimeError(f"expected 23 final-field summaries, got {len(summaries)}: {log}")
+    if len(summaries) != expected_fields:
+        raise RuntimeError(f"expected {expected_fields} final-field summaries, "
+                           f"got {len(summaries)}: {log}")
     halo_send = HALO_SEND.search(log_text)
     return {"command": command, "visible_devices": visible,
             "full_field_outputs": full_fields,
@@ -86,8 +96,17 @@ def main() -> None:
     parser.add_argument("--common-option", action="append", default=[])
     parser.add_argument("--baseline-option", action="append", default=[])
     parser.add_argument("--optimized-option", action="append", default=[])
+    parser.add_argument("--expected-fields", type=int, default=23)
+    parser.add_argument("--numeric-atol", type=float,
+                        help="compare only sum/norm2/min/max within this absolute tolerance; "
+                             "position fingerprints remain recorded")
     parser.add_argument("--require-directional-halo", action="store_true")
     args = parser.parse_args()
+    if args.expected_fields < 1:
+        parser.error("--expected-fields must be positive")
+    if args.numeric_atol is not None and (not math.isfinite(args.numeric_atol) or
+                                          args.numeric_atol <= 0):
+        parser.error("--numeric-atol must be finite and positive")
     binaries = {"baseline": args.baseline_binary.resolve(),
                 "optimized": args.optimized_binary.resolve()}
     inputs = args.input.resolve()
@@ -101,7 +120,7 @@ def main() -> None:
                              args.rank_wrapper.resolve() if args.rank_wrapper else None,
                              [*args.common_option,
                               *(args.optimized_option if name == "optimized"
-                                else args.baseline_option)])
+                                else args.baseline_option)], args.expected_fields)
         if args.require_directional_halo:
             if pair["baseline"]["directional_halo_active"]:
                 raise RuntimeError(f"baseline unexpectedly used directional halo on {ranks} GPU(s)")
@@ -110,18 +129,24 @@ def main() -> None:
             if ranks > 1 and not pair["optimized"]["rank0_halo_send_values"]:
                 raise RuntimeError(f"directional halo sent no remote values on {ranks} GPU(s)")
         pair["summary_equal"] = pair["baseline"]["fields"] == pair["optimized"]["fields"]
+        pair["max_numeric_abs_diff"] = max_numeric_difference(
+            pair["baseline"]["fields"], pair["optimized"]["fields"])
+        pair["passed"] = (pair["summary_equal"] if args.numeric_atol is None else
+                          pair["max_numeric_abs_diff"] <= args.numeric_atol)
         runs[str(ranks)] = pair
-        print(f"  summary_equal={pair['summary_equal']}", flush=True)
+        print(f"  summary_equal={pair['summary_equal']} passed={pair['passed']}", flush=True)
     report = {"input_sha256": sha256(inputs),
               "binary_sha256": {name: sha256(path) for name, path in binaries.items()},
               "common_options": args.common_option,
               "baseline_options": args.baseline_option,
               "optimized_options": args.optimized_option,
+              "expected_fields": args.expected_fields,
+              "numeric_atol": args.numeric_atol,
               "runs": runs}
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2) + "\n")
-    if not all(pair["summary_equal"] for pair in runs.values()):
-        raise SystemExit("final-field summary differs; see report")
+    if not all(pair["passed"] for pair in runs.values()):
+        raise SystemExit("final-field summary comparison failed; see report")
 
 
 if __name__ == "__main__":

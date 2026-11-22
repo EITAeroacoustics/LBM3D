@@ -166,6 +166,13 @@ AmrCoreLBM::AmrCoreLBM(ProblemInit problem_init)
 
   ReadParameters();
 
+#if (AMREX_SPACEDIM == 3)
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+      max_level == 0, "LBM3D requires amr.max_level=0.");
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ndir == 19,
+                                   "LBM3D requires lbm3d.ndir=19 (D3Q19).");
+#endif
+
   // Geometry on all levels has been defined already.
 
   // No valid BoxArray and DistributionMapping have been defined.
@@ -963,7 +970,6 @@ void AmrCoreLBM::ReadParameters() {
       ParmParse pp("lbm3d");
 
       pp.query("ndir", ndir);
-      pp.query("directional_halo", m_use_directional_halo);
       pp.queryarr("wis", wis);
       pp.queryarr("wim", wim);
       pp.queryarr("dirx", dirx);

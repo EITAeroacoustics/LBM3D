@@ -40,7 +40,6 @@ public:
                   amrex::Vector<amrex::Real> const& dirz);
 
   [[nodiscard]] bool matches(amrex::MultiFab const& f) const;
-  [[nodiscard]] bool safe() const noexcept { return m_safe; }
   void Fill(amrex::MultiFab& f);
 
 private:
@@ -62,7 +61,7 @@ private:
                            std::vector<Segment> const& segments,
                            amrex::Gpu::HostVector<lbm3d::detail::DirectionalHaloTag>& host_tags,
                            amrex::Gpu::DeviceVector<lbm3d::detail::DirectionalHaloTag>& device_tags,
-                           amrex::Real* buffer, int operation);
+                           amrex::Real* buffer, int operation, bool serial);
 
   void AddTag(std::vector<Segment>& segments,
               amrex::FabArrayBase::CopyComTag const& tag,
@@ -70,7 +69,8 @@ private:
 
   amrex::BoxArray m_boxes;
   amrex::DistributionMapping m_distribution;
-  bool m_safe = false;
+  bool m_serial_local = false;
+  bool m_serial_recv = false;
   std::array<std::array<int, 3>, 19> m_direction{};
   std::vector<Segment> m_local;
   std::vector<Segment> m_send;
@@ -88,6 +88,8 @@ private:
   amrex::Gpu::DeviceVector<lbm3d::detail::DirectionalHaloTag> m_recv_tags;
   amrex::Gpu::DeviceVector<amrex::Real> m_send_buffer;
   amrex::Gpu::DeviceVector<amrex::Real> m_recv_buffer;
+  amrex::Gpu::PinnedVector<amrex::Real> m_send_host_buffer;
+  amrex::Gpu::PinnedVector<amrex::Real> m_recv_host_buffer;
 };
 
 #endif

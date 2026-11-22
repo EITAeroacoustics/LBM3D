@@ -1,5 +1,7 @@
 # 方向性 halo 的非周期边界回归（2026-11-22）
 
+后续三维架构已固定为单层 D3Q19 方向性 halo，移除了本文所述的其他启用条件；本报告保留当时版本的数值记录。[新版回归](directional-halo-fixed-d3q19.md)记录固定路径的验收。
+
 ## 改动与依据
 
 从碰撞后方向性 halo 的启用条件中移除了 `geom[lev].isAllPeriodic()`。碰撞前仍沿用原条件：非周期算例通过 `FillPatchMesoscopic` 和 `FillPatchMacro` 填充物理边界。方向性 halo 仍使用 AMReX 的 `getFB(IntVect(1), geom.periodicity())` 标签；非周期轴上，只有可从有效网格单元取得数据的 FAB ghost 会进入标签，物理域外没有来源的 ghost 保留给边界条件处理。D3Q19 的方向筛选只取 pull streaming 实际读取的分量。
