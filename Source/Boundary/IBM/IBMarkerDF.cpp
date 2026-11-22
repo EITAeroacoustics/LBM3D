@@ -14,10 +14,7 @@
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <numeric>
-
-#include "IBM/PitchingAirfoilGeometry.H"
 
 using namespace amrex;
 
@@ -101,31 +98,9 @@ AMREX_FORCE_INLINE Real overlap_1d(Real xa, Real xb, Real h, int kernel_type,
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
-box_target_velocity(Real x, Real y, Real z, MarkerIBParams const &par,
-                    Real wall_tol, Real &ux, Real &uy, Real &uz) noexcept {
-  amrex::ignore_unused(x, z);
-  ux = amrex::Real(0.0);
-  uy = amrex::Real(0.0);
-  uz = amrex::Real(0.0);
-
-  // Cavity lid by default: only the yhi face moves.
-  if (amrex::Math::abs(y - par.box_yhi) <= wall_tol) {
-    ux = par.box_lid_ux;
-    uy = par.box_lid_uy;
-    uz = par.box_lid_uz;
-  }
-}
-
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
 rigid_target_velocity(Real x, Real y, Real z, Real x0, Real y0, Real z0,
-                      MarkerIBParams const &par, Real wall_tol, Real time,
+                      MarkerIBParams const &par,
                       Real &ux, Real &uy, Real &uz) noexcept {
-  amrex::ignore_unused(time);
-  if (par.geometry_type == MarkerIBParams::GeometryBox) {
-    box_target_velocity(x, y, z, par, wall_tol, ux, uy, uz);
-    return;
-  }
-
   Real om[3] = {par.omx, par.omy, par.omz};
   const Real rx = x - x0;
   const Real ry = y - y0;
@@ -164,236 +139,53 @@ void IBMarkerDF::build_markers(DistributionMapping const &dm,
 
   int Ml = m_par.n_marker;
   Real dv = amrex::Real(0.0);
-  const bool use_box = (m_par.geometry_type == MarkerIBParams::GeometryBox);
-  const bool use_custom =
-      (m_par.geometry_type == MarkerIBParams::GeometryUserDefined);
-
   std::vector<Real> phi_h;
   std::vector<Real> theta_h;
-  std::vector<Real> x_ref;
-  std::vector<Real> y_ref;
-  std::vector<Real> z_ref;
-
-  if (use_box) {
-#if (AMREX_SPACEDIM != 2)
-    amrex::Abort(
-        "IBMarkerDF: box marker geometry is currently implemented for 2D only.");
-#else
-    const auto problo = m_geom.ProbLoArray();
-    const auto probhi = m_geom.ProbHiArray();
-
-    Real xlo = m_par.box_xlo;
-    Real xhi = m_par.box_xhi;
-    Real ylo = m_par.box_ylo;
-    Real yhi = m_par.box_yhi;
-
-    if (xhi <= xlo) {
-      xlo = problo[0];
-      xhi = probhi[0];
-    }
-    if (yhi <= ylo) {
-      ylo = problo[1];
-      yhi = probhi[1];
-    }
-
-    // Keep markers strictly inside the particle domain.
-    // AMReX particle coordinates on non-periodic domains are effectively
-    // half-open at prob_hi, so markers exactly at prob_hi are dropped on
-    // Redistribute.
-    const Real epsx = amrex::max(amrex::Real(1.0e-6) * dx[0],
-                                 amrex::Real(1.0e-12));
-    const Real epsy = amrex::max(amrex::Real(1.0e-6) * dx[1],
-                                 amrex::Real(1.0e-12));
-    xlo = amrex::max(xlo, problo[0] + epsx);
-    xhi = amrex::min(xhi, probhi[0] - epsx);
-    ylo = amrex::max(ylo, problo[1] + epsy);
-    yhi = amrex::min(yhi, probhi[1] - epsy);
-
-    if (xhi <= xlo || yhi <= ylo) {
-      amrex::Abort("IBMarkerDF: invalid in-domain box bounds after clamping.");
-    }
-
-    // Persist effective bounds so lid targeting and diagnostics use the actual
-    // marker geometry.
-    m_par.box_xlo = xlo;
-    m_par.box_xhi = xhi;
-    m_par.box_ylo = ylo;
-    m_par.box_yhi = yhi;
-
-    Real ds = (m_par.box_ds > amrex::Real(0.0)) ? m_par.box_ds : h;
-    ds = amrex::max(ds, amrex::Real(1.0e-12));
-
-    const int nx =
-        amrex::max(2, static_cast<int>(std::round((xhi - xlo) / ds)) + 1);
-    const int ny =
-        amrex::max(2, static_cast<int>(std::round((yhi - ylo) / ds)) + 1);
-    const Real dsx = (xhi - xlo) / Real(nx - 1);
-    const Real dsy = (yhi - ylo) / Real(ny - 1);
-
-    const bool lid_only = (m_par.box_lid_only != 0);
-    if (lid_only) {
-      x_ref.reserve(static_cast<std::size_t>(nx + 1));
-    } else {
-      x_ref.reserve(static_cast<std::size_t>(2 * nx + 2 * amrex::max(ny - 2, 0) +
-                                             1));
-    }
-    y_ref.reserve(x_ref.capacity());
-    z_ref.reserve(x_ref.capacity());
-
-    // Keep index 0 unused so marker id() can be used as a direct index.
-    x_ref.push_back(amrex::Real(0.0));
-    y_ref.push_back(amrex::Real(0.0));
-    z_ref.push_back(amrex::Real(0.0));
-
-    auto add_marker = [&](Real x, Real y) {
-      x_ref.push_back(x);
-      y_ref.push_back(y);
-      z_ref.push_back(amrex::Real(0.0));
-    };
-
-    if (lid_only) {
-      // Lid-only forcing: only place markers on the top wall.
-      for (int i = 0; i < nx; ++i) {
-        add_marker(xlo + Real(i) * dsx, yhi);
-      }
-    } else {
-      // Full cavity box: all four walls.
-      // Bottom and top walls (include corners).
-      for (int i = 0; i < nx; ++i) {
-        add_marker(xlo + Real(i) * dsx, ylo);
-      }
-      for (int i = 0; i < nx; ++i) {
-        add_marker(xlo + Real(i) * dsx, yhi);
-      }
-      // Left and right walls (exclude corners to avoid duplicates).
-      for (int j = 1; j < ny - 1; ++j) {
-        const Real y = ylo + Real(j) * dsy;
-        add_marker(xlo, y);
-        add_marker(xhi, y);
-      }
-    }
-
-    Ml = static_cast<int>(x_ref.size()) - 1;
-    AMREX_ALWAYS_ASSERT(Ml > 0);
-
-    const Real perimeter = lid_only
-                               ? (xhi - xlo)
-                               : amrex::Real(2.0) * ((xhi - xlo) + (yhi - ylo));
-    const Real ds_eff = perimeter / Real(Ml);
-    dv = ds_eff * h;
-
-    m_wall_tol = (m_par.box_wall_tol > amrex::Real(0.0))
-                     ? m_par.box_wall_tol
-                     : amrex::max(amrex::Real(0.25) * amrex::min(dsx, dsy),
-                                  amrex::Real(1.0e-12));
-
-    m_xref_d.resize(Ml + 1);
-    m_yref_d.resize(Ml + 1);
-    m_zref_d.resize(Ml + 1);
-    m_xref_h = x_ref;
-    m_yref_h = y_ref;
-    m_zref_h = z_ref;
-    Gpu::copy(Gpu::hostToDevice, x_ref.begin(), x_ref.end(), m_xref_d.begin());
-    Gpu::copy(Gpu::hostToDevice, y_ref.begin(), y_ref.end(), m_yref_d.begin());
-    Gpu::copy(Gpu::hostToDevice, z_ref.begin(), z_ref.end(), m_zref_d.begin());
-
-    m_phiK_d.resize(0);
-    m_thetaK_d.resize(0);
-    m_phiK_h.clear();
-    m_thetaK_h.clear();
-#endif
-  } else if (use_custom) {
-    lbm_user_ibm_geometry::build_markers(m_geom, m_par, h, x_ref, y_ref, z_ref,
-                                         dv, m_wall_tol);
-    Ml = static_cast<int>(x_ref.size()) - 1;
-    AMREX_ALWAYS_ASSERT(Ml > 0);
-
-    m_xref_d.resize(Ml + 1);
-    m_yref_d.resize(Ml + 1);
-    m_zref_d.resize(Ml + 1);
-    m_xref_h = x_ref;
-    m_yref_h = y_ref;
-    m_zref_h = z_ref;
-    Gpu::copy(Gpu::hostToDevice, x_ref.begin(), x_ref.end(), m_xref_d.begin());
-    Gpu::copy(Gpu::hostToDevice, y_ref.begin(), y_ref.end(), m_yref_d.begin());
-    Gpu::copy(Gpu::hostToDevice, z_ref.begin(), z_ref.end(), m_zref_d.begin());
-
-    m_phiK_d.resize(0);
-    m_thetaK_d.resize(0);
-    m_phiK_h.clear();
-    m_thetaK_h.clear();
-  } else {
-#if (AMREX_SPACEDIM == 2)
-    if (Ml <= 0) {
-      Ml = static_cast<int>(std::ceil(amrex::Real(2.0) * pi * m_R / h));
-      Ml = std::max(Ml, 16);
-    }
-    // Approximate annulus area of thickness h.
-    dv = (amrex::Real(2.0) * pi * m_R * h) / static_cast<Real>(Ml);
-
-    // theta=pi/2 -> z=0, and phi is the polar angle.
-    phi_h.assign(Ml + 1, amrex::Real(0.0));
-    theta_h.assign(Ml + 1, amrex::Real(0.5) * pi);
-    for (int i = 1; i <= Ml; ++i) {
-      phi_h[i] = amrex::Real(2.0) * pi * Real(i - 1) / Real(Ml);
-    }
-#else
-    // IAMReX-like heuristic: build markers on a thin shell at radius R.
-    if (Ml <= 0) {
-      const Real rd = m_par.rd;
-      const Real a1 = Math::powi<3>(m_R - (rd - amrex::Real(0.5)) * h);
-      const Real a2 = Math::powi<3>(m_R - (rd + amrex::Real(0.5)) * h);
-      const Real denom = amrex::Real(3.0) * h * h * h / amrex::Real(4.0) / pi;
-      Ml = static_cast<int>((a1 - a2) / denom);
-      Ml = std::max(Ml, 32);
-    }
-    {
-      const Real rd = m_par.rd;
-      const Real a1 = Math::powi<3>(m_R - (rd - amrex::Real(0.5)) * h);
-      const Real a2 = Math::powi<3>(m_R - (rd + amrex::Real(0.5)) * h);
-      dv = (a1 - a2) / (amrex::Real(3.0) * Real(Ml) / amrex::Real(4.0) / pi);
-    }
-
-    // Golden-spiral parameterization (ported from IAMReX), but shifted to be
-    // 1-based so we can index with particle.id() directly.
-    phi_h.assign(Ml + 1, amrex::Real(0.0));
-    theta_h.assign(Ml + 1, amrex::Real(0.0));
-    Real phi = amrex::Real(0.0);
-    for (int marker_index = 0; marker_index < Ml; ++marker_index) {
-      const Real Hk = -amrex::Real(1.0) +
-                      amrex::Real(2.0) * Real(marker_index) /
-                          (Real(Ml) - amrex::Real(1.0));
-      const Real theta = std::acos(Hk);
-      if (marker_index == 0 || marker_index == Ml - 1) {
-        phi = amrex::Real(0.0);
-      } else {
-        phi = std::fmod(phi + amrex::Real(3.809) / std::sqrt(Real(Ml)) /
-                                  std::sqrt(amrex::Real(1.0) - Hk * Hk),
-                        amrex::Real(2.0) * pi);
-      }
-      const int idx = marker_index + 1;
-      phi_h[idx] = phi;
-      theta_h[idx] = theta;
-    }
-#endif
-
-    m_wall_tol = amrex::Real(0.0);
-
-    m_phiK_d.resize(Ml + 1);
-    m_thetaK_d.resize(Ml + 1);
-    m_phiK_h = phi_h;
-    m_thetaK_h = theta_h;
-    Gpu::copy(Gpu::hostToDevice, phi_h.begin(), phi_h.end(), m_phiK_d.begin());
-    Gpu::copy(Gpu::hostToDevice, theta_h.begin(), theta_h.end(),
-              m_thetaK_d.begin());
-
-    m_xref_d.resize(0);
-    m_yref_d.resize(0);
-    m_zref_d.resize(0);
-    m_xref_h.clear();
-    m_yref_h.clear();
-    m_zref_h.clear();
+  // IAMReX-like heuristic: build markers on a thin shell at radius R.
+  if (Ml <= 0) {
+    const Real rd = m_par.rd;
+    const Real a1 = Math::powi<3>(m_R - (rd - amrex::Real(0.5)) * h);
+    const Real a2 = Math::powi<3>(m_R - (rd + amrex::Real(0.5)) * h);
+    const Real denom = amrex::Real(3.0) * h * h * h / amrex::Real(4.0) / pi;
+    Ml = static_cast<int>((a1 - a2) / denom);
+    Ml = std::max(Ml, 32);
   }
+  {
+    const Real rd = m_par.rd;
+    const Real a1 = Math::powi<3>(m_R - (rd - amrex::Real(0.5)) * h);
+    const Real a2 = Math::powi<3>(m_R - (rd + amrex::Real(0.5)) * h);
+    dv = (a1 - a2) / (amrex::Real(3.0) * Real(Ml) / amrex::Real(4.0) / pi);
+  }
+
+  // Golden-spiral parameterization (ported from IAMReX), but shifted to be
+  // 1-based so we can index with particle.id() directly.
+  phi_h.assign(Ml + 1, amrex::Real(0.0));
+  theta_h.assign(Ml + 1, amrex::Real(0.0));
+  Real phi = amrex::Real(0.0);
+  for (int marker_index = 0; marker_index < Ml; ++marker_index) {
+    const Real Hk = -amrex::Real(1.0) +
+                    amrex::Real(2.0) * Real(marker_index) /
+                        (Real(Ml) - amrex::Real(1.0));
+    const Real theta = std::acos(Hk);
+    if (marker_index == 0 || marker_index == Ml - 1) {
+      phi = amrex::Real(0.0);
+    } else {
+      phi = std::fmod(phi + amrex::Real(3.809) / std::sqrt(Real(Ml)) /
+                                std::sqrt(amrex::Real(1.0) - Hk * Hk),
+                      amrex::Real(2.0) * pi);
+    }
+    const int idx = marker_index + 1;
+    phi_h[idx] = phi;
+    theta_h[idx] = theta;
+  }
+
+  m_phiK_d.resize(Ml + 1);
+  m_thetaK_d.resize(Ml + 1);
+  m_phiK_h = phi_h;
+  m_thetaK_h = theta_h;
+  Gpu::copy(Gpu::hostToDevice, phi_h.begin(), phi_h.end(), m_phiK_d.begin());
+  Gpu::copy(Gpu::hostToDevice, theta_h.begin(), theta_h.end(),
+            m_thetaK_d.begin());
 
   m_dv = dv;
 
@@ -407,9 +199,7 @@ void IBMarkerDF::build_markers(DistributionMapping const &dm,
       p.cpu() = ParallelDescriptor::MyProc();
       p.pos(0) = m_x0;
       p.pos(1) = m_y0;
-#if (AMREX_SPACEDIM == 3)
       p.pos(2) = m_z0;
-#endif
 
       std::array<ParticleReal, num_Real> attr{};
       std::array<int, num_Int> idarr{};
@@ -428,55 +218,31 @@ void IBMarkerDF::build_markers(DistributionMapping const &dm,
   // in device memory after Redistribute.
   m_start_id = 0;
 
-  update_lagrangian_marker(amrex::Real(0.0));
+  update_lagrangian_marker();
 
   if (m_par.verbose) {
     amrex::Print() << "[IBMarkerDF] Built " << num_markers()
                    << " markers, dv=" << m_dv
-                   << " geometry="
-                   << ((m_par.geometry_type == MarkerIBParams::GeometryBox)
-                           ? "box"
-                           : ((m_par.geometry_type ==
-                               MarkerIBParams::GeometryUserDefined)
-                                  ? lbm_user_ibm_geometry::label()
-                                  : "cylinder"))
+                   << " geometry=sphere"
                    << " delta_type=" << m_par.delta_type
                    << " loop_ns=" << m_par.loop_ns
                    << " id_range=[1," << Ml
                    << "] start_id=" << m_start_id;
-    if (m_par.geometry_type == MarkerIBParams::GeometryBox) {
-      amrex::Print() << " box_bounds=(" << m_par.box_xlo << "," << m_par.box_xhi
-                     << ")x(" << m_par.box_ylo << "," << m_par.box_yhi << ")";
-    }
     amrex::Print() << "\n";
   }
 }
 
-void IBMarkerDF::update_lagrangian_marker(Real time) const {
+void IBMarkerDF::update_lagrangian_marker() const {
   // IAMReX semantics: update positions and reset per-marker arrays to zero,
   // then Redistribute.
   const auto *phiK = m_phiK_d.data();
   const auto *thetaK = m_thetaK_d.data();
-  const auto *xref = m_xref_d.data();
-  const auto *yref = m_yref_d.data();
-  const auto *zref = m_zref_d.data();
   const Real x0 = m_x0;
   const Real y0 = m_y0;
-#if (AMREX_SPACEDIM == 3)
   const Real z0 = m_z0;
-#else
-  const Real z0 = amrex::Real(0.0);
-#endif
   const Real R = m_R;
   const int start_id = m_start_id;
-  const int use_box =
-      (m_par.geometry_type == MarkerIBParams::GeometryBox) ? 1 : 0;
-  const int use_custom =
-      (m_par.geometry_type == MarkerIBParams::GeometryUserDefined) ? 1 : 0;
-  const int max_idx = (use_box != 0 || use_custom != 0)
-                          ? static_cast<int>(m_xref_d.size()) - 1
-                          : static_cast<int>(m_phiK_d.size()) - 1;
-  const int max_idx_ref = static_cast<int>(m_xref_d.size()) - 1;
+  const int max_idx = static_cast<int>(m_phiK_d.size()) - 1;
 
   for (MarkerParIter pti(*m_markers, 0); pti.isValid(); ++pti) {
     auto *particles = pti.GetArrayOfStructs().data();
@@ -494,9 +260,6 @@ void IBMarkerDF::update_lagrangian_marker(Real time) const {
     auto *myP = soa.GetRealData(My_Marker).data();
     auto *mzP = soa.GetRealData(Mz_Marker).data();
 
-    const bool renorm = (m_par.renormalize_delta != 0) &&
-                        (m_par.coupling_method != MarkerIBParams::CouplingIVC);
-    const MarkerIBParams par = m_par;
     ParallelFor(np, [=] AMREX_GPU_DEVICE(int i) noexcept {
       const int m_id = particles[i].id();
       int idx = midP[i];
@@ -507,50 +270,15 @@ void IBMarkerDF::update_lagrangian_marker(Real time) const {
         idx = ((idx - 1) % max_idx + max_idx) % max_idx + 1;
       }
 
-      if (use_box != 0) {
-        particles[i].pos(0) = xref[idx];
-        particles[i].pos(1) = yref[idx];
-#if (AMREX_SPACEDIM == 3)
-        particles[i].pos(2) = zref[idx];
-#endif
-        mxP[i] = amrex::Real(0.0);
-        myP[i] = amrex::Real(0.0);
-        mzP[i] = amrex::Real(0.0);
-      } else if (use_custom != 0) {
-        int ridx = idx;
-        if (max_idx_ref > 0 && (ridx < 1 || ridx > max_idx_ref)) {
-          ridx = ((ridx - 1) % max_idx_ref + max_idx_ref) % max_idx_ref + 1;
-        }
-        Real px = x0;
-        Real py = y0;
-        Real pz = z0;
-        Real utx = amrex::Real(0.0);
-        Real uty = amrex::Real(0.0);
-        Real utz = amrex::Real(0.0);
-        lbm_user_ibm_geometry::marker_state(ridx, time, par, x0, y0, z0,
-                                            xref, yref, zref, px, py, pz, utx,
-                                            uty, utz);
-        particles[i].pos(0) = px;
-        particles[i].pos(1) = py;
-#if (AMREX_SPACEDIM == 3)
-        particles[i].pos(2) = pz;
-#endif
-        mxP[i] = utx;
-        myP[i] = uty;
-        mzP[i] = utz;
-      } else {
-        // Position on the sphere/circle.
-        particles[i].pos(0) =
-            x0 + R * std::sin(thetaK[idx]) * std::cos(phiK[idx]);
-        particles[i].pos(1) =
-            y0 + R * std::sin(thetaK[idx]) * std::sin(phiK[idx]);
-#if (AMREX_SPACEDIM == 3)
-        particles[i].pos(2) = z0 + R * std::cos(thetaK[idx]);
-#endif
-        mxP[i] = amrex::Real(0.0);
-        myP[i] = amrex::Real(0.0);
-        mzP[i] = amrex::Real(0.0);
-      }
+      // Position on the sphere.
+      particles[i].pos(0) =
+          x0 + R * std::sin(thetaK[idx]) * std::cos(phiK[idx]);
+      particles[i].pos(1) =
+          y0 + R * std::sin(thetaK[idx]) * std::sin(phiK[idx]);
+      particles[i].pos(2) = z0 + R * std::cos(thetaK[idx]);
+      mxP[i] = amrex::Real(0.0);
+      myP[i] = amrex::Real(0.0);
+      mzP[i] = amrex::Real(0.0);
 
       uP[i] = amrex::Real(0.0);
       vP[i] = amrex::Real(0.0);
@@ -571,24 +299,15 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void velocity_interpolation_cic(
     GpuArray<Real, AMREX_SPACEDIM> const &dx, int type,
     int ilo, int ihi, int jlo, int jhi, int klo, int khi,
     bool renormalize_delta, Real* partition_out) noexcept {
-  // AMREX_D_TERM does token concatenation; include operators in args 2/3.
-  // In 2D: dx[0]*dx[1]. In 3D: dx[0]*dx[1]*dx[2].
-  const Real d = AMREX_D_TERM(dx[0], *dx[1], *dx[2]);
+  const Real d = dx[0] * dx[1] * dx[2];
 
   const Real lx = (p.pos(0) - plo[0]) / dx[0];
   const Real ly = (p.pos(1) - plo[1]) / dx[1];
-#if (AMREX_SPACEDIM == 3)
   const Real lz = (p.pos(2) - plo[2]) / dx[2];
-#else
-  const Real lz = amrex::Real(0.0);
-#endif
 
   const int i0 = static_cast<int>(std::floor(lx));
   const int j0 = static_cast<int>(std::floor(ly));
   const int k0 = static_cast<int>(std::floor(lz));
-#if (AMREX_SPACEDIM < 3)
-  amrex::ignore_unused(k0);
-#endif
 
   Real u = amrex::Real(0.0), v = amrex::Real(0.0), w = amrex::Real(0.0);
   Real part = amrex::Real(0.0);
@@ -603,7 +322,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void velocity_interpolation_cic(
       const Real yi = plo[1] + (Real(j0 + jj) + amrex::Real(0.5)) * dx[1];
       const Real tV = delta_function(yi, p.pos(1), dx[1], type);
 
-#if (AMREX_SPACEDIM == 3)
       for (int kk = -2; kk < 3; ++kk) {
         const Real zi = plo[2] + (Real(k0 + kk) + amrex::Real(0.5)) * dx[2];
         const Real tW = delta_function(zi, p.pos(2), dx[2], type);
@@ -621,18 +339,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void velocity_interpolation_cic(
         v += delta_value * E(ip, jp, kp, EulerVIndex + 1) * d;
         w += delta_value * E(ip, jp, kp, EulerVIndex + 2) * d;
       }
-#else
-      const int ip = i0 + ii;
-      const int jp = j0 + jj;
-      if (ip < ilo || ip > ihi || jp < jlo || jp > jhi) {
-        continue;
-      }
-      const Real delta_value = tU * tV;
-      part += delta_value * d;
-      u += delta_value * E(ip, jp, 0, EulerVIndex + 0) * d;
-      v += delta_value * E(ip, jp, 0, EulerVIndex + 1) * d;
-      w += amrex::Real(0.0);
-#endif
     }
   }
 
@@ -673,11 +379,7 @@ void IBMarkerDF::velocity_interpolation(MultiFab const &EulerVel,
     const Box ebx = E[pti].box();
     const int ilo = ebx.smallEnd(0), ihi = ebx.bigEnd(0);
     const int jlo = ebx.smallEnd(1), jhi = ebx.bigEnd(1);
-#if (AMREX_SPACEDIM == 3)
     const int klo = ebx.smallEnd(2), khi = ebx.bigEnd(2);
-#else
-    const int klo = 0, khi = 0;
-#endif
     const int kernel_type = delta_type_to_kernel(delta_type);
 
     const bool renorm = (m_par.renormalize_delta != 0) &&
@@ -694,7 +396,7 @@ void IBMarkerDF::velocity_interpolation(MultiFab const &EulerVel,
   }
 }
 
-void IBMarkerDF::compute_lagrangian_force_explicit(Real dt, Real time) const {
+void IBMarkerDF::compute_lagrangian_force_explicit(Real dt) const {
   // Matches IAMReX: F = (Ub + omega x r - U_marker) / dt
   const Real relax =
       amrex::max(amrex::Real(0.0), amrex::min(amrex::Real(1.0), m_par.mdf_relax));
@@ -707,25 +409,14 @@ void IBMarkerDF::compute_lagrangian_force_explicit(Real dt, Real time) const {
   const auto dom = m_geom.Domain();
   const int ilo = dom.smallEnd(0), ihi = dom.bigEnd(0);
   const int jlo = dom.smallEnd(1), jhi = dom.bigEnd(1);
-#if (AMREX_SPACEDIM == 3)
   const int klo = dom.smallEnd(2), khi = dom.bigEnd(2);
-#else
-  const int klo = 0, khi = 0;
-#endif
   const int kernel_type = delta_type_to_kernel(m_par.delta_type);
 
   const Real x0 = m_x0;
   const Real y0 = m_y0;
   const Real dv = m_dv;
-#if (AMREX_SPACEDIM == 3)
   const Real z0 = m_z0;
-#else
-  const Real z0 = amrex::Real(0.0);
-#endif
-  const Real wall_tol = m_wall_tol;
   const MarkerIBParams par = m_par;
-  const int use_custom =
-      (m_par.geometry_type == MarkerIBParams::GeometryUserDefined) ? 1 : 0;
 
   for (MarkerParIter pti(*m_markers, 0); pti.isValid(); ++pti) {
     auto *particles = pti.GetArrayOfStructs().data();
@@ -738,29 +429,14 @@ void IBMarkerDF::compute_lagrangian_force_explicit(Real dt, Real time) const {
     auto *fxP = soa.GetRealData(Fx_Marker).data();
     auto *fyP = soa.GetRealData(Fy_Marker).data();
     auto *fzP = soa.GetRealData(Fz_Marker).data();
-    auto const *txP = soa.GetRealData(Mx_Marker).data();
-    auto const *tyP = soa.GetRealData(My_Marker).data();
-    auto const *tzP = soa.GetRealData(Mz_Marker).data();
-
     ParallelFor(np, [=] AMREX_GPU_DEVICE(int i) noexcept {
       Real Ux = amrex::Real(0.0);
       Real Uy = amrex::Real(0.0);
       Real Uz = amrex::Real(0.0);
       const Real px = particles[i].pos(0);
       const Real py = particles[i].pos(1);
-#if (AMREX_SPACEDIM == 3)
       const Real pz = particles[i].pos(2);
-#else
-      const Real pz = amrex::Real(0.0);
-#endif
-      if (use_custom != 0) {
-        Ux = txP[i];
-        Uy = tyP[i];
-        Uz = tzP[i];
-      } else {
-        rigid_target_velocity(px, py, pz, x0, y0, z0, par, wall_tol, time, Ux,
-                              Uy, Uz);
-      }
+      rigid_target_velocity(px, py, pz, x0, y0, z0, par, Ux, Uy, Uz);
 
       // IAMReX direct-forcing form: acceleration that drives marker velocity
       // toward the rigid-body target over one physical step.
@@ -770,20 +446,13 @@ void IBMarkerDF::compute_lagrangian_force_explicit(Real dt, Real time) const {
         // Diagonal implicit correction:
         //   M_kk = dv * sum_x delta_h(x-Xk)^2 dV
         // and F_k = (Ub-Uk)/(dt*M_kk).
-        const Real dV = AMREX_D_TERM(dx[0], *dx[1], *dx[2]);
+        const Real dV = dx[0] * dx[1] * dx[2];
         const Real lx = (particles[i].pos(0) - plo[0]) / dx[0];
         const Real ly = (particles[i].pos(1) - plo[1]) / dx[1];
-#if (AMREX_SPACEDIM == 3)
         const Real lz = (particles[i].pos(2) - plo[2]) / dx[2];
-#else
-        const Real lz = amrex::Real(0.0);
-#endif
         const int i0 = static_cast<int>(std::floor(lx));
         const int j0 = static_cast<int>(std::floor(ly));
         const int k0 = static_cast<int>(std::floor(lz));
-#if (AMREX_SPACEDIM < 3)
-        amrex::ignore_unused(k0);
-#endif
 
         Real sum_delta2 = amrex::Real(0.0);
         for (int ii = -2; ii < 3; ++ii) {
@@ -800,7 +469,6 @@ void IBMarkerDF::compute_lagrangian_force_explicit(Real dt, Real time) const {
             }
             const Real yi = plo[1] + (Real(jp) + amrex::Real(0.5)) * dx[1];
             const Real tV = delta_function(yi, particles[i].pos(1), dx[1], kernel_type);
-#if (AMREX_SPACEDIM == 3)
             for (int kk = -2; kk < 3; ++kk) {
               const int kp = k0 + kk;
               if (kp < klo || kp > khi) {
@@ -811,10 +479,6 @@ void IBMarkerDF::compute_lagrangian_force_explicit(Real dt, Real time) const {
               const Real delta_value = tU * tV * tW;
               sum_delta2 += delta_value * delta_value * dV;
             }
-#else
-            const Real delta_value = tU * tV;
-            sum_delta2 += delta_value * delta_value * dV;
-#endif
           }
         }
         const Real mkk = dv * sum_delta2;
@@ -829,21 +493,13 @@ void IBMarkerDF::compute_lagrangian_force_explicit(Real dt, Real time) const {
 }
 
 void IBMarkerDF::gather_marker_state(std::vector<int> &ids,
-                                     std::vector<Real> &data,
-                                     Real time) const {
+                                     std::vector<Real> &data) const {
   ids.clear();
   data.clear();
 
-  const bool use_box = (m_par.geometry_type == MarkerIBParams::GeometryBox);
-  const bool use_custom =
-      (m_par.geometry_type == MarkerIBParams::GeometryUserDefined);
   const Real x0 = m_x0;
   const Real y0 = m_y0;
-#if (AMREX_SPACEDIM == 3)
   const Real z0 = m_z0;
-#else
-  const Real z0 = amrex::Real(0.0);
-#endif
 
   for (MarkerParIter pti(*m_markers, 0); pti.isValid(); ++pti) {
     const Long np = pti.numParticles();
@@ -876,37 +532,15 @@ void IBMarkerDF::gather_marker_state(std::vector<int> &ids,
 
       Real px = x0;
       Real py = y0;
-#if (AMREX_SPACEDIM == 3)
       Real pz = z0;
-#else
-      Real pz = amrex::Real(0.0);
-#endif
 
-      if (use_box) {
-        if (idx < static_cast<int>(m_xref_h.size())) {
-          px = m_xref_h[idx];
-          py = m_yref_h[idx];
-#if (AMREX_SPACEDIM == 3)
-          pz = m_zref_h[idx];
-#endif
-        }
-      } else if (use_custom) {
-        Real utx = amrex::Real(0.0);
-        Real uty = amrex::Real(0.0);
-        Real utz = amrex::Real(0.0);
-        lbm_user_ibm_geometry::marker_state(
-            idx, time, m_par, x0, y0, z0,
-            m_xref_h.data(), m_yref_h.data(), m_zref_h.data(),
-            px, py, pz, utx, uty, utz);
-      } else if (idx < static_cast<int>(m_phiK_h.size()) &&
-                 idx < static_cast<int>(m_thetaK_h.size())) {
+      if (idx < static_cast<int>(m_phiK_h.size()) &&
+          idx < static_cast<int>(m_thetaK_h.size())) {
         const Real phi = m_phiK_h[idx];
         const Real theta = m_thetaK_h[idx];
         px = x0 + m_R * std::sin(theta) * std::cos(phi);
         py = y0 + m_R * std::sin(theta) * std::sin(phi);
-#if (AMREX_SPACEDIM == 3)
         pz = z0 + m_R * std::cos(theta);
-#endif
       }
 
       ids.push_back(idx);
@@ -1050,11 +684,7 @@ void IBMarkerDF::build_ivc_operator(std::vector<Real> const &x_global,
   const auto dom = m_geom.Domain();
   const int ilo = dom.smallEnd(0), ihi = dom.bigEnd(0);
   const int jlo = dom.smallEnd(1), jhi = dom.bigEnd(1);
-#if (AMREX_SPACEDIM == 3)
   const int klo = dom.smallEnd(2), khi = dom.bigEnd(2);
-#else
-  const int klo = 0, khi = 0;
-#endif
 
   const int kernel_type = delta_type_to_kernel(m_par.delta_type);
 
@@ -1067,12 +697,8 @@ void IBMarkerDF::build_ivc_operator(std::vector<Real> const &x_global,
                                  plo[0], ilo, ihi);
       const Real sy = overlap_1d(y_global[i], y_global[j], dx[1], kernel_type,
                                  plo[1], jlo, jhi);
-#if (AMREX_SPACEDIM == 3)
       const Real sz = overlap_1d(z_global[i], z_global[j], dx[2], kernel_type,
                                  plo[2], klo, khi);
-#else
-      const Real sz = amrex::Real(1.0);
-#endif
       Real val = m_dv * sx * sy * sz;
       if (i == j) {
         val += m_par.ivc_diag_reg;
@@ -1097,7 +723,7 @@ void IBMarkerDF::build_ivc_operator(std::vector<Real> const &x_global,
   }
 }
 
-void IBMarkerDF::compute_lagrangian_force_ivc(Real dt, Real time) const {
+void IBMarkerDF::compute_lagrangian_force_ivc(Real dt) const {
   const int nmark = static_cast<int>(num_markers());
   if (nmark <= 0) {
     return;
@@ -1111,7 +737,7 @@ void IBMarkerDF::compute_lagrangian_force_ivc(Real dt, Real time) const {
 
   std::vector<int> ids_local;
   std::vector<Real> marker_local;
-  gather_marker_state(ids_local, marker_local, time);
+  gather_marker_state(ids_local, marker_local);
 
   const int local_n = static_cast<int>(ids_local.size());
   const int nprocs = ParallelDescriptor::NProcs();
@@ -1211,7 +837,7 @@ void IBMarkerDF::compute_lagrangian_force_ivc(Real dt, Real time) const {
       amrex::Print() << "  [ibm_marker_ivc] LU factorization failed; falling back"
                      << " to explicit direct forcing.\n";
     }
-    compute_lagrangian_force_explicit(dt, time);
+    compute_lagrangian_force_explicit(dt);
     return;
   }
 
@@ -1224,26 +850,12 @@ void IBMarkerDF::compute_lagrangian_force_ivc(Real dt, Real time) const {
     std::vector<Real> by(nmark, amrex::Real(0.0));
     std::vector<Real> bz(nmark, amrex::Real(0.0));
 
-    const Real wall_tol = m_wall_tol;
-
-    const bool use_custom =
-        (m_par.geometry_type == MarkerIBParams::GeometryUserDefined);
-
     for (int i = 0; i < nmark; ++i) {
       Real Ux = amrex::Real(0.0);
       Real Uy = amrex::Real(0.0);
       Real Uz = amrex::Real(0.0);
-      if (use_custom) {
-        Real px = m_x0;
-        Real py = m_y0;
-        Real pz = m_z0;
-        lbm_user_ibm_geometry::marker_state(
-            marker_id_global[i], time, m_par, m_x0, m_y0, m_z0, m_xref_h.data(),
-            m_yref_h.data(), m_zref_h.data(), px, py, pz, Ux, Uy, Uz);
-      } else {
-        rigid_target_velocity(x_global[i], y_global[i], z_global[i], m_x0, m_y0,
-                              m_z0, m_par, wall_tol, time, Ux, Uy, Uz);
-      }
+      rigid_target_velocity(x_global[i], y_global[i], z_global[i], m_x0, m_y0,
+                            m_z0, m_par, Ux, Uy, Uz);
 
       // Match explicit direct forcing scaling for the IVC solve.
       bx[i] = (Ux - u_global[i]) / dt;
@@ -1290,25 +902,15 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void force_spreading_cic(
     GpuArray<Real, AMREX_SPACEDIM> const &dx, int type,
     int ilo, int ihi, int jlo, int jhi, int klo, int khi,
     bool renormalize_delta, Real* partition_out) noexcept {
-#if (AMREX_SPACEDIM < 3)
-  amrex::ignore_unused(fzP);
-#endif
   const Real lx = (p.pos(0) - plo[0]) / dx[0];
   const Real ly = (p.pos(1) - plo[1]) / dx[1];
-#if (AMREX_SPACEDIM == 3)
   const Real lz = (p.pos(2) - plo[2]) / dx[2];
-#else
-  const Real lz = amrex::Real(0.0);
-#endif
 
   const int i0 = static_cast<int>(std::floor(lx));
   const int j0 = static_cast<int>(std::floor(ly));
   const int k0 = static_cast<int>(std::floor(lz));
-#if (AMREX_SPACEDIM < 3)
-  amrex::ignore_unused(k0);
-#endif
 
-  const Real d = AMREX_D_TERM(dx[0], * dx[1], * dx[2]);
+  const Real d = dx[0] * dx[1] * dx[2];
   Real part = amrex::Real(0.0);
 
   // First pass: compute kernel partition (needed for optional renormalization)
@@ -1321,7 +923,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void force_spreading_cic(
       const Real yi = plo[1] + (Real(j0 + jj) + amrex::Real(0.5)) * dx[1];
       const Real tV = delta_function(yi, p.pos(1), dx[1], type);
 
-#if (AMREX_SPACEDIM == 3)
       for (int kk = -2; kk < 3; ++kk) {
         const Real zi = plo[2] + (Real(k0 + kk) + amrex::Real(0.5)) * dx[2];
         const Real tW = delta_function(zi, p.pos(2), dx[2], type);
@@ -1336,17 +937,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void force_spreading_cic(
         const Real delta_value = tU * tV * tW;
         part += delta_value * d;
       }
-#else
-      const Real delta_value = tU * tV;
-      const int ip = i0 + ii;
-      const int jp = j0 + jj;
-      const int kp = 0;
-      if (ip < ilo || ip > ihi || jp < jlo || jp > jhi || kp < klo ||
-          kp > khi) {
-        continue;
-      }
-      part += delta_value * d;
-#endif
     }
   }
 
@@ -1367,7 +957,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void force_spreading_cic(
       const Real yi = plo[1] + (Real(j0 + jj) + amrex::Real(0.5)) * dx[1];
       const Real tV = delta_function(yi, p.pos(1), dx[1], type);
 
-#if (AMREX_SPACEDIM == 3)
       for (int kk = -2; kk < 3; ++kk) {
         const Real zi = plo[2] + (Real(k0 + kk) + amrex::Real(0.5)) * dx[2];
         const Real tW = delta_function(zi, p.pos(2), dx[2], type);
@@ -1387,18 +976,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void force_spreading_cic(
         Gpu::Atomic::AddNoRet(&E(ip, jp, kp, EulerFIndex + 2),
                               delta_value * fzP);
       }
-#else
-      const Real delta_value = (tU * tV) * scale;
-      const int ip = i0 + ii;
-      const int jp = j0 + jj;
-      const int kp = 0;
-      if (ip < ilo || ip > ihi || jp < jlo || jp > jhi || kp < klo ||
-          kp > khi) {
-        continue;
-      }
-      Gpu::Atomic::AddNoRet(&E(ip, jp, 0, EulerFIndex + 0), delta_value * fxP);
-      Gpu::Atomic::AddNoRet(&E(ip, jp, 0, EulerFIndex + 1), delta_value * fyP);
-#endif
     }
   }
 }
@@ -1408,9 +985,7 @@ void IBMarkerDF::force_spreading(MultiFab &EulerForce, int euler_force_comp,
   const Real dv = m_dv;
   const Real x0 = m_x0;
   const Real y0 = m_y0;
-#if (AMREX_SPACEDIM == 3)
   const Real z0 = m_z0;
-#endif
 
   const auto dx = m_geom.CellSizeArray();
   const auto plo = m_geom.ProbLoArray();
@@ -1431,11 +1006,7 @@ void IBMarkerDF::force_spreading(MultiFab &EulerForce, int euler_force_comp,
     const Box ebx = EulerForce[pti].box();
     const int ilo = ebx.smallEnd(0), ihi = ebx.bigEnd(0);
     const int jlo = ebx.smallEnd(1), jhi = ebx.bigEnd(1);
-#if (AMREX_SPACEDIM == 3)
     const int klo = ebx.smallEnd(2), khi = ebx.bigEnd(2);
-#else
-    const int klo = 0, khi = 0;
-#endif
     const int kernel_type = delta_type_to_kernel(delta_type);
     const bool renorm = (m_par.renormalize_delta != 0);
 
@@ -1447,11 +1018,7 @@ void IBMarkerDF::force_spreading(MultiFab &EulerForce, int euler_force_comp,
 
       const Real rx = particles[i].pos(0) - x0;
       const Real ry = particles[i].pos(1) - y0;
-#if (AMREX_SPACEDIM == 3)
       const Real rz = particles[i].pos(2) - z0;
-#else
-      const Real rz = amrex::Real(0.0);
-#endif
 
       // Store moment about body center (r x F).
       mxP[i] = ry * fz - rz * fy;
@@ -1481,6 +1048,7 @@ void IBMarkerDF::update_forcing(MultiFab const &rhocc, MultiFab const &ucc,
                                 Real dt, Real time, MultiFab const *prev_Fx,
                                 MultiFab const *prev_Fy,
                                 MultiFab const *prev_Fz) const {
+  amrex::ignore_unused(time);
   // Build Euler velocity scratch: (u,v,w)
   // IMPORTANT: We need at least two ghost cells for the 3-pt/4-pt delta
   // stencil. Copy as much of (u,v,w) as available, including overlap with
@@ -1504,17 +1072,11 @@ void IBMarkerDF::update_forcing(MultiFab const &rhocc, MultiFab const &ucc,
     amrex::ignore_unused(has_prev_force);
 
     Box cpy = mfi.fabbox() & ucc[mfi].box() & vcc[mfi].box();
-#if (AMREX_SPACEDIM == 3)
     cpy &= wcc[mfi].box();
-#endif
     ParallelFor(cpy, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
       ev(i, j, k, 0) = u(i, j, k, 0);
       ev(i, j, k, 1) = v(i, j, k, 0);
-#if (AMREX_SPACEDIM == 3)
       ev(i, j, k, 2) = w(i, j, k, 0);
-#else
-      ev(i, j, k, 2) = amrex::Real(0.0);
-#endif
     });
   }
 
@@ -1533,7 +1095,7 @@ void IBMarkerDF::update_forcing(MultiFab const &rhocc, MultiFab const &ucc,
   for (int it = 0; it < nloop; ++it) {
     EulerForceIter.setVal(0.0);
 
-    update_lagrangian_marker(time);
+    update_lagrangian_marker();
     velocity_interpolation(EulerVel, 0, m_par.delta_type);
 
     // Optional diagnostics: kernel partition (should be ~1) and slip at markers
@@ -1545,11 +1107,7 @@ void IBMarkerDF::update_forcing(MultiFab const &rhocc, MultiFab const &ucc,
       const auto dom = m_geom.Domain();
       const int ilo = dom.smallEnd(0), ihi = dom.bigEnd(0);
       const int jlo = dom.smallEnd(1), jhi = dom.bigEnd(1);
-#if (AMREX_SPACEDIM == 3)
       const int klo = dom.smallEnd(2), khi = dom.bigEnd(2);
-#else
-      const int klo = 0, khi = 0;
-#endif
       const int kernel_type = delta_type_to_kernel(m_par.delta_type);
       amrex::Real pmin = 1.0e200, pmax = -1.0e200, psum = 0.0;
       amrex::Long pn = 0;
@@ -1558,38 +1116,23 @@ void IBMarkerDF::update_forcing(MultiFab const &rhocc, MultiFab const &ucc,
       auto part_for = [=] AMREX_GPU_HOST_DEVICE (const MarkerContainer::ParticleType& p) noexcept {
         const Real x1 = p.pos(0);
         const Real x2 = p.pos(1);
-#if (AMREX_SPACEDIM == 3)
         const Real x3 = p.pos(2);
-#else
-        const Real x3 = 0.0;
-#endif
-        const Real dV = AMREX_D_TERM(dx[0], * dx[1], * dx[2]);
+        const Real dV = dx[0] * dx[1] * dx[2];
         int ic = static_cast<int>(amrex::Math::floor((x1 - plo[0]) / dx[0]));
         int jc = static_cast<int>(amrex::Math::floor((x2 - plo[1]) / dx[1]));
-#if (AMREX_SPACEDIM == 3)
         int kc = static_cast<int>(amrex::Math::floor((x3 - plo[2]) / dx[2]));
-#else
-        int kc = 0;
-#endif
         int i0 = ic - 1;
         int i1 = (kernel_type == 1) ? (ic + 1) : (ic + 2);
         int j0 = jc - 1;
         int j1 = (kernel_type == 1) ? (jc + 1) : (jc + 2);
-#if (AMREX_SPACEDIM == 3)
         int k0 = kc - 1;
         int k1 = (kernel_type == 1) ? (kc + 1) : (kc + 2);
-#else
-        int k0 = 0;
-        int k1 = 0;
-#endif
         i0 = amrex::max(i0, ilo);
         i1 = amrex::min(i1, ihi);
         j0 = amrex::max(j0, jlo);
         j1 = amrex::min(j1, jhi);
-#if (AMREX_SPACEDIM == 3)
         k0 = amrex::max(k0, klo);
         k1 = amrex::min(k1, khi);
-#endif
 
         Real part = 0.0;
         for (int i = i0; i <= i1; ++i) {
@@ -1598,14 +1141,10 @@ void IBMarkerDF::update_forcing(MultiFab const &rhocc, MultiFab const &ucc,
           const Real tU = delta_function(x1, (plo[0] + (i + 0.5) * dx[0]), dx[0], kernel_type);
           for (int j = j0; j <= j1; ++j) {
             const Real tV = delta_function(x2, (plo[1] + (j + 0.5) * dx[1]), dx[1], kernel_type);
-#if (AMREX_SPACEDIM == 3)
             for (int k = k0; k <= k1; ++k) {
               const Real tW = delta_function(x3, (plo[2] + (k + 0.5) * dx[2]), dx[2], kernel_type);
               part += (tU * tV * tW) * dV;
             }
-#else
-            part += (tU * tV) * dV;
-#endif
           }
         }
         return part;
@@ -1650,7 +1189,7 @@ void IBMarkerDF::update_forcing(MultiFab const &rhocc, MultiFab const &ucc,
 		amrex::Real slip_sum = 0.0;
 		amrex::Long slip_n = 0;
 
-		// NOTE: For the current debug path (rigid, stationary cylinder), the
+		// NOTE: For the current debug path (rigid, stationary sphere), the
 		// desired marker velocity is zero everywhere. If/when we add moving
 		// rigid bodies, replace (ud,vd,wd) with rigid-body kinematics.
 		for (MarkerParIter pti(*m_markers, 0); pti.isValid(); ++pti) {
@@ -1690,45 +1229,10 @@ void IBMarkerDF::update_forcing(MultiFab const &rhocc, MultiFab const &ucc,
 		#endif
     }
 
-    if (m_par.verbose > 0 &&
-        m_par.geometry_type == MarkerIBParams::GeometryBox) {
-#ifndef AMREX_USE_GPU
-      amrex::Real y_min = std::numeric_limits<amrex::Real>::max();
-      amrex::Real y_max = std::numeric_limits<amrex::Real>::lowest();
-      amrex::Long n_lid = 0;
-      amrex::Long n_tot = 0;
-      for (MarkerParIter pti(*m_markers, 0); pti.isValid(); ++pti) {
-        auto const *particles = pti.GetArrayOfStructs().data();
-        const auto np2 = pti.numParticles();
-        for (int n = 0; n < np2; ++n) {
-          const amrex::Real y = particles[n].pos(1);
-          y_min = amrex::min(y_min, y);
-          y_max = amrex::max(y_max, y);
-          if (amrex::Math::abs(y - m_par.box_yhi) <= m_wall_tol) {
-            ++n_lid;
-          }
-          ++n_tot;
-        }
-      }
-      amrex::ParallelDescriptor::ReduceRealMin(y_min);
-      amrex::ParallelDescriptor::ReduceRealMax(y_max);
-      amrex::ParallelDescriptor::ReduceLongSum(n_lid);
-      amrex::ParallelDescriptor::ReduceLongSum(n_tot);
-      if (amrex::ParallelDescriptor::IOProcessor()) {
-        amrex::Print() << "  [ibm_marker_df] it=" << it
-                       << " box_y_range=(" << y_min << "," << y_max << ")"
-                       << " lid_markers=" << n_lid << "/" << n_tot
-                       << " box_yhi=" << m_par.box_yhi
-                       << " wall_tol=" << m_wall_tol
-                       << " lid_ux=" << m_par.box_lid_ux << "\n";
-      }
-#endif
-    }
-
     if (use_ivc) {
-      compute_lagrangian_force_ivc(dt, time);
+      compute_lagrangian_force_ivc(dt);
     } else {
-      compute_lagrangian_force_explicit(dt, time);
+      compute_lagrangian_force_explicit(dt);
     }
     force_spreading(EulerForceIter, 0, m_par.delta_type);
 
@@ -1801,7 +1305,7 @@ void IBMarkerDF::update_forcing(MultiFab const &rhocc, MultiFab const &ucc,
 	      amrex::ParallelDescriptor::ReduceRealSum(m_fz);
 
 	      const auto dxloc = m_geom.CellSizeArray();
-	      const amrex::Real dV = AMREX_D_TERM(dxloc[0], * dxloc[1], * dxloc[2]);
+	      const amrex::Real dV = dxloc[0] * dxloc[1] * dxloc[2];
 	      amrex::Real e_fx = 0.0, e_fy = 0.0, e_fz = 0.0;
 	      for (amrex::MFIter mfi(EulerForceIter, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 	        const amrex::Box& bx = mfi.tilebox();

@@ -1,0 +1,179 @@
+{
+  "definition": "max(0, last receive MPI_Wait.end - local halo GPU kernel.end)",
+  "time_unit": "milliseconds; source timestamps are nanoseconds",
+  "warmup_steps": 100,
+  "ranks": [
+    {
+      "file": "/home/hanbo/workspace/LBM/deps/lbm3d-stage-ucx-correct-20261122/runs/nsys-both-4strong/rank-0.sqlite",
+      "steps": 600,
+      "timed_steps": 500,
+      "event_order_errors": 0,
+      "other_gpu_compute_kernel_steps_in_exposed_window": 0,
+      "cpu_gpu_launch_offset_us": {
+        "min": -14.488,
+        "max": 19.302
+      },
+      "metrics": {
+        "recv_wait": {
+          "mean_ms": 1.415100218,
+          "median_ms": 1.348568,
+          "p95_ms": 1.820187,
+          "max_ms": 5.489763
+        },
+        "local_gpu_copy": {
+          "mean_ms": 0.331643228,
+          "median_ms": 0.3316115,
+          "p95_ms": 0.339708,
+          "max_ms": 0.347771
+        },
+        "overlap_with_local_copy": {
+          "mean_ms": 0.33148690199999997,
+          "median_ms": 0.331357,
+          "p95_ms": 0.339625,
+          "max_ms": 0.347771
+        },
+        "exposed_recv_after_local_copy": {
+          "mean_ms": 1.076422586,
+          "median_ms": 1.009928,
+          "p95_ms": 1.485729,
+          "max_ms": 5.148405
+        },
+        "send_wait": {
+          "mean_ms": 0.000963852,
+          "median_ms": 0.000837,
+          "p95_ms": 0.001752,
+          "max_ms": 0.015242
+        }
+      }
+    },
+    {
+      "file": "/home/hanbo/workspace/LBM/deps/lbm3d-stage-ucx-correct-20261122/runs/nsys-both-4strong/rank-1.sqlite",
+      "steps": 600,
+      "timed_steps": 500,
+      "event_order_errors": 0,
+      "other_gpu_compute_kernel_steps_in_exposed_window": 0,
+      "cpu_gpu_launch_offset_us": {
+        "min": -15.531,
+        "max": 26.323
+      },
+      "metrics": {
+        "recv_wait": {
+          "mean_ms": 1.370860946,
+          "median_ms": 1.294244,
+          "p95_ms": 1.679423,
+          "max_ms": 4.562381
+        },
+        "local_gpu_copy": {
+          "mean_ms": 0.331720778,
+          "median_ms": 0.33151549999999996,
+          "p95_ms": 0.339292,
+          "max_ms": 0.346331
+        },
+        "overlap_with_local_copy": {
+          "mean_ms": 0.331720778,
+          "median_ms": 0.33151549999999996,
+          "p95_ms": 0.339292,
+          "max_ms": 0.346331
+        },
+        "exposed_recv_after_local_copy": {
+          "mean_ms": 1.029055866,
+          "median_ms": 0.9526600000000001,
+          "p95_ms": 1.344996,
+          "max_ms": 4.222115
+        },
+        "send_wait": {
+          "mean_ms": 0.003898036,
+          "median_ms": 0.000854,
+          "p95_ms": 0.016255,
+          "max_ms": 0.081327
+        }
+      }
+    },
+    {
+      "file": "/home/hanbo/workspace/LBM/deps/lbm3d-stage-ucx-correct-20261122/runs/nsys-both-4strong/rank-2.sqlite",
+      "steps": 600,
+      "timed_steps": 500,
+      "event_order_errors": 0,
+      "other_gpu_compute_kernel_steps_in_exposed_window": 0,
+      "cpu_gpu_launch_offset_us": {
+        "min": -28.32,
+        "max": 24.122
+      },
+      "metrics": {
+        "recv_wait": {
+          "mean_ms": 1.471765112,
+          "median_ms": 1.3868010000000002,
+          "p95_ms": 1.841445,
+          "max_ms": 6.366564
+        },
+        "local_gpu_copy": {
+          "mean_ms": 0.358341076,
+          "median_ms": 0.3581565,
+          "p95_ms": 0.362972,
+          "max_ms": 0.367964
+        },
+        "overlap_with_local_copy": {
+          "mean_ms": 0.35832359,
+          "median_ms": 0.3581565,
+          "p95_ms": 0.362972,
+          "max_ms": 0.367964
+        },
+        "exposed_recv_after_local_copy": {
+          "mean_ms": 1.105500492,
+          "median_ms": 1.020814,
+          "p95_ms": 1.476396,
+          "max_ms": 6.010056
+        },
+        "send_wait": {
+          "mean_ms": 0.00127932,
+          "median_ms": 0.0008179999999999999,
+          "p95_ms": 0.002398,
+          "max_ms": 0.032815
+        }
+      }
+    },
+    {
+      "file": "/home/hanbo/workspace/LBM/deps/lbm3d-stage-ucx-correct-20261122/runs/nsys-both-4strong/rank-3.sqlite",
+      "steps": 600,
+      "timed_steps": 500,
+      "event_order_errors": 0,
+      "other_gpu_compute_kernel_steps_in_exposed_window": 0,
+      "cpu_gpu_launch_offset_us": {
+        "min": -13.601,
+        "max": 21.384
+      },
+      "metrics": {
+        "recv_wait": {
+          "mean_ms": 1.389604522,
+          "median_ms": 1.329329,
+          "p95_ms": 1.681057,
+          "max_ms": 5.457881
+        },
+        "local_gpu_copy": {
+          "mean_ms": 0.331880686,
+          "median_ms": 0.3318045,
+          "p95_ms": 0.339548,
+          "max_ms": 0.346172
+        },
+        "overlap_with_local_copy": {
+          "mean_ms": 0.33175486,
+          "median_ms": 0.331724,
+          "p95_ms": 0.339516,
+          "max_ms": 0.346172
+        },
+        "exposed_recv_after_local_copy": {
+          "mean_ms": 1.051973346,
+          "median_ms": 0.9907895,
+          "p95_ms": 1.340903,
+          "max_ms": 5.117482
+        },
+        "send_wait": {
+          "mean_ms": 0.000902366,
+          "median_ms": 0.000769,
+          "p95_ms": 0.002109,
+          "max_ms": 0.006903
+        }
+      }
+    }
+  ]
+}

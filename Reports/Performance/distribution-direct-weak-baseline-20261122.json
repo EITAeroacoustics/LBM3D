@@ -1,0 +1,133 @@
+{
+  "binary_sha256": "17c62a5653a3b8d404f150ae704f0244eaa0c01aa9cd3583a066a8a23e14e707",
+  "mass_check_interval": null,
+  "input_options": [],
+  "input_sha256": {
+    "1": "f5dea55260cf85f94e7267d3ce4b32bd0243f55285a6b66200e40d6479841576",
+    "2": "98cf2948f0d1ca95ce014ea5512a11c3001fe234e049664b34430554ad2b2650",
+    "4": "846a7df1cba8dbaa35acea244602482d6be141020fe2819c22980edf9bf2c6ed"
+  },
+  "cells_per_gpu": 16777216,
+  "max_grid_size": 64,
+  "blocking_factor": 8,
+  "cell_size": [
+    0.25,
+    0.25,
+    0.25
+  ],
+  "warmup_steps": 100,
+  "timed_steps": 500,
+  "run_order": [
+    [
+      1,
+      2,
+      4
+    ]
+  ],
+  "runs": [
+    {
+      "gpus": 1,
+      "repeat": 1,
+      "visible_devices": "0",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/direct/build/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/source/Benchmarks/TGV3D/inputs_weak_1gpu",
+        "amr.plot_int=-1",
+        "amr.chk_int=-1"
+      ],
+      "elapsed_max_s": 19.65860641,
+      "sec_per_step": 0.03931721282,
+      "log": "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/runs/weak-baseline/1gpu-r1/run.log",
+      "log_sha256": "e2801cff8d3cf8e93afa0d5d41f6d26ab8ed1e3cb66f5c91244ace826630b83c",
+      "full_field_outputs": []
+    },
+    {
+      "gpus": 2,
+      "repeat": 1,
+      "visible_devices": "0,2",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+        "--mca",
+        "pml",
+        "ucx",
+        "--mca",
+        "pml_ucx_tls",
+        "any",
+        "--mca",
+        "btl",
+        "^uct",
+        "--map-by",
+        "ppr:1:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "2",
+        "python3",
+        "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/source/Benchmarks/TGV3D/rank_gpu.py",
+        "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/direct/build/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/source/Benchmarks/TGV3D/inputs_weak_2gpu",
+        "amr.plot_int=-1",
+        "amr.chk_int=-1"
+      ],
+      "elapsed_max_s": 19.74084422,
+      "sec_per_step": 0.03948168845,
+      "log": "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/runs/weak-baseline/2gpu-r1/run.log",
+      "log_sha256": "c355c1b37a8c3ccfb13d698cc531893533212685b808a7fae7f43cc5f5f3ecb1",
+      "full_field_outputs": []
+    },
+    {
+      "gpus": 4,
+      "repeat": 1,
+      "visible_devices": "0,1,2,3",
+      "command": [
+        "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+        "--mca",
+        "pml",
+        "ucx",
+        "--mca",
+        "pml_ucx_tls",
+        "any",
+        "--mca",
+        "btl",
+        "^uct",
+        "--map-by",
+        "ppr:2:numa",
+        "--bind-to",
+        "numa",
+        "-np",
+        "4",
+        "python3",
+        "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/source/Benchmarks/TGV3D/rank_gpu.py",
+        "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/direct/build/lbm3d_tgv3d",
+        "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/source/Benchmarks/TGV3D/inputs_weak_4gpu",
+        "amr.plot_int=-1",
+        "amr.chk_int=-1"
+      ],
+      "elapsed_max_s": 20.30366909,
+      "sec_per_step": 0.04060733819,
+      "log": "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/runs/weak-baseline/4gpu-r1/run.log",
+      "log_sha256": "f4f351ccad214e38144caa01f2443893aa9e9711167815f1f0b7ec3b552d44d9",
+      "full_field_outputs": []
+    }
+  ],
+  "summary": {
+    "1": {
+      "median_sec_per_step": 0.03931721282,
+      "min_sec_per_step": 0.03931721282,
+      "max_sec_per_step": 0.03931721282,
+      "weak_efficiency": 1.0
+    },
+    "2": {
+      "median_sec_per_step": 0.03948168845,
+      "min_sec_per_step": 0.03948168845,
+      "max_sec_per_step": 0.03948168845,
+      "weak_efficiency": 0.9958341287706504
+    },
+    "4": {
+      "median_sec_per_step": 0.04060733819,
+      "min_sec_per_step": 0.04060733819,
+      "max_sec_per_step": 0.04060733819,
+      "weak_efficiency": 0.9682292554128133
+    }
+  }
+}

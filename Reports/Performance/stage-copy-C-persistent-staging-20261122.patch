@@ -1,0 +1,57 @@
+diff --git a/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp b/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
+--- a/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
++++ b/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
+@@ -58,7 +58,14 @@
+   }
+   bool const can_read_old_directly = lev == 0 && finestLevel() == 0 &&
+                                      geom[lev].isAllPeriodic() && !m_use_cylinder;
+-  MultiFab sfSborder(grids[lev], dmap[lev], sF_new.nComp(), sF_new.nGrow());
++  MultiFab& sfSborder = m_f_staging[lev];
++  if (!sfSborder.ok() || !(sfSborder.boxArray() == grids[lev]) ||
++      !(sfSborder.DistributionMap() == dmap[lev]) ||
++      sfSborder.nComp() != sF_new.nComp() ||
++      sfSborder.nGrow() != sF_new.nGrow()) {
++    sfSborder.clear();
++    sfSborder.define(grids[lev], dmap[lev], sF_new.nComp(), sF_new.nGrow());
++  }
+   MultiFab smSborder_storage;
+   if (!can_read_old_directly) {
+     smSborder_storage.define(grids[lev], dmap[lev], sM_new.nComp(),
+diff --git a/Source/AMReXAdapter/AmrCoreLBM.H b/Source/AMReXAdapter/AmrCoreLBM.H
+--- a/Source/AMReXAdapter/AmrCoreLBM.H
++++ b/Source/AMReXAdapter/AmrCoreLBM.H
+@@ -180,6 +180,7 @@
+   amrex::Vector<amrex::MultiFab> f_old;
+   amrex::Vector<amrex::MultiFab> macro_new;
+   amrex::Vector<amrex::MultiFab> macro_old;
++  amrex::Vector<amrex::MultiFab> m_f_staging;
+ 
+   amrex::Vector<amrex::MultiFab> forcing;
+ 
+diff --git a/Source/AMReXAdapter/AmrCoreLBM.cpp b/Source/AMReXAdapter/AmrCoreLBM.cpp
+--- a/Source/AMReXAdapter/AmrCoreLBM.cpp
++++ b/Source/AMReXAdapter/AmrCoreLBM.cpp
+@@ -200,6 +200,7 @@
+   f_old.resize(nlevs_max);
+   macro_new.resize(nlevs_max);
+   macro_old.resize(nlevs_max);
++  m_f_staging.resize(nlevs_max);
+ 
+   if (m_use_cylinder) {
+     amrex::Print() << "Using IBM with method = " << m_ib_method << std::endl;
+@@ -642,6 +643,7 @@
+   std::swap(oldF_state, f_old[lev]);
+   std::swap(newM_state, macro_new[lev]);
+   std::swap(oldM_state, macro_old[lev]);
++  m_f_staging[lev].clear();
+   // --- Level-set φ on this level ---
+   if (m_use_cylinder) {
+     // --- Level-set φ on this level ---
+@@ -667,6 +669,7 @@
+   f_old[lev].clear();
+   macro_new[lev].clear();
+   macro_old[lev].clear();
++  m_f_staging[lev].clear();
+   if (m_use_cylinder && lev < static_cast<int>(forcing.size())) {
+     forcing[lev].clear();
+   }

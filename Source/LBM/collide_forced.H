@@ -8,7 +8,8 @@
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void collide_forced(int i, int j, int k,
-                    amrex::Array4<amrex::Real> const &f_old,
+                    amrex::Array4<amrex::Real const> const &f_old,
+                    amrex::Array4<amrex::Real> const &f_post,
                     amrex::Real const *feq_i, // length = ndir
                     int ndir, amrex::Real tau,
                     amrex::Real const *wi, amrex::Real const *dirx,
@@ -17,7 +18,7 @@ void collide_forced(int i, int j, int k,
                     amrex::Real ux, amrex::Real uy, amrex::Real uz,
                     amrex::Real fx, amrex::Real fy, amrex::Real fz) {
   // 1) Do the usual BGK collision using your existing kernel
-  collide(i, j, k, f_old, feq_i, ndir, tau);
+  collide(i, j, k, f_old, f_post, feq_i, ndir, tau);
 
   // 2) If forcing is effectively zero, we are done:
   if (fx == 0.0 && fy == 0.0 && fz == 0.0) {
@@ -37,16 +38,12 @@ void collide_forced(int i, int j, int k,
 
     amrex::Real termx = (cx - ux) / cs2 + (eiu / (cs2 * cs2)) * cx;
     amrex::Real termy = (cy - uy) / cs2 + (eiu / (cs2 * cs2)) * cy;
-#if (AMREX_SPACEDIM == 3)
     amrex::Real termz = (cz - uz) / cs2 + (eiu / (cs2 * cs2)) * cz;
-#else
-    amrex::Real termz = 0.0;
-#endif
 
     amrex::Real Si = wi[q] * fac * (termx * fx + termy * fy + termz * fz);
 
     // add forcing *increment* on top of BGK result
-    f_old(i, j, k, q) += Si;
+    f_post(i, j, k, q) += Si;
   }
 }
 

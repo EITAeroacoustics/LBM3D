@@ -1,0 +1,37 @@
+diff --git a/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp b/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
+--- a/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
++++ b/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
+@@ -56,20 +56,25 @@
+     fy_cc->setVal(force[1]);
+     fz_cc->setVal(force[2]);
+   }
++  bool const can_read_old_directly = lev == 0 && finestLevel() == 0 &&
++                                     geom[lev].isAllPeriodic() && !m_use_cylinder;
+   MultiFab sfSborder(grids[lev], dmap[lev], sF_new.nComp(), sF_new.nGrow());
+-  MultiFab smSborder(grids[lev], dmap[lev], sM_new.nComp(), sM_new.nGrow());
+-  if (lev == 0 && finestLevel() == 0 && geom[lev].isAllPeriodic() &&
+-      !m_use_cylinder) {
++  MultiFab smSborder_storage;
++  if (can_read_old_directly) {
+     // Collision reads valid cells only. The post-collision halo exchange
+     // supplies the one-cell neighbors needed by streaming.
+     MultiFab::Copy(sfSborder, f_old[lev], 0, 0, sfSborder.nComp(), 0);
+-    MultiFab::Copy(smSborder, macro_old[lev], 0, 0, smSborder.nComp(), 0);
+   } else {
++    smSborder_storage.define(grids[lev], dmap[lev], sM_new.nComp(),
++                             sM_new.nGrow());
+     FillPatchMesoscopic(lev, time, sfSborder, 0, sfSborder.nComp());
+-    FillPatchMacro(lev, time, smSborder, 0, smSborder.nComp());
+-  }
+-
+-  // Alias macro fields from the macro staging MultiFab.
++    FillPatchMacro(lev, time, smSborder_storage, 0,
++                   smSborder_storage.nComp());
++  }
++  MultiFab& smSborder = can_read_old_directly ? macro_old[lev]
++                                               : smSborder_storage;
++
++  // Alias the macro inputs used by IBM and collision.
+   MultiFab rhocc(smSborder, amrex::make_alias, 0, 1); // rho
+   MultiFab ucc(smSborder, amrex::make_alias, 1, 1);   // u
+   MultiFab vcc(smSborder, amrex::make_alias, 2, 1);   // v

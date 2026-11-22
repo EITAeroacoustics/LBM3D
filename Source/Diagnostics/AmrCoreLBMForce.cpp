@@ -46,19 +46,11 @@ void AmrCoreLBM::ComputeIBForce(Real time, int step) {
     const amrex::Box &domain = geom[lev].Domain();
     Real Fx_sum = forcing[lev].sum(domain, 0, false);
     Real Fy_sum = forcing[lev].sum(domain, 1, false);
-#if (AMREX_SPACEDIM == 3)
     Real Fz_sum = forcing[lev].sum(domain, 2, false);
-#else
-    Real Fz_sum = 0.0;
-#endif
     const auto dx = geom[lev].CellSizeArray();
     Real dV = dx[0];
-#if (AMREX_SPACEDIM >= 2)
     dV *= dx[1];
-#endif
-#if (AMREX_SPACEDIM == 3)
     dV *= dx[2];
-#endif
     Fx_eul = -(Fx_sum * dV) / dt_lev;
     Fy_eul = -(Fy_sum * dV) / dt_lev;
     Fz_eul = -(Fz_sum * dV) / dt_lev;
@@ -126,46 +118,34 @@ void AmrCoreLBM::ComputeIBForce(Real time, int step) {
   m_prev_body_force[1] = Fy_body;
   m_prev_body_force[2] = Fz_body;
   m_have_prev_body_force = true;
-#if (AMREX_SPACEDIM != 3)
-  amrex::ignore_unused(Fz_body_tc);
-#endif
 
   // --------------------------------------------------------------------
   // 2) Force coefficients
   //
-  // In 2D, use the usual cylinder normalization with reference length D.
-  // In 3D, use the frontal area A = pi R^2.
-  //
-  //   2D: Cx = Fx / (0.5 * rho_ref * U_ref^2 * D)
-  //   3D: Cx = Fx / (0.5 * rho_ref * U_ref^2 * A)
+  // Use the sphere frontal area A = pi R^2:
+  //   Cx = Fx / (0.5 * rho_ref * U_ref^2 * A)
   //
   // The second reported coefficient keeps the historical "Cl" column name,
-  // but in 3D it is simply the y-direction lateral-force coefficient.
+  // but it is the y-direction lateral-force coefficient.
   // --------------------------------------------------------------------
   Real rho_ref = amrex::Real(1.0);            // standard LBM choice
   Real U_ref = U0;                  // set earlier in ReadParameters()
-  Real D_ref = amrex::Real(2.0) * m_ls_par.R; // cylinder diameter
+  Real D_ref = amrex::Real(2.0) * m_ls_par.R; // sphere diameter
 
   Real Cd = amrex::Real(0.0), Cl = amrex::Real(0.0);
   Real Cd_raw = amrex::Real(0.0), Cl_raw = amrex::Real(0.0);
   Real Cd_eul = amrex::Real(0.0), Cl_eul = amrex::Real(0.0);
   Real Cd_marker = amrex::Real(0.0), Cl_marker = amrex::Real(0.0);
   Real Cd_me = amrex::Real(0.0), Cl_me = amrex::Real(0.0);
-#if (AMREX_SPACEDIM == 3)
   Real Cz = amrex::Real(0.0);
   Real Cz_raw = amrex::Real(0.0);
   Real Cz_eul = amrex::Real(0.0);
   Real Cz_marker = amrex::Real(0.0);
   Real Cz_me = amrex::Real(0.0);
-#endif
 
   Real denom = amrex::Real(0.0);
-#if (AMREX_SPACEDIM == 3)
   const Real A_ref = Math::pi<Real>() * m_ls_par.R * m_ls_par.R;
   denom = amrex::Real(0.5) * rho_ref * U_ref * U_ref * A_ref;
-#else
-  denom = amrex::Real(0.5) * rho_ref * U_ref * U_ref * D_ref;
-#endif
   if (denom > amrex::Real(0.0)) {
     Cd_raw = Fx_body / denom;
     Cl_raw = Fy_body / denom;
@@ -177,13 +157,11 @@ void AmrCoreLBM::ComputeIBForce(Real time, int step) {
     Cl_marker = Fy_marker / denom;
     Cd_me = Fx_me / denom;
     Cl_me = Fy_me / denom;
-#if (AMREX_SPACEDIM == 3)
     Cz_raw = Fz_body / denom;
     Cz = Fz_body_tc / denom;
     Cz_eul = Fz_eul / denom;
     Cz_marker = Fz_marker / denom;
     Cz_me = Fz_me / denom;
-#endif
   }
 
   // --------------------------------------------------------------------
@@ -197,25 +175,19 @@ void AmrCoreLBM::ComputeIBForce(Real time, int step) {
         amrex::Print() << "WARNING: could not open " << m_force_file << "\n";
         return;
       }
-#if (AMREX_SPACEDIM == 3)
       m_force_ofs << "# 3D coefficients are normalized by frontal area A = pi R^2.\n";
       m_force_ofs << "# In 3D, the historical Cl columns represent the y-force coefficient.\n";
       m_force_ofs << "# Additional z-force and Cz columns are appended after t_conv.\n";
-#else
-      m_force_ofs << "# 2D coefficients are normalized by reference length D = 2R.\n";
-#endif
       m_force_ofs << "# step  time  Fx_body_tc  Fy_body_tc  Cd  Cl"
                      "  Fx_body_raw  Fy_body_raw  Cd_raw  Cl_raw"
                      "  Fx_eul  Fy_eul  Cd_eul  Cl_eul"
                      "  Fx_marker  Fy_marker  Cd_marker  Cl_marker"
                      "  Fx_me  Fy_me  Cd_me  Cl_me  t_conv";
-#if (AMREX_SPACEDIM == 3)
       m_force_ofs << "  Fz_body_tc  Cz"
                      "  Fz_body_raw  Cz_raw"
                      "  Fz_eul  Cz_eul"
                      "  Fz_marker  Cz_marker"
                      "  Fz_me  Cz_me";
-#endif
       m_force_ofs << "\n";
       m_force_output_initialized = true;
     }
@@ -232,12 +204,10 @@ void AmrCoreLBM::ComputeIBForce(Real time, int step) {
                 << Fx_marker << "  " << Fy_marker << "  " << Cd_marker << "  "
                 << Cl_marker << "  " << Fx_me << "  " << Fy_me << "  "
                 << Cd_me << "  " << Cl_me << "  " << t_conv;
-#if (AMREX_SPACEDIM == 3)
     m_force_ofs << "  " << Fz_body_tc << "  " << Cz << "  " << Fz_body
                 << "  " << Cz_raw << "  " << Fz_eul << "  " << Cz_eul
                 << "  " << Fz_marker << "  " << Cz_marker << "  " << Fz_me
                 << "  " << Cz_me;
-#endif
     m_force_ofs << "\n";
     m_force_ofs.flush();
 
@@ -245,9 +215,7 @@ void AmrCoreLBM::ComputeIBForce(Real time, int step) {
       amrex::Print() << "[force_eval] step=" << step
                      << " primary(" << m_force_eval_method << "): Cd=" << Cd
                      << " Cl=" << Cl
-#if (AMREX_SPACEDIM == 3)
                      << " Cz=" << Cz
-#endif
                      << " (raw Cd,Cl)=(" << Cd_raw << "," << Cl_raw << ")"
                      << " | eulerian(Cd,Cl)=(" << Cd_eul << "," << Cl_eul
                      << ") marker=(" << Cd_marker << "," << Cl_marker << ")"

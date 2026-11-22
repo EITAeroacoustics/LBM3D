@@ -1,0 +1,279 @@
+{
+  "date": "2026-11-22",
+  "remote_root": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122",
+  "setup": {
+    "gpu": "Tesla V100-SXM2-32GB, GPU 0; initial 5 MiB used and 0% utilization",
+    "amrex": "26.11, 3D CUDA",
+    "build": "Release; CUDA sm_70; LBM_ENABLE_IBM=ON; Open MPI 4.1.8 + UCX",
+    "case": "periodic D3Q19 TGV3D",
+    "max_grid_size": 64,
+    "blocking_factor": 8,
+    "steps": 10,
+    "grid_scan": "328..384, increment 8, stop at first failure for each variant",
+    "success_rule": "normal exit after Coarse STEP 10 ends and finalized",
+    "full_field_output": "amr.plot_int=-1; amr.chk_int=-1; no plotfile/checkpoint/HDF5 observed",
+    "probe_sha256": "184cee89af9ca11aba01a5c0dda2fe3e79b488ff713d6b26959c6a0782717b56",
+    "input_generator_sha256": "2c7878c85ca3f0827d11090ce4308296e65972c9fe266238f1e4274517918961"
+  },
+  "variants": [
+    {
+      "name": "baseline",
+      "description": "两处整场复制均保留",
+      "binary_sha256": "fdc00bf772c21a23d686110583cc65a6d250c67e1fe04014e5f77c6b5c968a81",
+      "binary": "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/baseline/build/lbm3d_tgv3d_summary",
+      "remote_report": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/baseline.json",
+      "measurements": [
+        {
+          "n": 328,
+          "cells": 35287552,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 28225,
+          "arena_max_allocated_mb": 27636,
+          "arena_max_used_mb": 27628,
+          "input_sha256": "d02a0fdf9463ef809025f029170eac0c11e2d8d1bceb290644ae233b67602d23",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/baseline/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/baseline/grid64-n328/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/baseline/grid64-n328/run.log"
+        },
+        {
+          "n": 336,
+          "cells": 37933056,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 30153,
+          "arena_max_allocated_mb": 29533,
+          "arena_max_used_mb": 29487,
+          "input_sha256": "cd66a52fe387616e25018b68a4839d258b5481041bde5c1e4e9bebfa283ce326",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/baseline/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/baseline/grid64-n336/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/baseline/grid64-n336/run.log"
+        },
+        {
+          "n": 344,
+          "cells": 40707584,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 32193,
+          "arena_max_allocated_mb": 31435,
+          "arena_max_used_mb": 31429,
+          "input_sha256": "058853186ae647235cb3005c52ec98da83b77bdd763b367a489ffe78a201cd39",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/baseline/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/baseline/grid64-n344/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/baseline/grid64-n344/run.log"
+        },
+        {
+          "n": 352,
+          "cells": 43614208,
+          "completed_steps": false,
+          "returncode": 6,
+          "out_of_memory": true,
+          "peak_vram_mib": 32491,
+          "arena_max_allocated_mb": 32007,
+          "arena_max_used_mb": 31996,
+          "input_sha256": "951c3d74b739938ddd166fca240040a8f5b50fb845a818051d3001e91dea5aa9",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/baseline/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/baseline/grid64-n352/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/baseline/grid64-n352/run.log"
+        }
+      ]
+    },
+    {
+      "name": "macro_direct",
+      "description": "移除宏观场暂存与复制",
+      "binary_sha256": "1fff349e50e36adfaf59d0f99d2303a49a7f59b164e43e489cc9bb474433e431",
+      "binary": "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/direct/build/lbm3d_tgv3d_summary",
+      "remote_report": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct.json",
+      "measurements": [
+        {
+          "n": 328,
+          "cells": 35287552,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 25831,
+          "arena_max_allocated_mb": 25439,
+          "arena_max_used_mb": 25420,
+          "input_sha256": "d02a0fdf9463ef809025f029170eac0c11e2d8d1bceb290644ae233b67602d23",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/direct/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n328/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n328/run.log"
+        },
+        {
+          "n": 336,
+          "cells": 37933056,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 27547,
+          "arena_max_allocated_mb": 27141,
+          "arena_max_used_mb": 27131,
+          "input_sha256": "cd66a52fe387616e25018b68a4839d258b5481041bde5c1e4e9bebfa283ce326",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/direct/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n336/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n336/run.log"
+        },
+        {
+          "n": 344,
+          "cells": 40707584,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 29433,
+          "arena_max_allocated_mb": 28938,
+          "arena_max_used_mb": 28917,
+          "input_sha256": "058853186ae647235cb3005c52ec98da83b77bdd763b367a489ffe78a201cd39",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/direct/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n344/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n344/run.log"
+        },
+        {
+          "n": 352,
+          "cells": 43614208,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 31215,
+          "arena_max_allocated_mb": 30783,
+          "arena_max_used_mb": 30780,
+          "input_sha256": "951c3d74b739938ddd166fca240040a8f5b50fb845a818051d3001e91dea5aa9",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/direct/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n352/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n352/run.log"
+        },
+        {
+          "n": 360,
+          "cells": 46656000,
+          "completed_steps": false,
+          "returncode": 6,
+          "out_of_memory": true,
+          "peak_vram_mib": 32463,
+          "arena_max_allocated_mb": 31927,
+          "arena_max_used_mb": 31897,
+          "input_sha256": "3487a8ed2f72e7a62c947ae41fb3f73c8eb2dcfefd0f7e2e8d8ee2ca72da6004",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-macro-direct-20261122/direct/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n360/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/macro_direct/grid64-n360/run.log"
+        }
+      ]
+    },
+    {
+      "name": "both_direct",
+      "description": "再移除分布函数有效区复制",
+      "binary_sha256": "ceeae7e1062f455f2ee301cf0a3eacc10d1d94d4456984cef3dde73b3ab53e28",
+      "binary": "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/build/lbm3d_tgv3d_summary",
+      "remote_report": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct.json",
+      "measurements": [
+        {
+          "n": 328,
+          "cells": 35287552,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 25855,
+          "arena_max_allocated_mb": 25462,
+          "arena_max_used_mb": 25420,
+          "input_sha256": "d02a0fdf9463ef809025f029170eac0c11e2d8d1bceb290644ae233b67602d23",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n328/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n328/run.log"
+        },
+        {
+          "n": 336,
+          "cells": 37933056,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 27567,
+          "arena_max_allocated_mb": 27164,
+          "arena_max_used_mb": 27131,
+          "input_sha256": "cd66a52fe387616e25018b68a4839d258b5481041bde5c1e4e9bebfa283ce326",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n336/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n336/run.log"
+        },
+        {
+          "n": 344,
+          "cells": 40707584,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 29469,
+          "arena_max_allocated_mb": 28973,
+          "arena_max_used_mb": 28917,
+          "input_sha256": "058853186ae647235cb3005c52ec98da83b77bdd763b367a489ffe78a201cd39",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n344/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n344/run.log"
+        },
+        {
+          "n": 352,
+          "cells": 43614208,
+          "completed_steps": true,
+          "returncode": 0,
+          "out_of_memory": false,
+          "peak_vram_mib": 31231,
+          "arena_max_allocated_mb": 30797,
+          "arena_max_used_mb": 30780,
+          "input_sha256": "951c3d74b739938ddd166fca240040a8f5b50fb845a818051d3001e91dea5aa9",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n352/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n352/run.log"
+        },
+        {
+          "n": 360,
+          "cells": 46656000,
+          "completed_steps": false,
+          "returncode": 6,
+          "out_of_memory": true,
+          "peak_vram_mib": 32463,
+          "arena_max_allocated_mb": 31927,
+          "arena_max_used_mb": 31897,
+          "input_sha256": "3487a8ed2f72e7a62c947ae41fb3f73c8eb2dcfefd0f7e2e8d8ee2ca72da6004",
+          "command": [
+            "/home/hanbo/workspace/LBM/deps/lbm3d-dist-direct-20261122/optimized/build/lbm3d_tgv3d_summary",
+            "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n360/inputs"
+          ],
+          "log": "/home/hanbo/workspace/LBM/runs/capacity-two-copy-20261122/both_direct/grid64-n360/run.log"
+        }
+      ]
+    }
+  ],
+  "conclusion": {
+    "baseline_max_completed_edge": 344,
+    "macro_direct_max_completed_edge": 352,
+    "both_direct_max_completed_edge": 352,
+    "max_completed_cells_gain_macro_vs_baseline": 0.07140251801728148,
+    "extra_capacity_gain_distribution_copy_removal": 0,
+    "boundary_resolution_cells_per_edge": 8
+  }
+}

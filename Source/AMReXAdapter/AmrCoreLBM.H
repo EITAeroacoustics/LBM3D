@@ -252,12 +252,8 @@ private:
 
   // LBM specific parameter
 
-  // LBM stencil size (default per dimension)
-#if (AMREX_SPACEDIM == 2)
-  int ndir{9}; // D2Q9
-#else
+  // D3Q19 stencil size
   int ndir{19}; // D3Q19
-#endif
   amrex::Vector<amrex::Real> wis;
   amrex::Vector<amrex::Real> wim;
   amrex::Vector<amrex::Real> wi;
@@ -285,9 +281,6 @@ private:
 
   void FillPatchMacro(int lev, amrex::Real time, amrex::MultiFab &mf, int icomp,
                       int ncomp);
-
-  void FillPatchForcing(int lev, amrex::Real time, amrex::MultiFab &mf,
-                        int icomp, int ncomp);
 
   void FillCoarsePatchMacro(int lev, amrex::Real time, amrex::MultiFab &mf,
                             int icomp, int ncomp);

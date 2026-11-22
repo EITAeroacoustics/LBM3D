@@ -1,6 +1,6 @@
 # 单张 V100 的 TGV3D 计算规模上限
 
-后续已执行网格块调整和无力临时场优化，分项收益见 [优化复测报告](force-field-optimization.md)。项目默认保持 `max_grid_size=64`、`blocking_factor=8`；下文保留优化前的容量基线，其他划分仅作专项容量实验。
+后续已执行网格块调整、无力临时场优化和两处暂存复制删减，分项收益分别见 [无力场优化复测](force-field-optimization.md)和[暂存复制删减复测](single-gpu-copy-elision-20261122.md)。项目默认保持 `max_grid_size=64`、`blocking_factor=8`；下文保留优化前的容量基线，其他划分仅作专项容量实验。
 
 测试日期：2026-11-21。使用 P1 洁净导入的模块化 TGV3D 二进制（SHA-256 `729b8f8957a0b31d08a77fcf5d6fe76680e21777a70c46f81da020a5bbc45e6e`）、AMReX 26.11、CUDA 12.2、双精度和一张 Tesla V100-SXM2-32GB。项目源码为 P1 固定提交 `995813161540d2a09e57a6571c73ada3fe121c03`。周期 D3Q19 Taylor–Green 涡，IBM 关闭。每次使用独立进程；默认成功判据是完成 10 步并正常退出。所有输入均设 `amr.plot_int=-1`、`amr.chk_int=-1`，工作目录只有输入、日志和小体积 JSON，没有全场流场文件。
 

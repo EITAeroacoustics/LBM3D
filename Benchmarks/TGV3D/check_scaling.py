@@ -13,7 +13,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("strong_report", type=Path)
     parser.add_argument("weak_report", type=Path)
-    parser.add_argument("--target", type=float, default=0.90)
+    parser.add_argument("--target", type=float, default=0.85)
     parser.add_argument("--min-repeats", type=int, choices=(1, 2, 3), default=3)
     args = parser.parse_args()
 

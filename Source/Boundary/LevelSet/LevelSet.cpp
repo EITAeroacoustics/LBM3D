@@ -57,15 +57,10 @@ void LevelSetManager::build_from_cylinder(int lev, Geometry const &geom,
       Real x = problo[0] + (Real(i) + Real(0.5)) * dx[0];
       Real y = problo[1] + (Real(j) + Real(0.5)) * dx[1];
 
-#if (AMREX_SPACEDIM == 3)
       Real z = problo[2] + (Real(k) + Real(0.5)) * dx[2];
       Real r = std::sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0) +
                          (z - z0) * (z - z0));
-#else
-            Real r = std::sqrt( (x - x0)*(x - x0)
-                              + (y - y0)*(y - y0) );
-#endif
-      // Signed distance: positive outside, negative inside the cylinder
+      // Signed distance: positive outside, negative inside the sphere
       phi_arr(i, j, k, 0) = r - R;
       // amrex::Print() << "LevelSetManager: phi_arr(" << i << "," << j << ","
       // << k << ") = "

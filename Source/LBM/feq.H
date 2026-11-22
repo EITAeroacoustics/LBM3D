@@ -12,16 +12,8 @@ amrex::Real feqFunction(amrex::Real wi, amrex::Real dirx, amrex::Real diry,
   amrex::Real result;
   amrex::Real eu, uv;
 
-  eu = dirx * u + diry * v
-#if (AMREX_SPACEDIM == 3)
-       + dirz * w
-#endif
-      ;
-  uv = u * u + v * v
-#if (AMREX_SPACEDIM == 3)
-       + w * w
-#endif
-      ;
+  eu = dirx * u + diry * v + dirz * w;
+  uv = u * u + v * v + w * w;
 
   result = wi * rho * (1.0 + 3.0 * eu + 4.5 * eu * eu - 1.5 * uv);
 

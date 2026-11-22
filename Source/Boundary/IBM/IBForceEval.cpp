@@ -13,13 +13,8 @@ namespace {
 
 AMREX_FORCE_INLINE AMREX_GPU_HOST_DEVICE Real
 signed_distance(Real x, Real y, Real z, LevelSetParams const &par) noexcept {
-#if (AMREX_SPACEDIM == 3)
   const Real r = std::sqrt((x - par.x0) * (x - par.x0) + (y - par.y0) * (y - par.y0) +
                            (z - par.z0) * (z - par.z0));
-#else
-  amrex::ignore_unused(z);
-  const Real r = std::sqrt((x - par.x0) * (x - par.x0) + (y - par.y0) * (y - par.y0));
-#endif
   return r - par.R;
 }
 
@@ -53,11 +48,7 @@ ComputeMomentumExchangeBodyForce(MultiFab const &f_cc, Geometry const &geom,
   const auto dom = geom.Domain();
   const int ilo = dom.smallEnd(0), ihi = dom.bigEnd(0);
   const int jlo = dom.smallEnd(1), jhi = dom.bigEnd(1);
-#if (AMREX_SPACEDIM == 3)
   const int klo = dom.smallEnd(2), khi = dom.bigEnd(2);
-#else
-  const int klo = 0, khi = 0;
-#endif
 
   const auto plo = geom.ProbLoArray();
   const auto dx = geom.CellSizeArray();
@@ -71,28 +62,14 @@ ComputeMomentumExchangeBodyForce(MultiFab const &f_cc, Geometry const &geom,
     const Box &bx = mfi.validbox();
     auto const f = f_cc[mfi].const_array();
 
-    const int kbeg =
-#if (AMREX_SPACEDIM == 3)
-        bx.smallEnd(2);
-#else
-        0;
-#endif
-    const int kend =
-#if (AMREX_SPACEDIM == 3)
-        bx.bigEnd(2);
-#else
-        0;
-#endif
+    const int kbeg = bx.smallEnd(2);
+    const int kend = bx.bigEnd(2);
     for (int k = kbeg; k <= kend; ++k) {
       for (int j = bx.smallEnd(1); j <= bx.bigEnd(1); ++j) {
         for (int i = bx.smallEnd(0); i <= bx.bigEnd(0); ++i) {
           const Real xc = plo[0] + (Real(i) + Real(0.5)) * dx[0];
           const Real yc = plo[1] + (Real(j) + Real(0.5)) * dx[1];
-#if (AMREX_SPACEDIM == 3)
           const Real zc = plo[2] + (Real(k) + Real(0.5)) * dx[2];
-#else
-          const Real zc = Real(0.0);
-#endif
           const bool fluid_here = (signed_distance(xc, yc, zc, par) > Real(0.0));
           if (!fluid_here) {
             continue;
@@ -130,7 +107,6 @@ ComputeMomentumExchangeBodyForce(MultiFab const &f_cc, Geometry const &geom,
             } else if (jn < jlo || jn > jhi) {
               continue;
             }
-#if (AMREX_SPACEDIM == 3)
             if (periodic[2]) {
               const int nz = khi - klo + 1;
               while (kn < klo) kn += nz;
@@ -138,18 +114,10 @@ ComputeMomentumExchangeBodyForce(MultiFab const &f_cc, Geometry const &geom,
             } else if (kn < klo || kn > khi) {
               continue;
             }
-#else
-            amrex::ignore_unused(klo, khi);
-            kn = 0;
-#endif
 
             const Real xn = plo[0] + (Real(in) + Real(0.5)) * dx[0];
             const Real yn = plo[1] + (Real(jn) + Real(0.5)) * dx[1];
-#if (AMREX_SPACEDIM == 3)
             const Real zn = plo[2] + (Real(kn) + Real(0.5)) * dx[2];
-#else
-            const Real zn = Real(0.0);
-#endif
             const bool solid_next = (signed_distance(xn, yn, zn, par) <= Real(0.0));
             if (!solid_next) {
               continue;

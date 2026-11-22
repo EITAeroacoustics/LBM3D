@@ -22,8 +22,6 @@
 
 #include <iomanip> // optional, for nicer formatting
 
-#include "IBM/PitchingAirfoilGeometry.H"
-
 namespace {
 
 inline amrex::Real ib_refine_padding(amrex::Real dx) noexcept {
@@ -36,21 +34,6 @@ inline bool immersed_boundary_refinement_region(
     amrex::Real &xhi, amrex::Real &ylo, amrex::Real &yhi, amrex::Real &zlo,
     amrex::Real &zhi) noexcept {
   const amrex::Real pad = ib_refine_padding(dx);
-
-  if (par.geometry_type == MarkerIBParams::GeometryBox) {
-    xlo = par.box_xlo - pad;
-    xhi = par.box_xhi + pad;
-    ylo = (par.box_lid_only > 0) ? (par.box_yhi - pad) : (par.box_ylo - pad);
-    yhi = par.box_yhi + pad;
-    zlo = par.box_zlo - pad;
-    zhi = par.box_zhi + pad;
-    return true;
-  }
-
-  if (par.geometry_type == MarkerIBParams::GeometryUserDefined) {
-    return lbm_user_ibm_geometry::refinement_region(
-        x0, y0, z0, par, dx, xlo, xhi, ylo, yhi, zlo, zhi);
-  }
 
   if (radius > amrex::Real(0.0)) {
     if (par.refine_upstream > amrex::Real(0.0) &&
@@ -123,18 +106,14 @@ void AmrCoreLBM::ResetForceHistory() {
 }
 
 void AmrCoreLBM::UpdateDerivedMacroFields(int lev, Real time) {
-  constexpr int derive_ncomp = 4; // rho, ux, uy, uz(dummy in 2D)
+  constexpr int derive_ncomp = 4; // rho, ux, uy, uz
   MultiFab macro_patch(grids[lev], dmap[lev], derive_ncomp, 1);
   FillPatchMacro(lev, time, macro_patch, 0, derive_ncomp);
 
   MultiFab &curMacro = macro_new[lev];
   const Real tempdx = xCellSize[lev];
   const Real tempdy = yCellSize[lev];
-#if (AMREX_SPACEDIM == 3)
   const Real tempdz = zCellSize[lev];
-#else
-  const Real tempdz = Real(0.0);
-#endif
   const Real T0_local = T0;
   update_derived_macro_fields_impl(curMacro, macro_patch, tempdx, tempdy,
                                    tempdz, T0_local);
@@ -166,12 +145,10 @@ AmrCoreLBM::AmrCoreLBM(ProblemInit problem_init)
 
   ReadParameters();
 
-#if (AMREX_SPACEDIM == 3)
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
       max_level == 0, "LBM3D requires amr.max_level=0.");
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ndir == 19,
                                    "LBM3D requires lbm3d.ndir=19 (D3Q19).");
-#endif
 
   // Geometry on all levels has been defined already.
 
@@ -449,6 +426,11 @@ amrex::Print() << std::setprecision(12)
       Real elapsed = amrex::second() - wall_start;
       amrex::ParallelDescriptor::ReduceRealMax(elapsed);
       if (elapsed >= wall_time_limit_s) {
+        if (!check_mass) {
+          const Real final_sum_rho = macro_new[0].sum(0);
+          amrex::Print() << "Coarse STEP " << step + 1
+                         << " final Sum(Rho) = " << final_sum_rho << '\n';
+        }
         amrex::Print() << "LBM wall time limit reached after " << elapsed
                        << " s at step " << step + 1 << '\n';
         break;
@@ -769,11 +751,7 @@ void AmrCoreLBM::ErrorEst(int lev, TagBoxArray &tags, Real time,
   const auto dx_arr = geom[lev].CellSizeArray();
   const Real dx_tag = dx_arr[0];
   const Real dy_tag = dx_arr[1];
-#if (AMREX_SPACEDIM == 3)
   const Real dz_tag = dx_arr[2];
-#else
-  const Real dz_tag = Real(0.0);
-#endif
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -812,10 +790,7 @@ void AmrCoreLBM::ErrorEst(int lev, TagBoxArray &tags, Real time,
           m_ls_par.x0, m_ls_par.y0, m_ls_par.z0, m_ls_par.R, m_marker_par,
           dx_min, refine_xlo, refine_xhi, refine_ylo, refine_yhi, refine_zlo,
           refine_zhi);
-  const bool marker_levelset_ibm =
-      (m_ib_method != IBMMethodMarker ||
-       m_marker_par.geometry_type == MarkerIBParams::GeometryCylinder);
-  if (m_use_cylinder && marker_levelset_ibm && m_ls && m_ls->has_level(lev)) {
+  if (m_use_cylinder && m_ls && m_ls->has_level(lev)) {
     // Level set φ for this level
     MultiFab &phi_mf = m_ls->phi_at(lev);
 
@@ -862,11 +837,7 @@ void AmrCoreLBM::ErrorEst(int lev, TagBoxArray &tags, Real time,
               if (have_body_refine_region) {
                 const Real x = problo[0] + (Real(i) + Real(0.5)) * dx[0];
                 const Real y = problo[1] + (Real(j) + Real(0.5)) * dx[1];
-#if (AMREX_SPACEDIM == 3)
                 const Real z = problo[2] + (Real(k) + Real(0.5)) * dx[2];
-#else
-                const Real z = amrex::Real(0.0);
-#endif
                 if (x >= refine_xlo && x <= refine_xhi && y >= refine_ylo &&
                     y <= refine_yhi && z >= refine_zlo && z <= refine_zhi) {
                   tagfab(i, j, k) = tagval;
@@ -913,11 +884,7 @@ void AmrCoreLBM::ErrorEst(int lev, TagBoxArray &tags, Real time,
               if (have_body_refine_region) {
                 const Real x = problo[0] + (Real(i) + Real(0.5)) * dx[0];
                 const Real y = problo[1] + (Real(j) + Real(0.5)) * dx[1];
-#if (AMREX_SPACEDIM == 3)
                 const Real z = problo[2] + (Real(k) + Real(0.5)) * dx[2];
-#else
-                const Real z = amrex::Real(0.0);
-#endif
                 if (x >= refine_xlo && x <= refine_xhi && y >= refine_ylo &&
                     y <= refine_yhi && z >= refine_zlo && z <= refine_zhi) {
                   tagfab(i, j, k) = tagval;
@@ -950,23 +917,7 @@ void AmrCoreLBM::ReadParameters() {
   }
 
   {
-    if (AMREX_SPACEDIM == 2) {
-      ParmParse pp("lbm2d");
-
-      pp.query("ndir", ndir);
-      pp.queryarr("wis", wis);
-      pp.queryarr("wim", wim);
-      pp.queryarr("dirx", dirx);
-      pp.queryarr("diry", diry);
-      pp.queryarr("dirz", dirz);
-
-      wi.resize(wis.size());
-      for (size_t idvs = 0; idvs < wis.size(); idvs++) {
-        wi[idvs] = wis[idvs] / wim[idvs];
-      }
-    }
-
-    if (AMREX_SPACEDIM == 3) {
+    {
       ParmParse pp("lbm3d");
 
       pp.query("ndir", ndir);
@@ -998,11 +949,14 @@ void AmrCoreLBM::ReadParameters() {
     {
       ParmParse pp_lbm("lbm");
       amrex::Vector<amrex::Real> Ftmp;
-      if (pp_lbm.queryarr("prescribed_force", Ftmp) && Ftmp.size() >= 2) {
+      if (pp_lbm.queryarr("prescribed_force", Ftmp)) {
+        if (Ftmp.size() != 3) {
+          amrex::Abort("lbm.prescribed_force requires three components");
+        }
         m_use_prescribed_force = true;
         m_prescribed_force[0] = Ftmp[0];
         m_prescribed_force[1] = Ftmp[1];
-        m_prescribed_force[2] = (Ftmp.size() > 2) ? Ftmp[2] : amrex::Real(0.0);
+        m_prescribed_force[2] = Ftmp[2];
       }
       pp_lbm.query("force_validation", m_force_validation);
       if (m_use_prescribed_force) {
@@ -1049,29 +1003,11 @@ void AmrCoreLBM::ReadParameters() {
       pp_ibm.query("refine_downstream", m_marker_par.refine_downstream);
       pp_ibm.query("refine_cross", m_marker_par.refine_cross);
       pp_ibm.query("rd", m_marker_par.rd);
-      std::string marker_geometry = "cylinder";
-      pp_ibm.query("marker_geometry", marker_geometry);
-      if (marker_geometry == "box" || marker_geometry == "cavity_box") {
-        m_marker_par.geometry_type = MarkerIBParams::GeometryBox;
-      } else if (marker_geometry == "pitching_airfoil" ||
-                 marker_geometry == "user_defined" ||
-                 marker_geometry == "custom") {
-        m_marker_par.geometry_type = MarkerIBParams::GeometryUserDefined;
-      } else {
-        m_marker_par.geometry_type = MarkerIBParams::GeometryCylinder;
+      std::string marker_geometry;
+      if (pp_ibm.query("marker_geometry", marker_geometry) &&
+          marker_geometry != "sphere") {
+        amrex::Abort("ibm.marker_geometry must be sphere in LBM3D");
       }
-      pp_ibm.query("box_xlo", m_marker_par.box_xlo);
-      pp_ibm.query("box_xhi", m_marker_par.box_xhi);
-      pp_ibm.query("box_ylo", m_marker_par.box_ylo);
-      pp_ibm.query("box_yhi", m_marker_par.box_yhi);
-      pp_ibm.query("box_zlo", m_marker_par.box_zlo);
-      pp_ibm.query("box_zhi", m_marker_par.box_zhi);
-      pp_ibm.query("box_ds", m_marker_par.box_ds);
-      pp_ibm.query("box_lid_only", m_marker_par.box_lid_only);
-      pp_ibm.query("box_lid_ux", m_marker_par.box_lid_ux);
-      pp_ibm.query("box_lid_uy", m_marker_par.box_lid_uy);
-      pp_ibm.query("box_lid_uz", m_marker_par.box_lid_uz);
-      pp_ibm.query("box_wall_tol", m_marker_par.box_wall_tol);
       pp_ibm.query("ubx", m_marker_par.ubx);
       pp_ibm.query("uby", m_marker_par.uby);
       pp_ibm.query("ubz", m_marker_par.ubz);
@@ -1125,30 +1061,6 @@ void AmrCoreLBM::ReadParameters() {
         pp_mdf.query("refine_upstream", m_marker_par.refine_upstream);
         pp_mdf.query("refine_downstream", m_marker_par.refine_downstream);
         pp_mdf.query("refine_cross", m_marker_par.refine_cross);
-        std::string marker_geometry_mdf;
-        if (pp_mdf.query("geometry", marker_geometry_mdf)) {
-          if (marker_geometry_mdf == "box" || marker_geometry_mdf == "cavity_box") {
-            m_marker_par.geometry_type = MarkerIBParams::GeometryBox;
-          } else if (marker_geometry_mdf == "pitching_airfoil" ||
-                     marker_geometry_mdf == "user_defined" ||
-                     marker_geometry_mdf == "custom") {
-            m_marker_par.geometry_type = MarkerIBParams::GeometryUserDefined;
-          } else {
-            m_marker_par.geometry_type = MarkerIBParams::GeometryCylinder;
-          }
-        }
-        pp_mdf.query("box_xlo", m_marker_par.box_xlo);
-        pp_mdf.query("box_xhi", m_marker_par.box_xhi);
-        pp_mdf.query("box_ylo", m_marker_par.box_ylo);
-        pp_mdf.query("box_yhi", m_marker_par.box_yhi);
-        pp_mdf.query("box_zlo", m_marker_par.box_zlo);
-        pp_mdf.query("box_zhi", m_marker_par.box_zhi);
-        pp_mdf.query("box_ds", m_marker_par.box_ds);
-        pp_mdf.query("box_lid_only", m_marker_par.box_lid_only);
-        pp_mdf.query("box_lid_ux", m_marker_par.box_lid_ux);
-        pp_mdf.query("box_lid_uy", m_marker_par.box_lid_uy);
-        pp_mdf.query("box_lid_uz", m_marker_par.box_lid_uz);
-        pp_mdf.query("box_wall_tol", m_marker_par.box_wall_tol);
         std::string coupling_method_mdf;
         if (pp_mdf.query("coupling_method", coupling_method_mdf)) {
           if (coupling_method_mdf == "ivc" || coupling_method_mdf == "wu_shu") {
@@ -1170,14 +1082,7 @@ void AmrCoreLBM::ReadParameters() {
       amrex::Print() << "               x0 = " << m_ls_par.x0
                      << ", y0 = " << m_ls_par.y0 << ", z0 = " << m_ls_par.z0
                      << ", R = " << m_ls_par.R << std::endl;
-      amrex::Print() << "               marker_geometry = "
-                     << ((m_marker_par.geometry_type ==
-                          MarkerIBParams::GeometryBox)
-                             ? "box"
-                             : ((m_marker_par.geometry_type ==
-                                 MarkerIBParams::GeometryUserDefined)
-                                    ? "pitching_airfoil"
-                                    : "cylinder"))
+      amrex::Print() << "               marker_geometry = sphere"
                      << " (refine_upstream=" << m_marker_par.refine_upstream
                      << ", refine_downstream=" << m_marker_par.refine_downstream
                      << ", refine_cross=" << m_marker_par.refine_cross << ")\n";
@@ -1205,10 +1110,7 @@ void AmrCoreLBM::ReadParameters() {
       ResetIBMBackend();
     }
 
-    int n_phi = (m_use_cylinder &&
-                 m_marker_par.geometry_type == MarkerIBParams::GeometryCylinder)
-                    ? 1
-                    : 0;
+    int n_phi = m_use_cylinder ? 1 : 0;
     amrex::Print() << "Number signed distance functions = " << n_phi
                    << std::endl;
     totalNumberVar = nmac + ndir + n_phi;
@@ -1229,24 +1131,6 @@ void AmrCoreLBM::ReadParameters() {
                      dirz_dev.begin());
 
     const Geometry &geom = Geom(0);
-    if (m_marker_par.geometry_type == MarkerIBParams::GeometryBox) {
-      const auto problo = geom.ProbLoArray();
-      const auto probhi = geom.ProbHiArray();
-      if (m_marker_par.box_xhi <= m_marker_par.box_xlo) {
-        m_marker_par.box_xlo = problo[0];
-        m_marker_par.box_xhi = probhi[0];
-      }
-      if (m_marker_par.box_yhi <= m_marker_par.box_ylo) {
-        m_marker_par.box_ylo = problo[1];
-        m_marker_par.box_yhi = probhi[1];
-      }
-#if (AMREX_SPACEDIM == 3)
-      if (m_marker_par.box_zhi <= m_marker_par.box_zlo) {
-        m_marker_par.box_zlo = problo[2];
-        m_marker_par.box_zhi = probhi[2];
-      }
-#endif
-    }
     L0 = geom.ProbHi(0) - geom.ProbLo(0);
 
     T0 = L0 / U0;
@@ -1330,11 +1214,7 @@ void AmrCoreLBM::FillPatchMesoscopic(int lev, amrex::Real time,
 
         const int ilo = vbx.smallEnd(0), ihi = vbx.bigEnd(0);
         const int jlo = vbx.smallEnd(1), jhi = vbx.bigEnd(1);
-#if (AMREX_SPACEDIM == 3)
         const int klo = vbx.smallEnd(2), khi = vbx.bigEnd(2);
-#else
-        const int klo = 0, khi = 0;
-#endif
 
         auto const rho = tmpM[mfi].const_array(0);
         auto const ux = tmpM[mfi].const_array(1);
@@ -1347,11 +1227,7 @@ void AmrCoreLBM::FillPatchMesoscopic(int lev, amrex::Real time,
             gbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
               const bool in_valid = (i >= ilo && i <= ihi) &&
                                     (j >= jlo && j <= jhi) &&
-#if (AMREX_SPACEDIM == 3)
                                     (k >= klo && k <= khi);
-#else
-              true;
-#endif
 
               if (!in_valid) {
                 Real r = amrex::max(rho(i, j, k), amrex::Real(1.e-12));
@@ -1583,20 +1459,6 @@ void AmrCoreLBM::FillPatchMacro(int lev, amrex::Real time, amrex::MultiFab &mf,
   }
 }
 
-void AmrCoreLBM::FillPatchForcing(int lev, amrex::Real time,
-                                  amrex::MultiFab &mf, int icomp, int ncomp) {
-  // Just copy from current forcing[lev]; no time interpolation
-  amrex::Vector<amrex::MultiFab *> smf(1, &forcing[lev]);
-  amrex::Vector<amrex::Real> stime(1, t_new[lev]);
-
-  GpuBndryFuncFab<macroBcFill> gpu_bndry_func(macroBcFill{bcval});
-  PhysBCFunct<GpuBndryFuncFab<macroBcFill>> physbc(geom[lev], bcsMacro,
-                                                   gpu_bndry_func);
-
-  amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp, geom[lev],
-                              physbc, 0);
-}
-
 void AmrCoreLBM::FillCoarsePatchMacro(int lev, amrex::Real time,
                                       amrex::MultiFab &mf, int icomp,
                                       int ncomp) {
@@ -1655,10 +1517,7 @@ void AmrCoreLBM::GetDataMacro(int lev, Real time, Vector<MultiFab *> &data,
 }
 
 void AmrCoreLBM::BuildLevelSetOnLevel(int lev) {
-  const bool marker_levelset_ibm =
-      (m_ib_method != IBMMethodMarker ||
-       m_marker_par.geometry_type == MarkerIBParams::GeometryCylinder);
-  if (!m_use_cylinder || !m_ls || !marker_levelset_ibm)
+  if (!m_use_cylinder || !m_ls)
     return;
 
   // Use the *macro* MultiFab as the reference for BA/DM

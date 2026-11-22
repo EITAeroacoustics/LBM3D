@@ -1,0 +1,179 @@
+{
+  "definition": "max(0, last receive MPI_Wait.end - local halo GPU kernel.end)",
+  "time_unit": "milliseconds; source timestamps are nanoseconds",
+  "warmup_steps": 100,
+  "ranks": [
+    {
+      "file": "/home/hanbo/workspace/LBM/deps/lbm3d-3donly.gowx2N/runs/halo-review-nsys-full-4strong-20261122/rank-0.sqlite",
+      "steps": 600,
+      "timed_steps": 500,
+      "event_order_errors": 0,
+      "other_gpu_compute_kernel_steps_in_exposed_window": 0,
+      "cpu_gpu_launch_offset_us": {
+        "min": -16.567,
+        "max": 21.053
+      },
+      "metrics": {
+        "recv_wait": {
+          "mean_ms": 1.417921856,
+          "median_ms": 1.377189,
+          "p95_ms": 1.689417,
+          "max_ms": 3.960098
+        },
+        "local_gpu_copy": {
+          "mean_ms": 0.331480242,
+          "median_ms": 0.33130499999999996,
+          "p95_ms": 0.338777,
+          "max_ms": 0.347897
+        },
+        "overlap_with_local_copy": {
+          "mean_ms": 0.33137756,
+          "median_ms": 0.3312575,
+          "p95_ms": 0.338745,
+          "max_ms": 0.347897
+        },
+        "exposed_recv_after_local_copy": {
+          "mean_ms": 1.079754336,
+          "median_ms": 1.0395945,
+          "p95_ms": 1.353468,
+          "max_ms": 3.619805
+        },
+        "send_wait": {
+          "mean_ms": 0.0009668,
+          "median_ms": 0.000804,
+          "p95_ms": 0.001873,
+          "max_ms": 0.017162
+        }
+      }
+    },
+    {
+      "file": "/home/hanbo/workspace/LBM/deps/lbm3d-3donly.gowx2N/runs/halo-review-nsys-full-4strong-20261122/rank-1.sqlite",
+      "steps": 600,
+      "timed_steps": 500,
+      "event_order_errors": 0,
+      "other_gpu_compute_kernel_steps_in_exposed_window": 0,
+      "cpu_gpu_launch_offset_us": {
+        "min": -15.419,
+        "max": 25.212
+      },
+      "metrics": {
+        "recv_wait": {
+          "mean_ms": 1.3394249,
+          "median_ms": 1.297002,
+          "p95_ms": 1.673313,
+          "max_ms": 2.412373
+        },
+        "local_gpu_copy": {
+          "mean_ms": 0.33284283,
+          "median_ms": 0.332761,
+          "p95_ms": 0.340441,
+          "max_ms": 0.349625
+        },
+        "overlap_with_local_copy": {
+          "mean_ms": 0.332803044,
+          "median_ms": 0.332761,
+          "p95_ms": 0.340441,
+          "max_ms": 0.349625
+        },
+        "exposed_recv_after_local_copy": {
+          "mean_ms": 0.996838522,
+          "median_ms": 0.954046,
+          "p95_ms": 1.335215,
+          "max_ms": 2.06473
+        },
+        "send_wait": {
+          "mean_ms": 0.00722186,
+          "median_ms": 0.000867,
+          "p95_ms": 0.0712,
+          "max_ms": 0.083922
+        }
+      }
+    },
+    {
+      "file": "/home/hanbo/workspace/LBM/deps/lbm3d-3donly.gowx2N/runs/halo-review-nsys-full-4strong-20261122/rank-2.sqlite",
+      "steps": 600,
+      "timed_steps": 500,
+      "event_order_errors": 0,
+      "other_gpu_compute_kernel_steps_in_exposed_window": 0,
+      "cpu_gpu_launch_offset_us": {
+        "min": -13.815,
+        "max": 25.063
+      },
+      "metrics": {
+        "recv_wait": {
+          "mean_ms": 1.460783668,
+          "median_ms": 1.4161125,
+          "p95_ms": 1.837396,
+          "max_ms": 3.975867
+        },
+        "local_gpu_copy": {
+          "mean_ms": 0.358282632,
+          "median_ms": 0.3582495,
+          "p95_ms": 0.362489,
+          "max_ms": 0.368474
+        },
+        "overlap_with_local_copy": {
+          "mean_ms": 0.358212446,
+          "median_ms": 0.358233,
+          "p95_ms": 0.362489,
+          "max_ms": 0.368474
+        },
+        "exposed_recv_after_local_copy": {
+          "mean_ms": 1.096020008,
+          "median_ms": 1.0520855,
+          "p95_ms": 1.469685,
+          "max_ms": 3.609277
+        },
+        "send_wait": {
+          "mean_ms": 0.0013752,
+          "median_ms": 0.00083,
+          "p95_ms": 0.002469,
+          "max_ms": 0.035309
+        }
+      }
+    },
+    {
+      "file": "/home/hanbo/workspace/LBM/deps/lbm3d-3donly.gowx2N/runs/halo-review-nsys-full-4strong-20261122/rank-3.sqlite",
+      "steps": 600,
+      "timed_steps": 500,
+      "event_order_errors": 0,
+      "other_gpu_compute_kernel_steps_in_exposed_window": 0,
+      "cpu_gpu_launch_offset_us": {
+        "min": -40.495,
+        "max": 15.426
+      },
+      "metrics": {
+        "recv_wait": {
+          "mean_ms": 1.334643212,
+          "median_ms": 1.2808160000000002,
+          "p95_ms": 1.621617,
+          "max_ms": 3.955792
+        },
+        "local_gpu_copy": {
+          "mean_ms": 0.331155348,
+          "median_ms": 0.331066,
+          "p95_ms": 0.338522,
+          "max_ms": 0.345786
+        },
+        "overlap_with_local_copy": {
+          "mean_ms": 0.330697186,
+          "median_ms": 0.330778,
+          "p95_ms": 0.338428,
+          "max_ms": 0.344401
+        },
+        "exposed_recv_after_local_copy": {
+          "mean_ms": 1.004960742,
+          "median_ms": 0.953605,
+          "p95_ms": 1.295646,
+          "max_ms": 3.618714
+        },
+        "send_wait": {
+          "mean_ms": 0.00094865,
+          "median_ms": 0.0007915,
+          "p95_ms": 0.001211,
+          "max_ms": 0.01649
+        }
+      }
+    }
+  ]
+}

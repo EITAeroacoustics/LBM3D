@@ -57,11 +57,11 @@ def main() -> None:
             log = run_dir / "run.log"
             mpi_launcher = ([args.mpirun, *shlex.split(args.mpi_options),
                              *launcher[1:]] if launcher else [])
-            application = [str(binary), str(inputs[ranks]),
-                           "amr.plot_int=-1", "amr.chk_int=-1"]
+            application = [str(binary), str(inputs[ranks])]
             if args.mass_check_interval is not None:
                 application.append(f"lbm3d.mass_check_interval={args.mass_check_interval}")
             application.extend(args.input_option)
+            application.extend(("amr.plot_int=-1", "amr.chk_int=-1"))
             if launcher and args.rank_wrapper:
                 application = ["python3", str(args.rank_wrapper.resolve()),
                                *application]

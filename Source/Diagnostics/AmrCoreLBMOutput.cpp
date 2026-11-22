@@ -29,10 +29,7 @@ amrex::Vector<std::unique_ptr<amrex::MultiFab>> AmrCoreLBM::PlotFileMF() const {
   const int n_macro_out = 6; // rho, ux, uy, uz, vor, Pressure
   const int f_first_comp = n_macro_out;
 
-  const bool marker_levelset_ibm =
-      (m_ib_method != IBMMethodMarker ||
-       m_marker_par.geometry_type == MarkerIBParams::GeometryCylinder);
-  const bool want_phi = (m_use_cylinder && m_ls && marker_levelset_ibm);
+  const bool want_phi = (m_use_cylinder && m_ls);
 
   for (int lev = 0; lev <= finest_level; ++lev) {
     amrex::Print() << "Preparing plotfile data at level " << lev << "\n";
@@ -81,8 +78,7 @@ amrex::Vector<std::unique_ptr<amrex::MultiFab>> AmrCoreLBM::PlotFileMF() const {
       // Marker IBM uses fictitious fluid inside the body; mask solid-interior
       // macroscopic fields in plot output so visualization reflects the
       // physical exterior flow.
-      if (m_ib_method == IBMMethodMarker &&
-          m_marker_par.geometry_type == MarkerIBParams::GeometryCylinder) {
+      if (m_ib_method == IBMMethodMarker) {
         const amrex::Real ubx = m_marker_par.ubx;
         const amrex::Real uby = m_marker_par.uby;
         const amrex::Real ubz = m_marker_par.ubz;
@@ -120,11 +116,7 @@ Vector<std::string> AmrCoreLBM::PlotFileVarNames() const {
   // Use level 0 as reference (all levels have the same nComp layout)
   const int nmacro = macro_new[0].nComp();
   const int nmeso = f_new[0].nComp();
-  const bool marker_levelset_ibm =
-      (m_ib_method != IBMMethodMarker ||
-       m_marker_par.geometry_type == MarkerIBParams::GeometryCylinder);
-  const bool have_phi =
-      (m_use_cylinder && m_ls && m_ls->has_level(0) && marker_levelset_ibm);
+  const bool have_phi = (m_use_cylinder && m_ls && m_ls->has_level(0));
   const int nphi = have_phi ? 1 : 0;
 
   // --- Macroscopic variables ---

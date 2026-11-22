@@ -48,8 +48,8 @@ def run(binary: Path, inputs: Path, root: Path, ranks: int,
     log = root / "run.log"
     mpi_launcher = ([mpirun, *shlex.split(mpi_options), *launcher[1:]]
                     if launcher else [])
-    application = [str(binary), str(inputs), "max_step=10",
-                   "amr.plot_int=-1", "amr.chk_int=-1", *input_options]
+    application = [str(binary), str(inputs), *input_options,
+                   "max_step=10", "amr.plot_int=-1", "amr.chk_int=-1"]
     if launcher and rank_wrapper:
         application = ["python3", str(rank_wrapper), *application]
     command = [*mpi_launcher, *application]
@@ -74,6 +74,9 @@ def run(binary: Path, inputs: Path, root: Path, ranks: int,
     if len(summaries) != expected_fields:
         raise RuntimeError(f"expected {expected_fields} final-field summaries, "
                            f"got {len(summaries)}: {log}")
+    for field, values in summaries.items():
+        if not all(math.isfinite(float(value)) for value in values[:4]):
+            raise RuntimeError(f"non-finite final-field summary {field}: {log}")
     halo_send = HALO_SEND.search(log_text)
     return {"command": command, "visible_devices": visible,
             "full_field_outputs": full_fields,

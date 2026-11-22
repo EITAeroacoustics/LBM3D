@@ -153,7 +153,6 @@ bool DirectionalHalo::matches(MultiFab const& f) const {
 void DirectionalHalo::AddTag(std::vector<Segment>& segments,
                              FabArrayBase::CopyComTag const& tag,
                              Box const& dst_valid, Long& count) {
-#if (AMREX_SPACEDIM == 3)
   for (int sx = -1; sx <= 1; ++sx) {
     for (int sy = -1; sy <= 1; ++sy) {
       for (int sz = -1; sz <= 1; ++sz) {
@@ -193,9 +192,6 @@ void DirectionalHalo::AddTag(std::vector<Segment>& segments,
       }
     }
   }
-#else
-  amrex::ignore_unused(segments, tag, dst_valid, count);
-#endif
 }
 
 void DirectionalHalo::CopySegments(MultiFab& f,

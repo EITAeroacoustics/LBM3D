@@ -57,28 +57,26 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     fz_cc->setVal(force[2]);
   }
   MultiFab sfSborder(grids[lev], dmap[lev], sF_new.nComp(), sF_new.nGrow());
-  MultiFab smSborder(grids[lev], dmap[lev], sM_new.nComp(), sM_new.nGrow());
-  if (lev == 0 && finestLevel() == 0 && geom[lev].isAllPeriodic() &&
-      !m_use_cylinder) {
-    // Collision reads valid cells only. The post-collision FillBoundary below
-    // supplies the one-cell halo needed by streaming.
-    MultiFab::Copy(sfSborder, f_old[lev], 0, 0, sfSborder.nComp(), 0);
-    MultiFab::Copy(smSborder, macro_old[lev], 0, 0, smSborder.nComp(), 0);
-  } else {
-    FillPatchMesoscopic(lev, time, sfSborder, 0, sfSborder.nComp());
-    FillPatchMacro(lev, time, smSborder, 0, smSborder.nComp());
+  const int ndir_l = ndir;
+  if (lev > 0 || !geom[lev].isAllPeriodic()) {
+    // Preserve old-time physical and coarse-fine ghosts without copying the
+    // valid distribution field. Streaming reads only the first ghost layer.
+    FillPatchMesoscopic(lev, time, f_old[lev], 0, f_old[lev].nComp());
+    for (MFIter mfi(sfSborder, false); mfi.isValid(); ++mfi) {
+      const Box &vbx = mfi.validbox();
+      const Box gbx = mfi.growntilebox(1);
+      auto const old = f_old[lev][mfi].const_array();
+      auto const post = sfSborder[mfi].array();
+      amrex::ParallelFor(
+          gbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            if (!vbx.contains(i, j, k)) {
+              for (int q = 0; q < ndir_l; ++q) {
+                post(i, j, k, q) = old(i, j, k, q);
+              }
+            }
+          });
+    }
   }
-
-  // Alias macro fields from the macro staging MultiFab.
-  MultiFab rhocc(smSborder, amrex::make_alias, 0, 1); // rho
-  MultiFab ucc(smSborder, amrex::make_alias, 1, 1);   // u
-  MultiFab vcc(smSborder, amrex::make_alias, 2, 1);   // v
-#if (AMREX_SPACEDIM == 3)
-  MultiFab wcc(smSborder, amrex::make_alias, 3, 1);   // w
-#else
-  MultiFab wcc(grids[lev], dmap[lev], 1, 0); // dummy w in 2D
-  wcc.setVal(0.0);
-#endif
 
 #if LBM_USE_IBM
   std::unique_ptr<MultiFab> prevFxAlias;
@@ -91,6 +89,13 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
 
   // ---- Marker DF IBM (no level-set required; only on finest) ----
   if (lev == finestLevel() && m_ib_method == IBMMethodMarker && m_ibm) {
+    // Marker interpolation needs current velocity ghosts. Fill them in the
+    // old macro state without staging another full MultiFab.
+    FillPatchMacro(lev, time, macro_old[lev], 0, 4);
+    MultiFab rhocc(macro_old[lev], amrex::make_alias, 0, 1);
+    MultiFab ucc(macro_old[lev], amrex::make_alias, 1, 1);
+    MultiFab vcc(macro_old[lev], amrex::make_alias, 2, 1);
+    MultiFab wcc(macro_old[lev], amrex::make_alias, 3, 1);
     if (sForcingPtr && sForcingPtr->nComp() >= 3) {
       prevFxAlias = std::make_unique<MultiFab>(*sForcingPtr, amrex::make_alias, 0, 1);
       prevFyAlias = std::make_unique<MultiFab>(*sForcingPtr, amrex::make_alias, 1, 1);
@@ -118,23 +123,11 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
   //     sM_new.nComp() > 0 && sF_new.nComp() > 0,
   //     "macro_new[lev] or f_new[lev] has zero components!");
 
-  std::unique_ptr<MultiFab> sForcingborder;
-  if (sForcingPtr) {
-    sForcingborder = std::make_unique<MultiFab>(
-        grids[lev], dmap[lev], sForcingPtr->nComp(), sForcingPtr->nGrow());
-  }
-  // if (sForcing) {
-  //     sForcingborder = std::make_unique<MultiFab>(
-  //         grids[lev], dmap[lev], sForcing.nComp(),
-  //                           sForcing.nGrow());
-  // }
-
   // pack into forcing[lev] on valid region
   if (sForcingPtr) {
     MultiFab &sForcing = *sForcingPtr;
     for (MFIter mfi(sM_new, TilingIfNotGPU()); mfi.isValid(); ++mfi) {
       // amrex::Print() << "MFIter lev=" << lev
-      //                << " smSborder.nComp=" << smSborder.nComp()
       //                << " sfSborder.nComp=" << sfSborder.nComp()
       //                << " box=" << mfi.validbox() << "\n";
       const Box &vbx = mfi.validbox();
@@ -162,9 +155,6 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     }
   }
 
-  if (sForcingborder) {
-    FillPatchForcing(lev, time, *sForcingborder, 0, sForcingborder->nComp());
-  }
   if (m_force_eval_debug > 0) {
     // NOTE: `local=true` is per-rank and can print zero on IO rank even when
     // other ranks have nonzero forcing. Report both local and global norms.
@@ -195,23 +185,12 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
                    << std::defaultfloat;
   }
 
-  // Keep forcing ghost cells consistent across FAB boundaries before the
-  // collide kernel touches grown boxes. Without this, ghost cells can retain
-  // stale zeros at internal box interfaces and imprint weak grid-aligned
-  // artifacts in vorticity.
-  if (use_force_fields) {
-    fx_cc->FillBoundary(geom[lev].periodicity());
-    fy_cc->FillBoundary(geom[lev].periodicity());
-    fz_cc->FillBoundary(geom[lev].periodicity());
-  }
-
   const Real temptau = tau[lev];
 
   auto const *dirx_d = dirx_dev.data();
   auto const *diry_d = diry_dev.data();
   auto const *dirz_d = dirz_dev.data();
   auto const *wi_d = wi_dev.data();
-  const int ndir_l = ndir;
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -219,11 +198,12 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
   for (MFIter mfi(sF_new, false); mfi.isValid(); ++mfi) {
     const Box &vbx = mfi.validbox();
 
-    Array4<Real> rho_old = smSborder[mfi].array(0);
-    Array4<Real> u_old = smSborder[mfi].array(1);
-    Array4<Real> v_old = smSborder[mfi].array(2);
-    Array4<Real> w_old = smSborder[mfi].array(3);
-    Array4<Real> statein = sfSborder[mfi].array(); // f* (post-collision)
+    Array4<Real const> rho_old = macro_old[lev][mfi].const_array(0);
+    Array4<Real const> u_old = macro_old[lev][mfi].const_array(1);
+    Array4<Real const> v_old = macro_old[lev][mfi].const_array(2);
+    Array4<Real const> w_old = macro_old[lev][mfi].const_array(3);
+    Array4<Real const> stateold = f_old[lev][mfi].const_array();
+    Array4<Real> statepost = sfSborder[mfi].array();
 
     amrex::Array4<amrex::Real const> fx;
     amrex::Array4<amrex::Real const> fy;
@@ -235,8 +215,7 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     }
 
     // Collide only on valid cells.
-    // Ghost cells are synchronized from neighboring valid data below via
-    // FillBoundary to avoid box-edge inconsistencies.
+    // Distribution ghosts are synchronized from neighboring valid data below.
     amrex::ParallelFor(
         vbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
           const amrex::Real rho_loc = rho_old(i, j, k);
@@ -253,23 +232,19 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
           const Real fx_loc = use_force_fields ? fx(i, j, k) : Real(0.0);
           const Real fy_loc = use_force_fields ? fy(i, j, k) : Real(0.0);
           const Real fz_loc = use_force_fields ? fz(i, j, k) : Real(0.0);
-          collide_forced(i, j, k, statein, feq_loc, ndir_l, temptau, wi_d,
-                         dirx_d, diry_d, dirz_d, rho_loc, u_loc, v_loc, w_loc,
-                         fx_loc, fy_loc, fz_loc);
+          collide_forced(i, j, k, stateold, statepost, feq_loc, ndir_l,
+                         temptau, wi_d, dirx_d, diry_d, dirz_d, rho_loc,
+                         u_loc, v_loc, w_loc, fx_loc, fy_loc, fz_loc);
         });
   }
 
   // Streaming reads only the nearest neighbor. Keep the wider FAB ghosts for
   // boundary and IBM operations.
-#if (AMREX_SPACEDIM == 3)
   if (!m_directional_halo || !m_directional_halo->matches(sfSborder)) {
     m_directional_halo = std::make_unique<DirectionalHalo>(
         sfSborder, geom[lev], dirx, diry, dirz);
   }
   m_directional_halo->Fill(sfSborder);
-#else
-  sfSborder.FillBoundary(IntVect(1), geom[lev].periodicity());
-#endif
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -310,9 +285,7 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
 
           int flip_x = 0;
           int flip_y = 0;
-#if (AMREX_SPACEDIM == 3)
           int flip_z = 0;
-#endif
           bool has_bounce_back = false;
           bool unsupported_face = false;
 
@@ -348,7 +321,6 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
             }
           }
 
-#if (AMREX_SPACEDIM == 3)
           if (k < domain.smallEnd(2)) {
             if (bc_rec.lo(2) == amrex::BCType::user_1) {
               flip_z = 1;
@@ -364,7 +336,6 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
               unsupported_face = true;
             }
           }
-#endif
 
           if (!has_bounce_back || unsupported_face) {
             return;
@@ -373,11 +344,7 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
           for (int q = 0; q < ndir_l; ++q) {
             const int itgt = i + static_cast<int>(dirx_d[q]);
             const int jtgt = j + static_cast<int>(diry_d[q]);
-#if (AMREX_SPACEDIM == 3)
             const int ktgt = k + static_cast<int>(dirz_d[q]);
-#else
-            const int ktgt = k;
-#endif
 
             if (!vbx.contains(itgt, jtgt, ktgt)) {
               continue;
@@ -385,11 +352,7 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
 
             const int rx = -static_cast<int>(dirx_d[q]);
             const int ry = -static_cast<int>(diry_d[q]);
-#if (AMREX_SPACEDIM == 3)
             const int rz = -static_cast<int>(dirz_d[q]);
-#else
-            const int rz = 0;
-#endif
 
             int q_reflect = q;
             for (int p = 0; p < ndir_l; ++p) {
@@ -422,14 +385,10 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
                                 dirx_d, diry_d, dirz_d);
         });
   }
-  const int step_lev = istep[lev];
-  // Negative intervals disable derived-field refreshes between outputs.
-  const bool do_vorticity =
-      ((regrid_int > 0) && (((step_lev + 1) % regrid_int) == 0)) ||
-      ((plot_int > 0) && (((step_lev + 1) % plot_int) == 0)) ||
-      ((chk_int > 0) && (((step_lev + 1) % chk_int) == 0));
-
-  if (do_vorticity) {
+  // The coarse level may be tagged for regridding on the next step.
+  // Plot output refreshes derived fields in Evolve immediately before writing.
+  if (lev < max_level && regrid_int > 0 &&
+      ((istep[lev] + 1) % regrid_int) == 0) {
     UpdateDerivedMacroFields(lev, t_new[lev]);
   }
 

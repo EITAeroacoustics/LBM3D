@@ -1,0 +1,97 @@
+diff --git a/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp b/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
+--- a/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
++++ b/Source/AMReXAdapter/AdvanceLBMAtLevel.cpp
+@@ -60,11 +60,7 @@
+                                      geom[lev].isAllPeriodic() && !m_use_cylinder;
+   MultiFab sfSborder(grids[lev], dmap[lev], sF_new.nComp(), sF_new.nGrow());
+   MultiFab smSborder_storage;
+-  if (can_read_old_directly) {
+-    // Collision reads valid cells only. The post-collision halo exchange
+-    // supplies the one-cell neighbors needed by streaming.
+-    MultiFab::Copy(sfSborder, f_old[lev], 0, 0, sfSborder.nComp(), 0);
+-  } else {
++  if (!can_read_old_directly) {
+     smSborder_storage.define(grids[lev], dmap[lev], sM_new.nComp(),
+                              sM_new.nGrow());
+     FillPatchMesoscopic(lev, time, sfSborder, 0, sfSborder.nComp());
+@@ -199,6 +195,9 @@
+     Array4<Real> u_old = smSborder[mfi].array(1);
+     Array4<Real> v_old = smSborder[mfi].array(2);
+     Array4<Real> w_old = smSborder[mfi].array(3);
++    Array4<Real const> stateold = can_read_old_directly
++                                      ? f_old[lev][mfi].const_array()
++                                      : sfSborder[mfi].const_array();
+     Array4<Real> statein = sfSborder[mfi].array(); // f* (post-collision)
+ 
+     amrex::Array4<amrex::Real const> fx;
+@@ -228,9 +227,9 @@
+           const Real fx_loc = use_force_fields ? fx(i, j, k) : Real(0.0);
+           const Real fy_loc = use_force_fields ? fy(i, j, k) : Real(0.0);
+           const Real fz_loc = use_force_fields ? fz(i, j, k) : Real(0.0);
+-          collide_forced(i, j, k, statein, feq_loc, ndir_l, temptau, wi_d,
+-                         dirx_d, diry_d, dirz_d, rho_loc, u_loc, v_loc, w_loc,
+-                         fx_loc, fy_loc, fz_loc);
++          collide_forced(i, j, k, stateold, statein, feq_loc, ndir_l,
++                         temptau, wi_d, dirx_d, diry_d, dirz_d, rho_loc,
++                         u_loc, v_loc, w_loc, fx_loc, fy_loc, fz_loc);
+         });
+   }
+ 
+diff --git a/Source/LBM/collide.H b/Source/LBM/collide.H
+--- a/Source/LBM/collide.H
++++ b/Source/LBM/collide.H
+@@ -7,20 +7,13 @@
+ AMREX_GPU_DEVICE
+ AMREX_FORCE_INLINE
+ void collide(int i, int j, int k,
+-             // amrex::Array4<amrex::Real>  const & f_out,
+-             amrex::Array4<amrex::Real> const &f_old,
++             amrex::Array4<amrex::Real const> const &f_old,
++             amrex::Array4<amrex::Real> const &f_post,
+              amrex::Real const *feq, int const ndir,
+              amrex::Real const tau) {
+-  // amrex::Print() << tau << std::endl;
+-  // amrex::Print() << "Collide at (" << i << "," << j << "," << k << ")\n";
+-
+   for (int i_dir = 0; i_dir < ndir; ++i_dir) {
+-
+-    // amrex::Print() << "f_old before: " << f_old(i, j, k, i_dir) << std::endl;
+-    // amrex::Print() << "feq: " << feq[i_dir] << std::endl;
+-    f_old(i, j, k, i_dir) = 1.0 * f_old(i, j, k, i_dir) -
++    f_post(i, j, k, i_dir) = 1.0 * f_old(i, j, k, i_dir) -
+                             (f_old(i, j, k, i_dir) - feq[i_dir]) / tau;
+-    // amrex::Print() << "f_old after: " << f_old(i, j, k, i_dir) << std::endl;
+   }
+ }
+ 
+diff --git a/Source/LBM/collide_forced.H b/Source/LBM/collide_forced.H
+--- a/Source/LBM/collide_forced.H
++++ b/Source/LBM/collide_forced.H
+@@ -8,7 +8,8 @@
+ AMREX_GPU_DEVICE
+ AMREX_FORCE_INLINE
+ void collide_forced(int i, int j, int k,
+-                    amrex::Array4<amrex::Real> const &f_old,
++                    amrex::Array4<amrex::Real const> const &f_old,
++                    amrex::Array4<amrex::Real> const &f_post,
+                     amrex::Real const *feq_i, // length = ndir
+                     int ndir, amrex::Real tau,
+                     amrex::Real const *wi, amrex::Real const *dirx,
+@@ -17,7 +18,7 @@
+                     amrex::Real ux, amrex::Real uy, amrex::Real uz,
+                     amrex::Real fx, amrex::Real fy, amrex::Real fz) {
+   // 1) Do the usual BGK collision using your existing kernel
+-  collide(i, j, k, f_old, feq_i, ndir, tau);
++  collide(i, j, k, f_old, f_post, feq_i, ndir, tau);
+ 
+   // 2) If forcing is effectively zero, we are done:
+   if (fx == 0.0 && fy == 0.0 && fz == 0.0) {
+@@ -42,7 +43,7 @@
+     amrex::Real Si = wi[q] * fac * (termx * fx + termy * fy + termz * fz);
+ 
+     // add forcing *increment* on top of BGK result
+-    f_old(i, j, k, q) += Si;
++    f_post(i, j, k, q) += Si;
+   }
+ }
+ 

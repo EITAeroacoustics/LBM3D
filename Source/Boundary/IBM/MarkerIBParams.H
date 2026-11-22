@@ -6,12 +6,6 @@
 //
 // This is intentionally kept as a POD to simplify I/O via ParmParse.
 struct MarkerIBParams {
-  enum GeometryType {
-    GeometryCylinder = 0,
-    GeometryBox = 1,
-    GeometryUserDefined = 2
-  };
-
   enum CouplingMethod {
     CouplingExplicit = 0,
     CouplingIVC = 1,
@@ -21,7 +15,7 @@ struct MarkerIBParams {
   // Marker-fluid coupling strategy:
   //   explicit : IAMReX-style multi-direct-forcing loop
   //   ivc      : implicit velocity correction (Wu & Shu style)
-  // Default to IVC for cylinder IBM runs; explicit remains available for
+  // Default to IVC for sphere IBM runs; explicit remains available for
   // diagnostics/regression checks.
   int coupling_method{CouplingIVC};
 
@@ -45,42 +39,11 @@ struct MarkerIBParams {
   // The epsilon is a numerical floor on M_kk.
   amrex::Real explicit_diag_eps{1.0e-8};
 
-  // Marker geometry:
-  //   cylinder     : legacy circular/spherical marker shell
-  //   box          : axis-aligned marker box (2D cavity-style walls)
-  //   user_defined : built-in pitching-airfoil geometry (legacy enum name)
-  int geometry_type{GeometryCylinder};
-
-  // Axis-aligned marker box bounds (used when geometry_type=box).
-  amrex::Real box_xlo{0.0};
-  amrex::Real box_xhi{0.0};
-  amrex::Real box_ylo{0.0};
-  amrex::Real box_yhi{0.0};
-  amrex::Real box_zlo{0.0};
-  amrex::Real box_zhi{0.0};
-
-  // Marker spacing along each wall. If <=0, defaults to dx.
-  amrex::Real box_ds{0.0};
-
-  // If >0, build only the top (yhi) marker wall.
-  // This is useful for cavity validation where side/bottom walls are
-  // already enforced by physical BC and only the moving lid is imposed by IBM.
-  int box_lid_only{0};
-
-  // Moving-lid velocity on the yhi face (others are stationary for now).
-  amrex::Real box_lid_ux{0.0};
-  amrex::Real box_lid_uy{0.0};
-  amrex::Real box_lid_uz{0.0};
-
-  // Tolerance used to identify the lid face from marker coordinates.
-  // If <=0, an internal default based on marker spacing is used.
-  amrex::Real box_wall_tol{0.0};
-
   // Optional override for number of Lagrangian markers.
   // If 0, a heuristic is used (IAMReX-like for spheres).
   int n_marker{0};
 
-  // Optional AMR refinement envelope around cylinder/sphere-style IBM bodies,
+  // Optional AMR refinement envelope around spherical IBM bodies,
   // expressed in multiples of the body radius.
   // If <= 0, the legacy body-only refinement box is used.
   amrex::Real refine_upstream{-1.0};

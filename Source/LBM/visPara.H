@@ -17,7 +17,6 @@ amrex::Real vorticityDiagnostic(
   Real dv_dx = (v(i + 1, j, k) - v(i - 1, j, k)) / (2.0 * dx);
   Real du_dy = (u(i, j + 1, k) - u(i, j - 1, k)) / (2.0 * dy);
 
-#if (AMREX_SPACEDIM == 3)
   Real du_dz = (u(i, j, k + 1) - u(i, j, k - 1)) / (2.0 * dz);
   Real dw_dx = (w(i + 1, j, k) - w(i - 1, j, k)) / (2.0 * dx);
   Real dv_dz = (v(i, j, k + 1) - v(i, j, k - 1)) / (2.0 * dz);
@@ -29,10 +28,6 @@ amrex::Real vorticityDiagnostic(
 
   return std::sqrt(omega_x * omega_x + omega_y * omega_y +
                    omega_z * omega_z);
-#else
-  amrex::ignore_unused(w, dz);
-  return dv_dx - du_dy;
-#endif
 }
 
 AMREX_GPU_DEVICE

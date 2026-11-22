@@ -24,27 +24,24 @@ cuda_arch=${LBM_CUDA_ARCH:-70}
     nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv,noheader
 } > "$work_dir/toolchain.txt" 2>&1
 
-for dim in 2 3; do
-    "$cmake_bin" -S "$amrex_src" -B "$work_dir/amrex-build-${dim}d" \
-        -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_COMPILER="$cuda_compiler" \
-        -DCMAKE_CUDA_ARCHITECTURES="$cuda_arch" \
-        -DCMAKE_INSTALL_PREFIX="$work_dir/amrex-install-${dim}d" \
-        -DAMReX_SPACEDIM="$dim" -DAMReX_GPU_BACKEND=CUDA \
-        -DAMReX_PRECISION=DOUBLE -DAMReX_MPI=ON -DAMReX_PARTICLES=ON \
-        -DAMReX_FORTRAN=OFF -DAMReX_CUDA_FASTMATH=OFF \
-        > "$work_dir/amrex-config-${dim}d.log" 2>&1
-    "$cmake_bin" --build "$work_dir/amrex-build-${dim}d" --parallel 4 \
-        > "$work_dir/amrex-build-${dim}d.log" 2>&1
-    "$cmake_bin" --install "$work_dir/amrex-build-${dim}d" \
-        > "$work_dir/amrex-install-${dim}d.log" 2>&1
-    "$cmake_bin" -S "$project_src" -B "$work_dir/lbm3d-build-${dim}d" \
-        -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_COMPILER="$cuda_compiler" \
-        -DCMAKE_PREFIX_PATH="$work_dir/amrex-install-${dim}d" \
-        -DLBM_DIM="$dim" \
-        > "$work_dir/lbm3d-config-${dim}d.log" 2>&1
-    "$cmake_bin" --build "$work_dir/lbm3d-build-${dim}d" --parallel 4 \
-        > "$work_dir/lbm3d-build-${dim}d.log" 2>&1
-done
+"$cmake_bin" -S "$amrex_src" -B "$work_dir/amrex-build-3d" \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_COMPILER="$cuda_compiler" \
+    -DCMAKE_CUDA_ARCHITECTURES="$cuda_arch" \
+    -DCMAKE_INSTALL_PREFIX="$work_dir/amrex-install-3d" \
+    -DAMReX_SPACEDIM=3 -DAMReX_GPU_BACKEND=CUDA \
+    -DAMReX_PRECISION=DOUBLE -DAMReX_MPI=ON -DAMReX_PARTICLES=ON \
+    -DAMReX_FORTRAN=OFF -DAMReX_CUDA_FASTMATH=OFF \
+    > "$work_dir/amrex-config-3d.log" 2>&1
+"$cmake_bin" --build "$work_dir/amrex-build-3d" --parallel 4 \
+    > "$work_dir/amrex-build-3d.log" 2>&1
+"$cmake_bin" --install "$work_dir/amrex-build-3d" \
+    > "$work_dir/amrex-install-3d.log" 2>&1
+"$cmake_bin" -S "$project_src" -B "$work_dir/lbm3d-build-3d" \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_COMPILER="$cuda_compiler" \
+    -DCMAKE_PREFIX_PATH="$work_dir/amrex-install-3d" \
+    > "$work_dir/lbm3d-config-3d.log" 2>&1
+"$cmake_bin" --build "$work_dir/lbm3d-build-3d" --parallel 4 \
+    > "$work_dir/lbm3d-build-3d.log" 2>&1
 
 mkdir -p "$work_dir/smoke"
 cd "$work_dir/smoke"
@@ -59,14 +56,14 @@ if [[ ${1:-} == --full ]]; then
     "$cmake_bin" -S "$project_src/Baseline" -B "$work_dir/baseline-build-3d" \
         -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_COMPILER="$cuda_compiler" \
         -DCMAKE_PREFIX_PATH="$work_dir/amrex-install-3d" \
-        -DLBM_DIM=3 -DLBM_CASE=TGV3D \
+        -DLBM_CASE=TGV3D \
         > "$work_dir/baseline-config-3d.log" 2>&1
     "$cmake_bin" --build "$work_dir/baseline-build-3d" --parallel 4 \
         > "$work_dir/baseline-build-3d.log" 2>&1
     "$cmake_bin" -S "$project_src/Baseline" -B "$work_dir/baseline-timed-3d" \
         -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_COMPILER="$cuda_compiler" \
         -DCMAKE_PREFIX_PATH="$work_dir/amrex-install-3d" \
-        -DLBM_DIM=3 -DLBM_CASE=TGV3D -DLBM_BASELINE_TIMING=ON \
+        -DLBM_CASE=TGV3D -DLBM_BASELINE_TIMING=ON \
         > "$work_dir/baseline-timed-config-3d.log" 2>&1
     "$cmake_bin" --build "$work_dir/baseline-timed-3d" --target ilbmrex_baseline --parallel 4 \
         > "$work_dir/baseline-timed-build-3d.log" 2>&1
@@ -75,7 +72,7 @@ if [[ ${1:-} == --full ]]; then
         "$cmake_bin" -S "$project_src" -B "$build_dir" \
             -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_COMPILER="$cuda_compiler" \
             -DCMAKE_PREFIX_PATH="$work_dir/amrex-install-3d" \
-            -DLBM_DIM=3 -DLBM_ENABLE_IBM=OFF -DLBM_TIMING="$timing" \
+            -DLBM_ENABLE_IBM=OFF -DLBM_TIMING="$timing" \
             > "$work_dir/lbm3d-analysis-${timing}-config.log" 2>&1
         "$cmake_bin" --build "$build_dir" --target lbm3d_tgv3d --parallel 4 \
             > "$work_dir/lbm3d-analysis-${timing}-build.log" 2>&1

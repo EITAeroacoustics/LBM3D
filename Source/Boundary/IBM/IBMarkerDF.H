@@ -41,8 +41,7 @@
 //  - Multi-direct-forcing iterations with in-loop velocity correction (and
 //  accumulation of total Eulerian force)
 //
-// This is intentionally scoped to a single rigid body (the existing cylinder
-// geometry in your code).
+// This is intentionally scoped to a single rigid sphere.
 
 class IBMarkerDF {
 public:
@@ -94,15 +93,13 @@ public:
   void build_markers(amrex::DistributionMapping const &dm,
                      amrex::BoxArray const &ba);
 
-  void update_lagrangian_marker(amrex::Real time) const;
+  void update_lagrangian_marker() const;
 
   void velocity_interpolation(amrex::MultiFab const &EulerVel,
                               int euler_vel_comp, int delta_type) const;
 
-  void compute_lagrangian_force_explicit(amrex::Real dt,
-                                         amrex::Real time) const;
-  void compute_lagrangian_force_ivc(amrex::Real dt,
-                                    amrex::Real time) const;
+  void compute_lagrangian_force_explicit(amrex::Real dt) const;
+  void compute_lagrangian_force_ivc(amrex::Real dt) const;
 
   void force_spreading(amrex::MultiFab &EulerForce, int euler_force_comp,
                        int delta_type) const;
@@ -113,8 +110,7 @@ public:
                            amrex::Real dt) const;
 
   void gather_marker_state(std::vector<int> &ids,
-                           std::vector<amrex::Real> &data,
-                           amrex::Real time) const;
+                           std::vector<amrex::Real> &data) const;
 
   void scatter_marker_force(std::vector<amrex::Real> const &fx_global,
                             std::vector<amrex::Real> const &fy_global,
@@ -146,17 +142,10 @@ private:
   // We keep device copies so UpdateLagrangianMarker can run on GPU.
   mutable amrex::Gpu::DeviceVector<amrex::Real> m_phiK_d;
   mutable amrex::Gpu::DeviceVector<amrex::Real> m_thetaK_d;
-  mutable amrex::Gpu::DeviceVector<amrex::Real> m_xref_d;
-  mutable amrex::Gpu::DeviceVector<amrex::Real> m_yref_d;
-  mutable amrex::Gpu::DeviceVector<amrex::Real> m_zref_d;
   std::vector<amrex::Real> m_phiK_h;
   std::vector<amrex::Real> m_thetaK_h;
-  std::vector<amrex::Real> m_xref_h;
-  std::vector<amrex::Real> m_yref_h;
-  std::vector<amrex::Real> m_zref_h;
   int m_start_id{0};
   amrex::Real m_dv{0.0};
-  amrex::Real m_wall_tol{0.0};
 
   std::unique_ptr<MarkerContainer> m_markers;
 

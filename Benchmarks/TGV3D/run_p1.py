@@ -32,7 +32,7 @@ def build_options(binary: Path) -> dict[str, str]:
     cache = binary.parent / "CMakeCache.txt"
     if not cache.exists():
         return {}
-    names = ("AMReX_DIR", "CMAKE_BUILD_TYPE", "CMAKE_CUDA_COMPILER", "LBM_DIM",
+    names = ("AMReX_DIR", "CMAKE_BUILD_TYPE", "CMAKE_CUDA_COMPILER",
              "LBM_BASELINE_IBM", "LBM_ENABLE_IBM", "LBM_TIMING")
     return {name: line.split("=", 1)[1] for line in cache.read_text().splitlines()
             for name in names if line.startswith(name + ":")}
