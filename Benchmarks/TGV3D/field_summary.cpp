@@ -3,6 +3,7 @@
 #include <iomanip>
 
 #include <AMReX.H>
+#include <AMReX_Math.H>
 #include <AMReX_MultiFab.H>
 #include <AMReX_ParReduce.H>
 #include <AMReX_ParallelContext.H>
@@ -82,6 +83,82 @@ void PrintFieldSummary(amrex::MultiFab const& field, int lev,
                  << '\n';
 }
 
+#ifdef LBM_TGV_METRICS
+void PrintTgvMetrics(AmrCoreLBM const& solver) {
+  constexpr amrex::Real u0 = 0.02;
+  constexpr amrex::Real cs2 = 1.0 / 3.0;
+  int const lev = 0;
+  int const step = solver.StepAtLevel(lev);
+  auto const& macro = solver.MacroState(lev);
+  auto const& f = solver.DistributionState(lev);
+  auto const& geom = solver.Geom(lev);
+  auto const prob_lo = geom.ProbLoArray();
+  auto const prob_hi = geom.ProbHiArray();
+  auto const dx = geom.CellSizeArray();
+  amrex::Real const two_pi = 2.0 * amrex::Math::pi<amrex::Real>();
+  amrex::Real const kx = two_pi / (prob_hi[0] - prob_lo[0]);
+  amrex::Real const ky = two_pi / (prob_hi[1] - prob_lo[1]);
+  amrex::Real const kz = two_pi / (prob_hi[2] - prob_lo[2]);
+  auto const arrays = macro.const_arrays();
+  auto const values = amrex::ParReduce(
+      amrex::TypeList<amrex::ReduceOpSum, amrex::ReduceOpMax>{},
+      amrex::TypeList<amrex::Real, amrex::Real>{},
+      macro, amrex::IntVect(0),
+      [=] AMREX_GPU_DEVICE(int box, int i, int j, int k) noexcept
+          -> amrex::GpuTuple<amrex::Real, amrex::Real> {
+        auto const& a = arrays[box];
+        amrex::Real const rho = a(i, j, k, 0);
+        amrex::Real const ux = a(i, j, k, 1);
+        amrex::Real const uy = a(i, j, k, 2);
+        amrex::Real const uz = a(i, j, k, 3);
+        amrex::Real const kinetic =
+            0.5 * rho * (ux * ux + uy * uy + uz * uz);
+        amrex::Real error = 0.0;
+        if (step == 0) {
+          amrex::Real const x = prob_lo[0] + (i + 0.5) * dx[0];
+          amrex::Real const y = prob_lo[1] + (j + 0.5) * dx[1];
+          amrex::Real const z = prob_lo[2] + (k + 0.5) * dx[2];
+          auto const sx = amrex::Math::sincos(kx * x);
+          auto const sy = amrex::Math::sincos(ky * y);
+          auto const sz = amrex::Math::sincos(kz * z);
+          amrex::Real const expected_ux =
+              u0 * sx.first * sy.second * sz.second;
+          amrex::Real const expected_uy =
+              -u0 * sx.second * sy.first * sz.second;
+          amrex::Real const pressure = u0 * u0 / 16.0 *
+              (amrex::Math::sincos(2.0 * kx * x).second +
+               amrex::Math::sincos(2.0 * ky * y).second) *
+              (amrex::Math::sincos(2.0 * kz * z).second + 2.0);
+          amrex::Real const expected_rho = 1.0 + pressure / cs2;
+          error = amrex::max(amrex::Math::abs(rho - expected_rho),
+                            amrex::Math::abs(ux - expected_ux));
+          error = amrex::max(error,
+                             amrex::Math::abs(uy - expected_uy));
+          error = amrex::max(error, amrex::Math::abs(uz));
+        }
+        return {kinetic, error};
+      });
+  amrex::Real kinetic = amrex::get<0>(values);
+  amrex::Real init_error = amrex::get<1>(values);
+  amrex::ParallelDescriptor::ReduceRealSum(kinetic);
+  amrex::ParallelDescriptor::ReduceRealMax(init_error);
+  auto const cells = geom.Domain().numPts();
+  bool const nonfinite = macro.contains_nan() || macro.contains_inf() ||
+                         f.contains_nan() || f.contains_inf();
+  amrex::Print() << "TGV_PRECISION real_bytes=" << sizeof(amrex::Real) << '\n';
+  amrex::Print() << std::setprecision(17)
+                 << "TGV_METRICS step=" << step
+                 << " time=" << solver.TimeAtLevel(lev)
+                 << " cells=" << cells
+                 << " mean_rho=" << macro.sum(0) /
+                       static_cast<amrex::Real>(cells)
+                 << " mean_kinetic=" << kinetic /
+                       static_cast<amrex::Real>(cells)
+                 << " init_linf=" << init_error
+                 << " nonfinite=" << nonfinite << '\n';
+}
+#endif
+
 int main(int argc, char* argv[]) {
   amrex::Initialize(argc, argv);
   {
@@ -101,6 +178,9 @@ int main(int argc, char* argv[]) {
         PrintFieldSummary(f, lev, comp, 6 + comp);
       }
     }
+#ifdef LBM_TGV_METRICS
+    PrintTgvMetrics(solver);
+#endif
   }
   amrex::Finalize();
 }

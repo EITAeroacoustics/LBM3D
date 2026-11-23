@@ -96,6 +96,8 @@ public:
 
   amrex::MultiFab const& MacroState(int lev) const { return macro_new[lev]; }
   amrex::MultiFab const& DistributionState(int lev) const { return f_new[lev]; }
+  int StepAtLevel(int lev) const { return istep[lev]; }
+  amrex::Real TimeAtLevel(int lev) const { return t_new[lev]; }
 
   void InitEquilibrium();
 
