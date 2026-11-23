@@ -59,3 +59,5 @@ CUDA_VISIBLE_DEVICES=0 "$R/build/lbm3d_aa_tgv3d" \
 容量算式：`536³=153,990,656` 个有效单元；九块/轴、一层 ghost 的分布场分配 `(536+18)³ × 19 × 8 = 24,647.5 MiB`，4 分量有效宏观场 `536³ × 4 × 8 = 4,699.4 MiB`，数值场合计 `29,346.9 MiB`。本机 arena 实际已用比该算式多约 39 MiB，设备峰值还包括 arena 预留和运行时开销。
 
 集成到 `AmrCoreLBM` 后仍需独立进程跑满 100 步，并在第 1、50、100 步检查在线标量、GPU 峰值、arena 和无全场文件。当前原型只覆盖单层全周期无外力 TGV；IBM、非周期边界、AMR 和 checkpoint 未验证。
+
+后续提交 `11d4f89e3d9f5946a93a20454c69dab2930118bd` 补充 AA 逆向本地 halo 在 AMReX team 模式下按有效 FAB 拥有者分派标签。上述数值与容量日志产生于此前的 team.size=1 二进制；远端 AMReX 安装未定义 `BL_USE_MPI3` 或 `BL_USE_TEAM`，因此 team.size>1 尚无运行验证。
