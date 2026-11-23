@@ -18,9 +18,9 @@ AMReXAdapter 组织 LBM、边界和诊断代码；LBM 核函数不依赖算例�
 
 `AMReXAdapter/DirectionalHalo` 是三维单层 D3Q19 求解的固定通信路径，只交换 pull streaming 实际读取的单层分布函数 ghost 分量。几何相交、周期映射和 rank 归属来自 AMReX 的 FillBoundary 元数据；非周期物理边界仍由 FillPatch 和边界条件处理。方向性 halo 不因 IBM、周期性、MPI 传输方式或 AMReX team size 切换为普通 `FillBoundary`，也不提供运行时开关。`lbm3d.mass_check_interval` 默认每 100 步做一次全局质量检查，首步和末步始终检查；设为 1 可逐步检查。
 
-推进每步从分布函数计算并保存密度与速度。默认双缓冲路径向 `sfSborder` 写入碰撞结果，不复制分布函数有效区；周期单层路径在 `f_old` 原位碰撞，下一步直接读取旧宏观场有效单元。非周期物理边界或未来粗细界面的旧时刻 ghost 仍须保持正确时间语义。IBM 所需的宏观 ghost 按需在原场填充；推进不创建宏观场暂存副本。
+推进每步从分布函数计算并保存密度与速度。当前运行缺省的双缓冲路径向碰撞暂存场写入结果，不复制分布函数有效区；周期单层路径在 `f_old` 原位碰撞，下一步直接读取旧宏观场有效单元。非周期物理边界或未来粗细界面的旧时刻 ghost 仍须保持正确时间语义。IBM 所需的宏观 ghost 按需在原场填充；推进不创建宏观场暂存副本。
 
-TGV 容量模式由输入 `lbm3d.storage=aa` 选择。它只分配一份 19 分量、一层 ghost 的分布场及一份 4 分量、无 ghost 的宏观场；奇偶步交替解释同一份分布函数，并以方向性 halo 的 `Fill` 与反向 `ScatterAA` 交换实际需要的值。该路径目前要求单层、全周期、无 IBM 和外力、`lbmPhysicalParameters.nmac=4`，且关闭 plotfile、checkpoint 与 restart。默认双缓冲路径继续服务其他边界和层级配置。`lbm3d.tgv_metrics_interval` 设为正整数时，AA 路径在首步、指定间隔和末步输出在线质量、动能、正性及非有限值指标；设为 0 时，TGV 摘要程序只输出末步指标。
+FP64 Alternating Access（AA）已选为后续求解器的目标存储与流移路线；当前已验收的 TGV 路径由输入 `lbm3d.storage=aa` 显式选择。它只分配一份 19 分量、一层 ghost 的分布场及一份 4 分量、无 ghost 的宏观场；奇偶步交替解释同一份分布函数，并以方向性 halo 的 `Fill` 与反向 `ScatterAA` 交换实际需要的值。该路径目前要求单层、全周期、无 IBM 和外力、`lbmPhysicalParameters.nmac=4`，且关闭 plotfile、checkpoint 与 restart。双缓冲路径暂时服务尚未迁移的边界和层级配置；相关 AA 数值、守恒与多卡验收完成后再切换通用运行默认。`lbm3d.tgv_metrics_interval` 设为正整数时，AA 路径在首步、指定间隔和末步输出在线质量、动能、正性及非有限值指标；设为 0 时，TGV 摘要程序只输出末步指标。
 
 AA 路径遇到多个入向远端通信邻居时，在等待方向性 halo 接收期间计算 FAB 内部宏观量，待 ghost 到齐后计算边界格点；单卡或单邻居仍按整块计算宏观量。两种调度都使用相同的一层方向性 halo 通信。
 
