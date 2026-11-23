@@ -280,7 +280,7 @@ private:
   amrex::Vector<amrex::Real> xCellSize, yCellSize, zCellSize;
 
   int nmac;
-  const int nghost = 3;
+  int nghost = 3;
 
   int totalNumberVar;
 

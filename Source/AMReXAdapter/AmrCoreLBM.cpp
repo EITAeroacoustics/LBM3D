@@ -106,6 +106,7 @@ void AmrCoreLBM::ResetForceHistory() {
 }
 
 void AmrCoreLBM::UpdateDerivedMacroFields(int lev, Real time) {
+  if (nmac == 4) { return; }
   constexpr int derive_ncomp = 4; // rho, ux, uy, uz
   MultiFab macro_patch(grids[lev], dmap[lev], derive_ncomp, 1);
   FillPatchMacro(lev, time, macro_patch, 0, derive_ncomp);
@@ -149,6 +150,10 @@ AmrCoreLBM::AmrCoreLBM(ProblemInit problem_init)
       max_level == 0, "LBM3D requires amr.max_level=0.");
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ndir == 19,
                                    "LBM3D requires lbm3d.ndir=19 (D3Q19).");
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+      nmac == 4 || nmac >= 6,
+      "LBM3D requires four flow macros or six with derived fields.");
+  if (!m_use_cylinder && geom[0].isAllPeriodic()) { nghost = 1; }
 
   // Geometry on all levels has been defined already.
 

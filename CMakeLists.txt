@@ -68,13 +68,20 @@ setup_target_for_cuda_compilation(lbm_compare)
 
 add_lbm_case(lbm3d_sphere ${CMAKE_CURRENT_SOURCE_DIR}/Examples/Sphere_flow)
 add_lbm_case(lbm3d_square_duct ${CMAKE_CURRENT_SOURCE_DIR}/Examples/SquareDuct_flow)
-add_lbm_case(lbm3d_tgv3d ${CMAKE_CURRENT_SOURCE_DIR}/Benchmarks/TGV3D)
+add_executable(lbm3d_tgv3d
+    Examples/Common/main.cpp
+    Benchmarks/TGV3D/ProblemInit.cpp)
+target_include_directories(lbm3d_tgv3d PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Benchmarks/TGV3D)
+target_link_libraries(lbm3d_tgv3d PRIVATE lbm3d)
+setup_target_for_cuda_compilation(lbm3d_tgv3d)
 
 add_executable(lbm3d_tgv3d_summary EXCLUDE_FROM_ALL
     Benchmarks/TGV3D/field_summary.cpp
-    Examples/Common/ProblemInit.cpp)
+    Benchmarks/TGV3D/ProblemInit.cpp)
 target_include_directories(lbm3d_tgv3d_summary PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Benchmarks/TGV3D)
+target_compile_definitions(lbm3d_tgv3d_summary PRIVATE LBM_TGV_METRICS=1)
 target_link_libraries(lbm3d_tgv3d_summary PRIVATE lbm3d)
 setup_target_for_cuda_compilation(lbm3d_tgv3d_summary)
 

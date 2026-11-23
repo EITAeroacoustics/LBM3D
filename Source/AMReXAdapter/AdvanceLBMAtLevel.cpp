@@ -56,17 +56,29 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     fy_cc->setVal(force[1]);
     fz_cc->setVal(force[2]);
   }
-  MultiFab sfSborder(grids[lev], dmap[lev], sF_new.nComp(), sF_new.nGrow());
+  // A single periodic level can collide in f_old itself: each cell reads and
+  // writes only its own populations, then the directional halo makes the
+  // post-collision state ready for pull streaming into f_new.
+  const bool collide_in_place =
+      lev == 0 && max_level == 0 && geom[lev].isAllPeriodic() &&
+      !m_use_cylinder;
+  std::unique_ptr<MultiFab> collision_scratch;
+  MultiFab *post_collision = &f_old[lev];
+  if (!collide_in_place) {
+    collision_scratch = std::make_unique<MultiFab>(
+        grids[lev], dmap[lev], sF_new.nComp(), sF_new.nGrow());
+    post_collision = collision_scratch.get();
+  }
   const int ndir_l = ndir;
   if (lev > 0 || !geom[lev].isAllPeriodic()) {
     // Preserve old-time physical and coarse-fine ghosts without copying the
     // valid distribution field. Streaming reads only the first ghost layer.
     FillPatchMesoscopic(lev, time, f_old[lev], 0, f_old[lev].nComp());
-    for (MFIter mfi(sfSborder, false); mfi.isValid(); ++mfi) {
+    for (MFIter mfi(*post_collision, false); mfi.isValid(); ++mfi) {
       const Box &vbx = mfi.validbox();
       const Box gbx = mfi.growntilebox(1);
       auto const old = f_old[lev][mfi].const_array();
-      auto const post = sfSborder[mfi].array();
+      auto const post = (*post_collision)[mfi].array();
       amrex::ParallelFor(
           gbx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
             if (!vbx.contains(i, j, k)) {
@@ -203,7 +215,7 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     Array4<Real const> v_old = macro_old[lev][mfi].const_array(2);
     Array4<Real const> w_old = macro_old[lev][mfi].const_array(3);
     Array4<Real const> stateold = f_old[lev][mfi].const_array();
-    Array4<Real> statepost = sfSborder[mfi].array();
+    Array4<Real> statepost = (*post_collision)[mfi].array();
 
     amrex::Array4<amrex::Real const> fx;
     amrex::Array4<amrex::Real const> fy;
@@ -240,11 +252,11 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
 
   // Streaming reads only the nearest neighbor. Keep the wider FAB ghosts for
   // boundary and IBM operations.
-  if (!m_directional_halo || !m_directional_halo->matches(sfSborder)) {
+  if (!m_directional_halo || !m_directional_halo->matches(*post_collision)) {
     m_directional_halo = std::make_unique<DirectionalHalo>(
-        sfSborder, geom[lev], dirx, diry, dirz);
+        *post_collision, geom[lev], dirx, diry, dirz);
   }
-  m_directional_halo->Fill(sfSborder);
+  m_directional_halo->Fill(*post_collision);
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -253,7 +265,7 @@ void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
     const Box &vbx = mfi.validbox();
     Box gtbx = mfi.growntilebox(nghost); // clamped to FAB
 
-    Array4<Real> statein = sfSborder[mfi].array();
+    Array4<Real> statein = (*post_collision)[mfi].array();
     Array4<Real> stateout = sF_new[mfi].array();
 
     Array4<Real> rho = sM_new[mfi].array(0);

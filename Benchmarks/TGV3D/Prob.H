@@ -16,7 +16,6 @@ void initdata(int i, int j, int k,
               amrex::Array4<amrex::Real> const& ux,
               amrex::Array4<amrex::Real> const& uy,
               amrex::Array4<amrex::Real> const& uz,
-              amrex::Array4<amrex::Real> const& vor,
               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& prob_lo,
               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& prob_hi,
               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
@@ -42,7 +41,6 @@ void initdata(int i, int j, int k,
     ux(i, j, k) =  u0 * sx.first * sy.second * sz.second;
     uy(i, j, k) = -u0 * sx.second * sy.first * sz.second;
     uz(i, j, k) = 0.0;
-    vor(i, j, k) = 0.0;
 
     const amrex::Real pressure =
         rho0 * u0 * u0 / 16.0 *
