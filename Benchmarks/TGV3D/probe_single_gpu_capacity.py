@@ -230,7 +230,8 @@ def run_stage(binary: Path, case_dir: Path, run_root: Path, stage: str,
         "amr.chk_int": "-1",
     }))
     input_hash = sha256(inputs)
-    command = [str(binary), str(inputs)]
+    command = [str(binary), str(inputs), "lbm3d.storage=aa",
+               f"lbm3d.tgv_metrics_interval={max(1, steps // 2)}"]
     log_path = directory / "run.log"
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
@@ -313,6 +314,7 @@ def main() -> None:
         "target": "> 150000000 cells on one GPU, 10-step pilot and >= 100 steps",
         "n": args.n, "cells": args.n**3,
         "max_grid_size": 64, "blocking_factor": 8, "nmac": 4,
+        "storage": "aa", "online_metric_interval": "half the run length",
         "real_bytes_expected": args.real_bytes,
         "mass_relative_tolerance": args.mass_rel_tol,
         "binary": str(binary), "binary_sha256": binary_hash,

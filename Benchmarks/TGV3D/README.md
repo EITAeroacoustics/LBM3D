@@ -37,7 +37,7 @@ CUDA_VISIBLE_DEVICES=0 /path/to/ilbmrex_baseline /path/to/inputs_physics_64 > ru
 
 本目录中的物理、逐位与稳定性输入及脚本用于复现 P1 冻结验收，部分会写全场 plotfile。按后续测试约定，新发起的日常回归和测试智能体运行不得使用这些写盘配置，也不得写全场 checkpoint。强扩展输入 `inputs_strong_256` 已设置 `amr.plot_int = -1`、`amr.chk_int = -1`。后续测试体系将以求解时标量归约、紧凑逐位指纹或进程间比较和日志替代全场文件，并记录输出关闭状态。
 
-P2 单卡容量验收使用 `probe_single_gpu_capacity.py`。默认测试 536³＝153,990,656 个格点，保持 `max_grid_size=64`、`blocking_factor=8`，关闭 plotfile 和 checkpoint。脚本先运行 10 步，再以同一二进制启动独立的 100 步进程；记录二进制与输入校验值、显存峰值、AMReX arena、完成步数和在线数值指标。仅两次运行均通过且长程运行在首步、中间步、末步给出质量、动能、正性及非有限值诊断时才判定容量达标；诊断缺失记为未完成。调用形式为 `python3 probe_single_gpu_capacity.py 二进制 本目录 独立运行目录 报告.json`，可用 `--n`、`--steps`、`--gpu-index`、`--mass-rel-tol` 调整测试参数。P1 已完成的 V100 容量结果见[历史单卡容量报告](../../Reports/Capacity/single-gpu.md)。
+P2 单卡容量验收使用 `probe_single_gpu_capacity.py`。默认测试 536³＝153,990,656 个格点，保持 `max_grid_size=64`、`blocking_factor=8`，以 `lbm3d.storage=aa` 使用单分布函数存储，关闭 plotfile 和 checkpoint。脚本先运行 10 步，再以同一二进制启动独立的 100 步进程；记录二进制与输入校验值、显存峰值、AMReX arena、完成步数和在线数值指标。仅两次运行均通过且长程运行在首步、中间步、末步给出质量、动能、正性及非有限值诊断时才判定容量达标；诊断缺失记为未完成。调用形式为 `python3 probe_single_gpu_capacity.py 二进制 本目录 独立运行目录 报告.json`，可用 `--n`、`--steps`、`--gpu-index`、`--mass-rel-tol` 调整测试参数。P1 已完成的 V100 容量结果见[历史单卡容量报告](../../Reports/Capacity/single-gpu.md)。
 
 项目默认保持 `max_grid_size=64`、`blocking_factor=8`。`inputs_capacity_single_gpu_352` 固定网格块 192、阻塞因子 8，供单卡容量专项复跑；`inputs_capacity_single_gpu_360` 用于无力临时场优化后的边界复核，均不改变默认配置。`compare_single_gpu.py` 以左右交替顺序测两个二进制或两份同网格输入，默认各运行两次，每次预热 100 步并计时 500 步。`inputs_strong_single_gpu_*` 是本轮使用的无全场输出计时输入，分项结果见 [优化复测报告](../../Reports/Capacity/force-field-optimization.md)。这些输入的前两行注释继承自 64³ 模板，实际网格、时间步及输出开关以输入参数为准。
 
