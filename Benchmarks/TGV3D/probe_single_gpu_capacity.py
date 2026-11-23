@@ -352,6 +352,8 @@ def main() -> None:
             break
 
     print(f"report={report_path}", flush=True)
+    if report["status"] != "passed":
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

@@ -146,9 +146,17 @@ def main() -> None:
               "expected_fields": args.expected_fields,
               "numeric_atol": args.numeric_atol,
               "runs": runs}
+    optimized = [runs[str(ranks)]["optimized"]["fields"]
+                 for ranks in CONFIGS]
+    cross_rank_hashes_equal = all(
+        {field: values[4:] for field, values in fields.items()} ==
+        {field: values[4:] for field, values in optimized[0].items()}
+        for fields in optimized[1:])
+    report["optimized_cross_rank_hashes_equal"] = cross_rank_hashes_equal
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2) + "\n")
-    if not all(pair["passed"] for pair in runs.values()):
+    if not all(pair["passed"] for pair in runs.values()) or \
+       (args.numeric_atol is not None and not cross_rank_hashes_equal):
         raise SystemExit("final-field summary comparison failed; see report")
 
 
