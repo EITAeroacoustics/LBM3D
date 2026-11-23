@@ -42,14 +42,14 @@ def max_numeric_difference(baseline: dict, optimized: dict) -> float:
 
 def run(binary: Path, inputs: Path, root: Path, ranks: int,
         mpirun: str, mpi_options: str, rank_wrapper: Optional[Path],
-        input_options: list[str], expected_fields: int) -> dict:
+        input_options: list[str], expected_fields: int, steps: int) -> dict:
     visible, launcher = CONFIGS[ranks]
     root.mkdir(parents=True, exist_ok=True)
     log = root / "run.log"
     mpi_launcher = ([mpirun, *shlex.split(mpi_options), *launcher[1:]]
                     if launcher else [])
     application = [str(binary), str(inputs), *input_options,
-                   "max_step=10", "amr.plot_int=-1", "amr.chk_int=-1"]
+                   f"max_step={steps}", "amr.plot_int=-1", "amr.chk_int=-1"]
     if launcher and rank_wrapper:
         application = ["python3", str(rank_wrapper), *application]
     command = [*mpi_launcher, *application]
@@ -100,6 +100,7 @@ def main() -> None:
     parser.add_argument("--baseline-option", action="append", default=[])
     parser.add_argument("--optimized-option", action="append", default=[])
     parser.add_argument("--expected-fields", type=int, default=23)
+    parser.add_argument("--steps", type=int, default=10)
     parser.add_argument("--numeric-atol", type=float,
                         help="compare only sum/norm2/min/max within this absolute tolerance; "
                              "position fingerprints remain recorded")
@@ -107,6 +108,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.expected_fields < 1:
         parser.error("--expected-fields must be positive")
+    if args.steps < 1:
+        parser.error("--steps must be positive")
     if args.numeric_atol is not None and (not math.isfinite(args.numeric_atol) or
                                           args.numeric_atol <= 0):
         parser.error("--numeric-atol must be finite and positive")
@@ -123,7 +126,8 @@ def main() -> None:
                              args.rank_wrapper.resolve() if args.rank_wrapper else None,
                              [*args.common_option,
                               *(args.optimized_option if name == "optimized"
-                                else args.baseline_option)], args.expected_fields)
+                                else args.baseline_option)], args.expected_fields,
+                             args.steps)
         if args.require_directional_halo:
             if pair["baseline"]["directional_halo_active"]:
                 raise RuntimeError(f"baseline unexpectedly used directional halo on {ranks} GPU(s)")
@@ -144,6 +148,7 @@ def main() -> None:
               "baseline_options": args.baseline_option,
               "optimized_options": args.optimized_option,
               "expected_fields": args.expected_fields,
+              "steps": args.steps,
               "numeric_atol": args.numeric_atol,
               "runs": runs}
     optimized = [runs[str(ranks)]["optimized"]["fields"]
