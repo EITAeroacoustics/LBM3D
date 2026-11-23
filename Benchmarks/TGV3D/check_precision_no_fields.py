@@ -243,10 +243,7 @@ def run_case(binary: Path, n: int, step: int, real_bytes: int, directory: Path,
         result["metric"] = parse_metric(log, n, step)
         result["fields"] = parse_fields(log)
     except (KeyError, ValueError) as error:
-        result["status"] = ("not_run" if
-                            "expected one final" in str(error) or
-                            "missing FIELD_SUMMARY" in str(error) or
-                            "missing TGV_PRECISION" in str(error) else "failed")
+        result["status"] = "failed"
         result["reason"] = str(error)
         return result
     result["status"] = "passed"
