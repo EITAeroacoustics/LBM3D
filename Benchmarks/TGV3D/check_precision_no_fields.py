@@ -84,7 +84,8 @@ def parse_metric(log: str, n: int, step: int) -> dict:
     if len(rows) != 1:
         raise ValueError(f"expected one final TGV_METRICS row, found {len(rows)}")
     row = rows[0]
-    if (row["step"] != step or row["time"] != physical_time or
+    if (row["step"] != step or not math.isclose(row["time"], physical_time,
+                                              rel_tol=0.0, abs_tol=1.0e-12) or
         row["cells"] != n**3 or row["nonfinite"] not in (0.0, 1.0) or
         row["mean_rho"] <= 0.0 or row["mean_kinetic"] <= 0.0 or
         row["init_linf"] < 0.0):
