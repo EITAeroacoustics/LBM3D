@@ -15,6 +15,7 @@
 #include <AMReX_BCRec.H>
 #include <AMReX_FillPatcher.H>
 #include <AMReX_FluxRegister.H>
+#include <AMReX_GpuContainers.H>
 #include <AMReX_TableData.H>
 #include <memory> // for std::unique_ptr
 
@@ -78,6 +79,8 @@ public:
   // Advance phi at a single level for a single time step, update flux registers
   void AdvancePhiAtLevel(int lev, amrex::Real time, amrex::Real dt_lev,
                          int iteration, int ncycle);
+  void AdvanceAAAtLevel(int lev);
+  void PrintAATgvMetrics(int step, amrex::Real time) const;
 
   // Exposed publicly because nvcc extended device lambdas reject private
   // enclosing member functions in this code path.
@@ -96,6 +99,8 @@ public:
 
   amrex::MultiFab const& MacroState(int lev) const { return macro_new[lev]; }
   amrex::MultiFab const& DistributionState(int lev) const { return f_new[lev]; }
+  bool UsesAAStorage() const { return m_aa_storage; }
+  bool IsAAFlipped() const { return m_aa_storage && m_aa_flipped; }
   int StepAtLevel(int lev) const { return istep[lev]; }
   amrex::Real TimeAtLevel(int lev) const { return t_new[lev]; }
 
@@ -270,8 +275,12 @@ private:
   amrex::Gpu::DeviceVector<amrex::Real> dirx_dev;
   amrex::Gpu::DeviceVector<amrex::Real> diry_dev;
   amrex::Gpu::DeviceVector<amrex::Real> dirz_dev;
+  amrex::GpuArray<int, 19> m_aa_opposite{};
 
   std::unique_ptr<DirectionalHalo> m_directional_halo;
+  bool m_aa_storage = false;
+  bool m_aa_flipped = false;
+  int m_tgv_metrics_interval = 0;
 
   amrex::Real nu;
   amrex::Real tau_base;
