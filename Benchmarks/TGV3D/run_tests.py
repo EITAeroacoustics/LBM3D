@@ -139,7 +139,9 @@ def environment(args: argparse.Namespace) -> dict:
             "gpu": gpu_inventory(), "cuda": command_output(["nvcc", "--version"]),
             "mpi": command_output([args.mpirun, "--version"]),
             "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
-            "ucx_tls": os.environ.get("UCX_TLS")}
+            "ucx_tls": os.environ.get("UCX_TLS"),
+            "ld_library_path": os.environ.get("LD_LIBRARY_PATH"),
+            "path": os.environ.get("PATH")}
 
 
 def v100_resources(inventory: dict, needed: tuple[int, ...],
@@ -724,6 +726,10 @@ def main() -> None:
     provenance_problems = []
     if final_environment["git"]["commit"] != plan["source_commit"]:
         provenance_problems.append("source commit changed during run")
+    if final_environment["git"]["status"] != inventory["git"]["status"]:
+        provenance_problems.append("source worktree changed during run")
+    if final_environment["inputs_sha256"] != inventory["inputs_sha256"]:
+        provenance_problems.append("test inputs changed during run")
     for task_name, binary_name in (("build_summary", "summary_binary"),
                                    ("build_timing", "timing_binary")):
         build_task = next((row for row in report["tasks"]
