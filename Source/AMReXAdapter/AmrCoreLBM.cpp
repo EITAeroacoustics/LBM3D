@@ -157,7 +157,7 @@ AmrCoreLBM::AmrCoreLBM(ProblemInit problem_init)
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
         geom[0].isAllPeriodic() && nmac == 4 && !m_use_cylinder &&
             m_ib_method == IBMMethodNone && !m_use_prescribed_force &&
-            m_force_eval_debug == 0 && plot_int < 0 && chk_int < 0 &&
+            m_force_eval_debug == 0 && plot_int <= 0 && chk_int <= 0 &&
             restart_chkfile.empty(),
         "lbm3d.storage=aa requires one periodic, unforced level, four "
         "macros, and no plotfile, checkpoint, or restart.");
