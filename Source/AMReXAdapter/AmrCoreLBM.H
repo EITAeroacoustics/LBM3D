@@ -94,6 +94,9 @@ public:
 
   amrex::Vector<std::unique_ptr<amrex::MultiFab>> PlotFileMF() const;
 
+  amrex::MultiFab const& MacroState(int lev) const { return macro_new[lev]; }
+  amrex::MultiFab const& DistributionState(int lev) const { return f_new[lev]; }
+
   void InitEquilibrium();
 
   // compute dt from CFL considerations

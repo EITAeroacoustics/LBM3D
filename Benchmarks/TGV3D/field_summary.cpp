@@ -49,6 +49,39 @@ std::uint64_t field_hash(amrex::Real value, int i, int j, int k,
 
 } // namespace
 
+void PrintFieldSummary(amrex::MultiFab const& field, int lev,
+                       int source_comp, int output_comp) {
+  const auto sum = field.sum(source_comp);
+  const auto norm2 = field.norm2(source_comp);
+  const auto min = field.min(source_comp);
+  const auto max = field.max(source_comp);
+  auto const arrays = field.const_arrays();
+  // Use the plotfile component number in the coordinate-sensitive hash.
+  auto const fingerprint = amrex::ParReduce(
+      amrex::TypeList<amrex::ReduceOpSum, amrex::ReduceOpSum>{},
+      amrex::TypeList<unsigned long long, unsigned long long>{},
+      field, amrex::IntVect(0),
+      [=] AMREX_GPU_DEVICE(int box, int i, int j, int k) noexcept
+          -> amrex::GpuTuple<unsigned long long, unsigned long long> {
+        const auto hash = field_hash(arrays[box](i, j, k, source_comp),
+                                     i, j, k, output_comp);
+        return {hash & 0xffffffffULL, hash >> 32};
+      });
+  unsigned long long hashes[2] = {amrex::get<0>(fingerprint),
+                                  amrex::get<1>(fingerprint)};
+#ifdef AMREX_USE_MPI
+  BL_MPI_REQUIRE(MPI_Allreduce(MPI_IN_PLACE, hashes, 2,
+                               MPI_UNSIGNED_LONG_LONG, MPI_SUM,
+                               amrex::ParallelContext::CommunicatorSub()));
+#endif
+  amrex::Print() << std::setprecision(17)
+                 << "FIELD_SUMMARY lev=" << lev << " comp=" << output_comp
+                 << " sum=" << sum << " norm2=" << norm2
+                 << " min=" << min << " max=" << max
+                 << " hash0=" << hashes[0] << " hash1=" << hashes[1]
+                 << '\n';
+}
+
 int main(int argc, char* argv[]) {
   amrex::Initialize(argc, argv);
   {
@@ -56,45 +89,16 @@ int main(int argc, char* argv[]) {
     solver.InitData();
     solver.Evolve();
 
-    // Reduce the final fields in memory; no plotfile or checkpoint is written.
-    auto fields = solver.PlotFileMF();
-    for (int lev = 0; lev < static_cast<int>(fields.size()); ++lev) {
-      auto const& field = *fields[lev];
-      for (int comp = 0; comp < field.nComp(); ++comp) {
-        // Derived vorticity and pressure are refreshed only for output/regrid.
-        if (comp == 4 || comp == 5) {
-          continue;
-        }
-        const auto sum = field.sum(comp);
-        const auto norm2 = field.norm2(comp);
-        const auto min = field.min(comp);
-        const auto max = field.max(comp);
-        auto const arrays = field.const_arrays();
-        // Coordinate and value bits make this compact check sensitive to
-        // misplaced populations; split the hash into bounded integer sums.
-        auto const fingerprint = amrex::ParReduce(
-            amrex::TypeList<amrex::ReduceOpSum, amrex::ReduceOpSum>{},
-            amrex::TypeList<unsigned long long, unsigned long long>{},
-            field, amrex::IntVect(0),
-            [=] AMREX_GPU_DEVICE(int box, int i, int j, int k) noexcept
-                -> amrex::GpuTuple<unsigned long long, unsigned long long> {
-              const auto hash = field_hash(arrays[box](i, j, k, comp),
-                                           i, j, k, comp);
-              return {hash & 0xffffffffULL, hash >> 32};
-            });
-        unsigned long long hashes[2] = {amrex::get<0>(fingerprint),
-                                        amrex::get<1>(fingerprint)};
-#ifdef AMREX_USE_MPI
-        BL_MPI_REQUIRE(MPI_Allreduce(MPI_IN_PLACE, hashes, 2,
-                                     MPI_UNSIGNED_LONG_LONG, MPI_SUM,
-                                     amrex::ParallelContext::CommunicatorSub()));
-#endif
-        amrex::Print() << std::setprecision(17)
-                       << "FIELD_SUMMARY lev=" << lev << " comp=" << comp
-                       << " sum=" << sum << " norm2=" << norm2
-                       << " min=" << min << " max=" << max
-                       << " hash0=" << hashes[0] << " hash1=" << hashes[1]
-                       << '\n';
+    // Reduce resident state directly. PlotFileMF would duplicate all 25
+    // components and defeat single-GPU capacity measurements.
+    for (int lev = 0; lev <= solver.finestLevel(); ++lev) {
+      auto const& macro = solver.MacroState(lev);
+      auto const& f = solver.DistributionState(lev);
+      for (int comp = 0; comp < 4; ++comp) {
+        PrintFieldSummary(macro, lev, comp, comp);
+      }
+      for (int comp = 0; comp < f.nComp(); ++comp) {
+        PrintFieldSummary(f, lev, comp, 6 + comp);
       }
     }
   }
