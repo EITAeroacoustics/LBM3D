@@ -8,7 +8,6 @@ Existing case drivers retain the numerical and timing definitions.
 from __future__ import annotations
 
 import argparse
-import csv
 import hashlib
 import json
 import math
@@ -39,6 +38,7 @@ QUICK = ("build_summary", "quick_precision", "compact_even", "compact_odd")
 FULL = (*QUICK, "build_timing", "full_precision", "capacity", "strong",
         "weak", "scaling", "stability")
 AA_OPTIONS = tuple(CONFIG["solver_options"])
+MASS_TOL = precision.LIMITS["fp64"]["mass"]
 
 
 def sha256(path: Path) -> str:
@@ -95,6 +95,11 @@ def binary_identity(path: Path | None) -> dict:
         item["sha256"] = sha256(path)
         item.update(cache_options(path))
     return item
+
+
+def expected_binary(path: Path | None, target: str) -> bool:
+    return (path is not None and path.name == target and path.is_file() and
+            os.access(path, os.X_OK))
 
 
 def gpu_inventory() -> dict:
@@ -183,15 +188,15 @@ def commands(args: argparse.Namespace, root: Path) -> dict[str, list[list[str]]]
         "compact_even": [], "compact_odd": [],
         "full_precision": [script_command("check_precision_no_fields.py",
                              base, summ, str(root / "full_precision"),
-                             "--candidate-precision", args.precision,
+                             "--candidate-precision", "fp64",
                              *precision_options)],
         "capacity": [script_command("probe_single_gpu_capacity.py", summ,
                         str(HERE), str(root / "capacity"),
                         str(root / "capacity.json"), "--n",
                         str(CONFIG["capacity"]["grid"]), "--steps",
                         str(CONFIG["capacity"]["sustained_steps"]),
-                        "--real-bytes",
-                        str(8 if args.precision == "fp64" else 4))],
+                        "--mass-rel-tol",
+                        str(MASS_TOL), "--real-bytes", "8")],
         "strong": [script_command("run_strong.py", timed,
                        str(HERE / "inputs_strong_256"), str(root / "strong"),
                        str(root / "strong.json"), "--repeats",
@@ -250,7 +255,6 @@ def make_plan(args: argparse.Namespace, root: Path, inventory: dict) -> dict:
                 replay += ["--" + name.replace("_", "-"), str(value)]
         replay += ["--mpirun", args.mpirun, "--mpi-options", args.mpi_options,
                    "--cmake", args.cmake,
-                   "--precision", args.precision,
                    "--stability-seconds", str(args.stability_seconds),
                    "--max-gpu-used-mib", str(args.max_gpu_used_mib)]
         planned_reason = prerequisite(task, args, inventory)
@@ -269,11 +273,12 @@ def make_plan(args: argparse.Namespace, root: Path, inventory: dict) -> dict:
             "mode": args.mode, "created_utc": inventory["utc"],
             "source_commit": inventory["git"]["commit"],
             "hardware_scope": "4 x Tesla V100-SXM2-32GB; GPU maps 0 / 0,2 / 0,1,2,3",
-            "reference": {"commit": P1_COMMIT,
+            "reference": {"historical_commit": P1_COMMIT,
+                          "baseline_binary_commit_verified": False,
                           "physics": "reference_physics.csv",
                           "strong": "Reports/P1/tgv-modular-strong-256.json"},
             "criteria": {"physics": "nine frozen P1 checks on 64^3 and 128^3",
-                         "compact": "23 positive/finite components; equal coordinate fingerprints across 1/2/4 GPU, numeric absolute difference <= configured precision tolerance; 10 and 11 steps",
+                         "compact": "23 positive/finite FP64 components; equal coordinate fingerprints across 1/2/4 GPU, numeric absolute difference <=1e-9; 10 and 11 steps",
                          "capacity": "536^3 >150M, 10-step pilot and >=100 steps, positive finite online diagnostics and measured peak GPU memory",
                          "scaling": "three repeats per 1/2/4 GPU, 100 warmup + 500 timed steps; strong T1/(N*TN), weak T1/TN, each 2/4 GPU efficiency >0.85",
                          "stability": f"one GPU, 256^3, >= {args.stability_seconds:g} s, online finite/positive metrics"},
@@ -292,12 +297,11 @@ def run_script(command: list[str], log: Path) -> dict:
 
 def quick_precision(args: argparse.Namespace, root: Path) -> dict:
     runs: dict[str, dict] = {}
-    width = 8 if args.precision == "fp64" else 4
     for n in CONFIG["precision"]["grids"]:
         runs[str(n)] = {}
         for physical_time in CONFIG["precision"]["physical_times"]:
             step = int(physical_time * n / 64)
-            row = precision.run_case(args.summary_binary, n, step, width,
+            row = precision.run_case(args.summary_binary, n, step, 8,
                                      root / "quick_precision" / str(n) /
                                      str(physical_time), list(AA_OPTIONS))
             runs[str(n)][str(physical_time)] = row
@@ -309,32 +313,13 @@ def quick_precision(args: argparse.Namespace, root: Path) -> dict:
     if hashes != {sha256(args.summary_binary)}:
         return {"status": "failed", "reason": "summary binary changed between checkpoints",
                 "runs": runs}
-    limits = precision.LIMITS[args.precision]
-    checks = precision.physics_checks(runs, limits)
-    with (HERE / "reference_physics.csv").open(newline="") as source:
-        reference = {(row["grid"], str(int(float(row["time"])))): row
-                     for row in csv.DictReader(source)}
-    if args.precision == "fp64":
-        reference_checks = precision.reference_checks(runs)
-    else:
-        reference_checks = {}
-        for n in CONFIG["precision"]["grids"]:
-            for t in CONFIG["precision"]["physical_times"]:
-                actual = runs[str(n)][str(t)]["metric"]
-                expected = reference[str(n), str(t)]
-                rho_error = abs(actual["mean_rho"] - float(expected["mean_rho"]))
-                energy_error = abs(actual["mean_kinetic"] -
-                                   float(expected["mean_kinetic"])) / float(expected["mean_kinetic"])
-                reference_checks[f"{n}:{t}"] = {
-                    "rho_abs_error": rho_error, "energy_rel_error": energy_error,
-                    "passed": rho_error <= limits["rho_to_fp64"] and
-                              energy_error <= limits["energy_to_fp64"]}
+    checks = precision.physics_checks(runs, precision.LIMITS["fp64"])
+    reference_checks = precision.reference_checks(runs)
     passed = all(checks.values()) and all(row["passed"] for row in
                                                reference_checks.values())
     return {"status": "passed" if passed else "failed", "runs": runs,
             "physics_checks": checks, "reference_checks": reference_checks,
-            "classification": "P1 strict FP64" if args.precision == "fp64"
-                              else "FP32 equivalence only"}
+            "classification": "P1 strict FP64"}
 
 
 def compact(args: argparse.Namespace, root: Path, steps: int) -> dict:
@@ -349,12 +334,11 @@ def compact(args: argparse.Namespace, root: Path, steps: int) -> dict:
         if (f"Coarse STEP {steps} ends" not in log or
             not re.search(r"^AMReX \([^\n]+\) finalized$", log, re.M)):
             raise ValueError(f"final step or finalization missing: {row['log']}")
-        expected_bytes = 8 if args.precision == "fp64" else 4
-        if precision.PRECISION.findall(log) != [str(expected_bytes)]:
+        if precision.PRECISION.findall(log) != ["8"]:
             raise ValueError(f"precision diagnostic missing or wrong: {row['log']}")
         metric = precision.parse_metric(log, 128, steps)
-        if metric["nonfinite"] != 0.0 or abs(metric["mean_rho"] - 1.0) > (
-                1e-8 if args.precision == "fp64" else 1e-6):
+        if (metric["nonfinite"] != 0.0 or
+            abs(metric["mean_rho"] - 1.0) > MASS_TOL):
             raise ValueError(f"invalid compact mass or nonfinite diagnostic: {row['log']}")
         precision.parse_fields(log)
         if capacity.full_field_files(Path(row["log"]).parent):
@@ -372,7 +356,7 @@ def compact(args: argparse.Namespace, root: Path, steps: int) -> dict:
             baseline[key][4:] == fields[key][4:] for key in baseline))
         halo = row["directional_halo_active"] and (
             int(ranks) == 1 or bool(row["rank0_halo_send_values"]))
-        tolerance = CONFIG["precision"]["compact_numeric_atol_" + args.precision]
+        tolerance = CONFIG["precision"]["compact_numeric_atol"]
         checks[ranks] = {"max_numeric_abs_diff": max_difference,
                          "fingerprints_equal": hashes_equal,
                          "directional_halo": halo,
@@ -396,8 +380,7 @@ def stability(args: argparse.Namespace, root: Path) -> dict:
     log = log_path.read_text(errors="replace")
     match = re.search(r"LBM wall time limit reached after ([0-9.eE+-]+) s at step (\d+)", log)
     steps = int(match.group(2)) if match else 0
-    assessment = (capacity.assess_log(log, 256, steps, 1e-8,
-                                      8 if args.precision == "fp64" else 4,
+    assessment = (capacity.assess_log(log, 256, steps, MASS_TOL, 8,
                                       require_online=True) if steps else None)
     fields = capacity.full_field_files(directory)
     problems = []
@@ -405,6 +388,8 @@ def stability(args: argparse.Namespace, root: Path) -> dict:
         problems.append(f"exit code {code}")
     if not match or float(match.group(1)) < args.stability_seconds:
         problems.append("wall time target not observed")
+    if steps <= 0 or assessment is None:
+        problems.append("no completed step or online numerical assessment")
     if fields:
         problems.append("full-field output found")
     if assessment and assessment["status"] != "passed":
@@ -438,7 +423,7 @@ def timing_diagnostics(report: dict, kind: str) -> tuple[bool, list[dict]]:
                 try:
                     measured = float(mass[0])
                     if (not math.isfinite(measured) or
-                        abs(measured - expected) / expected > 1e-8):
+                        abs(measured - expected) / expected > MASS_TOL):
                         problems.append("final mass outside tolerance")
                 except ValueError:
                     problems.append("invalid final mass diagnostic")
@@ -460,11 +445,13 @@ def prerequisite(task: str, args: argparse.Namespace, inventory: dict) -> str | 
     if task == "build_summary":
         if args.summary_build_dir:
             return None if args.summary_build_dir.is_dir() else "summary CMake build directory unavailable"
-        return None if binaries["summary_binary"]["available"] else "summary binary unavailable"
+        return (None if expected_binary(args.summary_binary, "lbm3d_tgv3d_summary")
+                else "executable lbm3d_tgv3d_summary unavailable")
     if task == "build_timing":
         if args.timing_build_dir:
             return None if args.timing_build_dir.is_dir() else "timing CMake build directory unavailable"
-        return None if binaries["timing_binary"]["available"] else "timing binary unavailable"
+        return (None if expected_binary(args.timing_binary, "lbm3d_tgv3d")
+                else "executable lbm3d_tgv3d unavailable")
     if task == "scaling":
         return None
     required = ("timing_binary",) if task in ("strong", "weak") else (
@@ -473,6 +460,10 @@ def prerequisite(task: str, args: argparse.Namespace, inventory: dict) -> str | 
     for name in required:
         if not binaries[name]["available"]:
             return f"{name.replace('_', '-')} unavailable"
+        target = ("lbm3d_tgv3d" if name == "timing_binary" else
+                  "lbm3d_tgv3d_summary")
+        if not expected_binary(getattr(args, name), target):
+            return f"{name.replace('_', '-')} is not executable {target}"
     if task in ("compact_even", "compact_odd", "strong", "weak"):
         if args.rank_wrapper and not args.rank_wrapper.is_file():
             return "rank wrapper unavailable"
@@ -496,12 +487,15 @@ def check_task(task: str, args: argparse.Namespace, root: Path) -> dict:
             result = run_script(command, root / f"{task}.log")
             if result["returncode"]:
                 return {**result, "status": "failed", "reason": "CMake build failed"}
-        if not binary or not binary.is_file():
+        target = ("lbm3d_tgv3d_summary" if task == "build_summary" else
+                  "lbm3d_tgv3d")
+        if not expected_binary(binary, target):
             return {**result, "status": "failed",
-                    "reason": "expected TGV binary missing after build"}
+                    "reason": f"expected executable {target} missing after build"}
         return {**result, "status": "passed", "binary": binary_identity(binary),
+                "verification": "cmake_build" if build_dir else "prebuilt_hash",
                 "reason": "CMake build completed" if build_dir else
-                          "prebuilt TGV binary hash verified"}
+                          "prebuilt target filename, executable bit and hash verified"}
     if task == "quick_precision":
         return quick_precision(args, root)
     if task in ("compact_even", "compact_odd"):
@@ -517,15 +511,18 @@ def check_task(task: str, args: argparse.Namespace, root: Path) -> dict:
         try:
             result["assessment"] = json.loads((root / "scaling.log").read_text())
         except json.JSONDecodeError:
-            result["assessment"] = None
+            result["assessment"] = {}
+        if not isinstance(result["assessment"], dict):
+            result["assessment"] = {}
+        result["status"] = ("passed" if result["returncode"] == 0 and
+                            result["assessment"].get("passed") else "failed")
     elif report_path and report_path.is_file():
         result["report"] = str(report_path)
         result["report_sha256"] = sha256(report_path)
         report = json.loads(report_path.read_text())
         if task == "full_precision":
             result["classification"] = report["status"]
-            passed = report["status"] == ("passed" if args.precision == "fp64"
-                                          else "passed_fp32_equivalence")
+            passed = report["status"] == "passed"
             hashes = {variant: {case["binary_sha256"]
                         for grid in runs.values() for case in grid.values()}
                       for variant, runs in report["runs"].items()}
@@ -534,8 +531,6 @@ def check_task(task: str, args: argparse.Namespace, root: Path) -> dict:
                        hashes.get("candidate") == {sha256(args.summary_binary)})
             result["run_binary_hashes"] = {name: sorted(values)
                                             for name, values in hashes.items()}
-            if report["status"] == "not_run":
-                result["status"] = "not_run"
         elif task == "capacity":
             passed = report["status"] == "passed"
             result["peak_mib"] = [row.get("gpu_peak_mib") for row in
@@ -554,14 +549,10 @@ def check_task(task: str, args: argparse.Namespace, root: Path) -> dict:
                     p1["summary"][str(n)]["median_sec_per_step"]
                     for n in (1, 2, 4)}
                 result["p1_reference_sha256"] = sha256(p1_path)
-        if result.get("status") != "not_run":
-            result["status"] = ("passed" if result["returncode"] == 0 and passed
-                                else "failed")
-    else:
-        result["status"] = ("passed" if result["returncode"] == 0 and
-                            task == "scaling" and
-                            result.get("assessment", {}).get("passed")
+        result["status"] = ("passed" if result["returncode"] == 0 and passed
                             else "failed")
+    else:
+        result["status"] = "failed"
     if result["status"] == "failed":
         result["reason"] = "see driver log and case logs for the first failing check"
     return result
@@ -628,7 +619,6 @@ def main() -> None:
     parser.add_argument("--baseline-summary-binary", type=Path)
     parser.add_argument("--summary-build-dir", type=Path)
     parser.add_argument("--timing-build-dir", type=Path)
-    parser.add_argument("--precision", choices=("fp64", "fp32"), default="fp64")
     parser.add_argument("--mpirun", default="mpirun")
     parser.add_argument("--cmake", default="cmake")
     parser.add_argument("--mpi-options", default="")
@@ -640,6 +630,8 @@ def main() -> None:
     parser.add_argument("--only", choices=FULL)
     parser.add_argument("--plan-only", action="store_true")
     args = parser.parse_args()
+    if args.only == "scaling":
+        parser.error("scaling requires fresh strong and weak reports; rerun full mode")
     if CONFIG["agent_version"] != VERSION or any(
             CONFIG["hardware"]["gpu_maps"][str(n)] != visible
             for configs in (summary.CONFIGS, run_strong.CONFIGS, run_weak.CONFIGS)
@@ -649,6 +641,9 @@ def main() -> None:
         parser.error("--only task is outside the chosen mode")
     if args.stability_seconds <= 0 or not math.isfinite(args.stability_seconds):
         parser.error("--stability-seconds must be finite and positive")
+    if (args.mode == "full" and args.stability_seconds <
+            CONFIG["stability"]["duration_seconds"]):
+        parser.error("full acceptance stability duration cannot be shortened")
     if args.max_gpu_used_mib < 0:
         parser.error("--max-gpu-used-mib must be nonnegative")
     for name in ("summary_binary", "timing_binary", "baseline_summary_binary",
@@ -656,6 +651,15 @@ def main() -> None:
         value = getattr(args, name)
         if value is not None:
             setattr(args, name, value.resolve())
+    for name, target in (("summary", "lbm3d_tgv3d_summary"),
+                         ("timing", "lbm3d_tgv3d")):
+        build_dir = getattr(args, f"{name}_build_dir")
+        binary = getattr(args, f"{name}_binary")
+        if build_dir:
+            built_binary = build_dir / target
+            if binary and binary != built_binary:
+                parser.error(f"--{name}-binary must be {built_binary} when building")
+            setattr(args, f"{name}_binary", built_binary)
     root = args.run_root.resolve()
     if root.exists():
         parser.error(f"run root already exists: {root}")
@@ -666,6 +670,10 @@ def main() -> None:
     write_json(root / "plan.json", plan)
     report = {"schema_version": 1, "agent_version": VERSION,
               "mode": args.mode, "status": "not_run", "tasks": plan["tasks"],
+              "baseline_binary_provenance": {
+                  "source_commit_verified": False,
+                  "scope": "supplied FP64 P1 diagnostic build; source relationship not proven by SHA-256",
+                  "sha256": inventory["binaries"]["baseline_summary_binary"].get("sha256")},
               "plan": str(root / "plan.json"), "environment": str(root / "environment.json")}
     write_json(root / "result.json", report)
     for task in report["tasks"]:
@@ -699,17 +707,17 @@ def main() -> None:
         print(f"{task['id']}: running", flush=True)
         try:
             outcome = check_task(task["id"], args, root)
-        except (OSError, ValueError, RuntimeError, KeyError, subprocess.SubprocessError) as error:
+        except (OSError, ValueError, RuntimeError, KeyError, TypeError,
+                subprocess.SubprocessError) as error:
             outcome = {"status": "failed", "reason": str(error)}
         task.update(outcome)
         write_json(root / "result.json", report)
         print(f"{task['id']}: {task['status']}", flush=True)
     statuses = [task["status"] for task in report["tasks"]]
     report["status"] = ("failed" if "failed" in statuses else
-                        "not_run" if "not_run" in statuses or args.precision == "fp32"
+                        "not_run" if "not_run" in statuses
                         else "passed")
     report["completed_utc"] = datetime.now(timezone.utc).isoformat()
-    report["strict_fp64_acceptance"] = args.precision == "fp64"
     final_environment = environment(args)
     write_json(root / "environment_after.json", final_environment)
     report["environment_after"] = str(root / "environment_after.json")

@@ -2,16 +2,26 @@
 
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 import run_tests
 
 
 class TestTgvAgent(unittest.TestCase):
+    @staticmethod
+    def args(summary_binary=None):
+        return SimpleNamespace(
+            summary_binary=summary_binary, timing_binary=None,
+            baseline_summary_binary=None, summary_build_dir=None,
+            timing_build_dir=None, rank_wrapper=None, mpirun="mpirun",
+            mpi_options="", cmake="cmake", stability_seconds=600)
+
     def test_plan_only_records_unrun_matrix_and_history(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "quick-1"
@@ -54,17 +64,20 @@ class TestTgvAgent(unittest.TestCase):
     def test_prebuilt_binary_verification_does_not_require_cmake(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "build-check"
+            binary = Path(temporary) / "lbm3d_tgv3d_summary"
+            shutil.copy2(sys.executable, binary)
             result = subprocess.run(
                 [sys.executable, str(run_tests.HERE / "run_tests.py"),
                  "--mode", "quick", "--only", "build_summary",
-                 "--summary-binary", sys.executable,
+                 "--summary-binary", str(binary),
                  "--run-root", str(root)], text=True, capture_output=True)
             self.assertEqual(result.returncode, 2, result.stderr)
             report = json.loads((root / "result.json").read_text())
             self.assertEqual(report["status"], "not_run")
             self.assertEqual(report["tasks"][0]["status"], "passed")
+            self.assertEqual(report["tasks"][0]["verification"], "prebuilt_hash")
             self.assertEqual(report["tasks"][0]["binary"]["sha256"],
-                             hashlib.sha256(Path(sys.executable).read_bytes()).hexdigest())
+                             hashlib.sha256(binary.read_bytes()).hexdigest())
 
     def test_scaling_gate_is_strictly_above_85_percent(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -91,6 +104,51 @@ class TestTgvAgent(unittest.TestCase):
                      str(paths["strong"]), str(paths["weak"]),
                      "--target", "0.85"], text=True, capture_output=True)
                 self.assertEqual(result.returncode, 0 if efficiency > 0.85 else 1)
+
+    def test_non_json_scaling_error_remains_a_reported_failure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            outcome = run_tests.check_task("scaling", self.args(), root)
+            self.assertEqual(outcome["status"], "failed")
+            self.assertEqual(outcome["assessment"], {})
+            self.assertTrue(Path(outcome["log"]).is_file())
+
+    def test_stability_requires_a_completed_step(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            fake = root / "lbm3d_tgv3d_summary"
+            fake.write_text("#!/bin/sh\n"
+                            "echo 'LBM wall time limit reached after 600 s at step 0'\n")
+            fake.chmod(0o755)
+            outcome = run_tests.stability(self.args(fake), root)
+            self.assertEqual(outcome["status"], "failed")
+            self.assertIn("no completed step or online numerical assessment",
+                          outcome["problems"])
+
+    def test_attempted_missing_precision_diagnostics_fail(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            fake = root / "lbm3d_tgv3d_summary"
+            fake.write_text("#!/bin/sh\necho 'AMReX (26.11) finalized'\n")
+            fake.chmod(0o755)
+            outcome = run_tests.quick_precision(self.args(fake), root)
+            self.assertEqual(outcome["status"], "failed")
+            self.assertIn("missing TGV_PRECISION", outcome["reason"])
+
+    def test_build_directory_infers_target_path_before_plan(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            build = Path(temporary) / "build"
+            build.mkdir()
+            root = Path(temporary) / "plan"
+            result = subprocess.run(
+                [sys.executable, str(run_tests.HERE / "run_tests.py"),
+                 "--mode", "quick", "--summary-build-dir", str(build),
+                 "--run-root", str(root), "--plan-only"],
+                text=True, capture_output=True)
+            self.assertEqual(result.returncode, 2, result.stderr)
+            plan = json.loads((root / "plan.json").read_text())
+            self.assertEqual(plan["tasks"][1]["commands"][0][0],
+                             str((build / "lbm3d_tgv3d_summary").resolve()))
 
 
 if __name__ == "__main__":

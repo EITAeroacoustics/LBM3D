@@ -14,8 +14,7 @@
     "physical_times": [0, 32, 64],
     "compact_grid": 128,
     "compact_steps": [10, 11],
-    "compact_numeric_atol_fp64": 1e-9,
-    "compact_numeric_atol_fp32": 1e-3
+    "compact_numeric_atol": 1e-9
   },
   "capacity": {"grid": 536, "cells": 153990656, "pilot_steps": 10, "sustained_steps": 100},
   "scaling": {
