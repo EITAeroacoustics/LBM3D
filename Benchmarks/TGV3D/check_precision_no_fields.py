@@ -290,6 +290,8 @@ def main() -> None:
         parser.error("both binaries must exist")
     if baseline == candidate:
         parser.error("fresh baseline and candidate must be separate binaries")
+    if sha256(baseline) == sha256(candidate):
+        parser.error("baseline and candidate binaries have identical contents")
     root.mkdir(parents=True)
 
     runs = {"baseline": {}, "candidate": {}}
