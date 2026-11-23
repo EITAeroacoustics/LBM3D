@@ -6,6 +6,7 @@
 #include <AMReX_MultiFab.H>
 
 #include <array>
+#include <functional>
 #include <vector>
 
 namespace lbm3d::detail {
@@ -42,8 +43,13 @@ public:
 
   [[nodiscard]] bool matches(amrex::MultiFab const& f,
                              bool aa_pattern = false) const;
-  void Fill(amrex::MultiFab& f);
-  void ScatterAA(amrex::MultiFab& f);
+  [[nodiscard]] bool hasMultipleIncomingPeers(bool reverse) const noexcept {
+    return reverse ? m_send_peers.size() > 1 : m_recv_peers.size() > 1;
+  }
+  void Fill(amrex::MultiFab& f,
+            std::function<void()> const& before_wait = {});
+  void ScatterAA(amrex::MultiFab& f,
+                 std::function<void()> const& before_wait = {});
 
 private:
   struct Segment {

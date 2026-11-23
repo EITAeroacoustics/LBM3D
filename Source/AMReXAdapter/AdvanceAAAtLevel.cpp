@@ -83,43 +83,139 @@ void AmrCoreLBM::AdvanceAAAtLevel(int lev) {
     m_directional_halo = std::make_unique<DirectionalHalo>(
         f, geom[lev], dirx, diry, dirz, true);
   }
-  if (even) {
-    m_directional_halo->Fill(f);
-  } else {
-    m_directional_halo->ScatterAA(f);
-  }
-
+  // Multiple remote peers leave enough receive time to hide the interior
+  // macro update; a single peer does not offset the extra boundary launch.
+  bool const overlap_macro = m_directional_halo->hasMultipleIncomingPeers(!even);
   bool const flipped = even;
-  for (MFIter mfi(macro, TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-    Box const& bx = mfi.validbox();
-    auto const state = f[mfi].const_array();
-    auto const rho = macro[mfi].array(0);
-    auto const u = macro[mfi].array(1);
-    auto const v = macro[mfi].array(2);
-    auto const w = macro[mfi].array(3);
-    ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
-      Real r = 0.0, m1 = 0.0, m2 = 0.0, m3 = 0.0;
-      for (int q = 0; q < 19; ++q) {
-        Real fq;
-        if (flipped) {
-          int const sx = static_cast<int>(cx_d[q]);
-          int const sy = static_cast<int>(cy_d[q]);
-          int const sz = static_cast<int>(cz_d[q]);
-          fq = state(i - sx, j - sy, k - sz, opposite[q]);
-        } else {
-          fq = state(i, j, k, q);
+  if (!overlap_macro) {
+    if (even) {
+      m_directional_halo->Fill(f);
+    } else {
+      m_directional_halo->ScatterAA(f);
+    }
+    for (MFIter mfi(macro, TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+      Box const& bx = mfi.validbox();
+      auto const state = f[mfi].const_array();
+      auto const rho = macro[mfi].array(0);
+      auto const u = macro[mfi].array(1);
+      auto const v = macro[mfi].array(2);
+      auto const w = macro[mfi].array(3);
+      ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+        Real r = 0.0, m1 = 0.0, m2 = 0.0, m3 = 0.0;
+        for (int q = 0; q < 19; ++q) {
+          Real fq;
+          if (flipped) {
+            int const sx = static_cast<int>(cx_d[q]);
+            int const sy = static_cast<int>(cy_d[q]);
+            int const sz = static_cast<int>(cz_d[q]);
+            fq = state(i - sx, j - sy, k - sz, opposite[q]);
+          } else {
+            fq = state(i, j, k, q);
+          }
+          r += fq;
+          m1 += cx_d[q] * fq;
+          m2 += cy_d[q] * fq;
+          m3 += cz_d[q] * fq;
         }
-        r += fq;
-        m1 += cx_d[q] * fq;
-        m2 += cy_d[q] * fq;
-        m3 += cz_d[q] * fq;
-      }
-      rho(i, j, k) = r;
-      u(i, j, k) = (m1 + Real(0.5) * Real(0.0)) / r;
-      v(i, j, k) = (m2 + Real(0.5) * Real(0.0)) / r;
-      w(i, j, k) = (m3 + Real(0.5) * Real(0.0)) / r;
-    });
+        rho(i, j, k) = r;
+        u(i, j, k) = (m1 + Real(0.5) * Real(0.0)) / r;
+        v(i, j, k) = (m2 + Real(0.5) * Real(0.0)) / r;
+        w(i, j, k) = (m3 + Real(0.5) * Real(0.0)) / r;
+      });
+    }
+    m_aa_flipped = flipped;
+    return;
   }
+  auto update_macro = [&](bool interior) {
+    MFItInfo mfi_info;
+    if (interior) { mfi_info.DisableDeviceSync(); }
+    for (MFIter mfi(macro, mfi_info); mfi.isValid(); ++mfi) {
+      Box const& bx = mfi.validbox();
+      auto const state = f[mfi].const_array();
+      auto const rho = macro[mfi].array(0);
+      auto const u = macro[mfi].array(1);
+      auto const v = macro[mfi].array(2);
+      auto const w = macro[mfi].array(3);
+      auto const calculate = [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+        Real r = 0.0, m1 = 0.0, m2 = 0.0, m3 = 0.0;
+        for (int q = 0; q < 19; ++q) {
+          Real fq;
+          if (flipped) {
+            int const sx = static_cast<int>(cx_d[q]);
+            int const sy = static_cast<int>(cy_d[q]);
+            int const sz = static_cast<int>(cz_d[q]);
+            fq = state(i - sx, j - sy, k - sz, opposite[q]);
+          } else {
+            fq = state(i, j, k, q);
+          }
+          r += fq;
+          m1 += cx_d[q] * fq;
+          m2 += cy_d[q] * fq;
+          m3 += cz_d[q] * fq;
+        }
+        rho(i, j, k) = r;
+        u(i, j, k) = (m1 + Real(0.5) * Real(0.0)) / r;
+        v(i, j, k) = (m2 + Real(0.5) * Real(0.0)) / r;
+        w(i, j, k) = (m3 + Real(0.5) * Real(0.0)) / r;
+      };
+      Box inner = bx;
+      inner.grow(-1);
+      if (interior) {
+        if (inner.ok()) { ParallelFor(inner, calculate); }
+      } else if (inner.ok()) {
+        Box xlo = bx;
+        xlo.setBig(0, bx.smallEnd(0));
+        Box xhi = bx;
+        xhi.setSmall(0, bx.bigEnd(0));
+        Box ylo = bx;
+        ylo.setSmall(0, inner.smallEnd(0));
+        ylo.setBig(0, inner.bigEnd(0));
+        ylo.setBig(1, bx.smallEnd(1));
+        Box yhi = bx;
+        yhi.setSmall(0, inner.smallEnd(0));
+        yhi.setBig(0, inner.bigEnd(0));
+        yhi.setSmall(1, bx.bigEnd(1));
+        Box zlo = inner;
+        zlo.setSmall(2, bx.smallEnd(2));
+        zlo.setBig(2, bx.smallEnd(2));
+        Box zhi = inner;
+        zhi.setSmall(2, bx.bigEnd(2));
+        zhi.setBig(2, bx.bigEnd(2));
+        Long const end_xlo = xlo.numPts();
+        Long const end_xhi = end_xlo + xhi.numPts();
+        Long const end_ylo = end_xhi + ylo.numPts();
+        Long const end_yhi = end_ylo + yhi.numPts();
+        Long const end_zlo = end_yhi + zlo.numPts();
+        Long const end_zhi = end_zlo + zhi.numPts();
+        ParallelFor(end_zhi, [=] AMREX_GPU_DEVICE(Long index) noexcept {
+          GpuArray<int, 3> cell;
+          if (index < end_xlo) {
+            cell = xlo.atOffset3d(index);
+          } else if (index < end_xhi) {
+            cell = xhi.atOffset3d(index - end_xlo);
+          } else if (index < end_ylo) {
+            cell = ylo.atOffset3d(index - end_xhi);
+          } else if (index < end_yhi) {
+            cell = yhi.atOffset3d(index - end_ylo);
+          } else if (index < end_zlo) {
+            cell = zlo.atOffset3d(index - end_yhi);
+          } else {
+            cell = zhi.atOffset3d(index - end_zlo);
+          }
+          calculate(cell[0], cell[1], cell[2]);
+        });
+      } else {
+        ParallelFor(bx, calculate);
+      }
+    }
+  };
+  auto before_wait = [&] { update_macro(true); };
+  if (even) {
+    m_directional_halo->Fill(f, before_wait);
+  } else {
+    m_directional_halo->ScatterAA(f, before_wait);
+  }
+  update_macro(false);
   m_aa_flipped = flipped;
 }
 

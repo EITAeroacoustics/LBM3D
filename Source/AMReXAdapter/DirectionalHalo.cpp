@@ -294,7 +294,8 @@ void DirectionalHalo::CopySegments(MultiFab& f,
   }
 }
 
-void DirectionalHalo::Fill(MultiFab& f) {
+void DirectionalHalo::Fill(MultiFab& f,
+                           std::function<void()> const& before_wait) {
 #ifdef BL_USE_TEAM
   if (ParallelDescriptor::TeamSize() > 1) {
     Gpu::streamSynchronize();
@@ -345,6 +346,7 @@ void DirectionalHalo::Fill(MultiFab& f) {
 
   CopySegments(f, m_local, m_local_host_tags, m_local_tags, nullptr, 1,
                m_serial_local);
+  if (before_wait) { before_wait(); }
 
 #ifdef AMREX_USE_MPI
   for (auto& receive : receives) { receive.wait(); }
@@ -352,7 +354,11 @@ void DirectionalHalo::Fill(MultiFab& f) {
 #endif
 
   // Finish local writes before unpacking remote data into ghost cells.
-  Gpu::streamSynchronize();
+  if (before_wait) {
+    Gpu::streamSynchronizeAll();
+  } else {
+    Gpu::streamSynchronize();
+  }
 #ifdef AMREX_USE_MPI
   if (!device_mpi && !m_recv.empty()) {
     Gpu::copyAsync(Gpu::hostToDevice, m_recv_host_buffer.begin(),
@@ -369,7 +375,8 @@ void DirectionalHalo::Fill(MultiFab& f) {
 #endif
 }
 
-void DirectionalHalo::ScatterAA(MultiFab& f) {
+void DirectionalHalo::ScatterAA(
+    MultiFab& f, std::function<void()> const& before_wait) {
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_aa_pattern,
                                    "ScatterAA requires AA halo directions.");
 #ifdef BL_USE_TEAM
@@ -425,12 +432,17 @@ void DirectionalHalo::ScatterAA(MultiFab& f) {
     CopySegments(f, m_local, m_local_host_tags, m_local_tags, nullptr, 4,
                  m_serial_local);
   }
+  if (before_wait) { before_wait(); }
 
 #ifdef AMREX_USE_MPI
   for (auto& receive : receives) { receive.wait(); }
   for (auto& send : sends) { send.wait(); }
 #endif
-  Gpu::streamSynchronize();
+  if (before_wait) {
+    Gpu::streamSynchronizeAll();
+  } else {
+    Gpu::streamSynchronize();
+  }
 #ifdef AMREX_USE_MPI
   if (!device_mpi && !m_send.empty()) {
     Gpu::copyAsync(Gpu::hostToDevice, m_send_host_buffer.begin(),
