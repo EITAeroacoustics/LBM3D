@@ -1,5 +1,7 @@
 # D3Q19 三维 Taylor–Green 基准
 
+P1 后的无全场持续测试统一入口和判据见 [TESTS.md](TESTS.md)。
+
 这是周期方盒 `[0,64]^3`、均匀网格、`amr.max_level=0`、无 IBM 的可复用案例。初始速度为
 
 ```text
