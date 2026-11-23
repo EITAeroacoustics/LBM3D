@@ -26,6 +26,9 @@ STEP_END = re.compile(r"^Coarse STEP (\d+) ends\.", re.M)
 STEP_MASS = re.compile(r"^Coarse STEP (\d+) ends\..*?\bSum\(Rho\) = (\S+)", re.M)
 METRICS = re.compile(r"^TGV_METRICS (.+)$", re.M)
 PRECISION = re.compile(r"^TGV_PRECISION real_bytes=(\d+)$", re.M)
+STORAGE = re.compile(
+    r"^LBM_STORAGE mode=(\S+) f_ncomp=(\d+) f_ngrow=(\d+) "
+    r"macro_ncomp=(\d+) macro_ngrow=(\d+)$", re.M)
 FIELD = re.compile(r"^FIELD_SUMMARY (.+)$", re.M)
 ARENA = re.compile(
     r"\[The\s+Arena\]\s+(?:max space \(MB\) {kind}\s+spread across MPI|"
@@ -91,6 +94,12 @@ def assess_log(log: str, n: int, steps: int, mass_rel_tol: float,
         missing.append("TGV_PRECISION row")
     elif any(int(width) != real_bytes for width in precision):
         problems.append(f"Real width differs from expected {real_bytes} bytes")
+
+    storage_rows = STORAGE.findall(log)
+    if not storage_rows:
+        missing.append("LBM_STORAGE row")
+    elif storage_rows != [("aa", "19", "1", "4", "0")]:
+        problems.append("unexpected LBM_STORAGE allocation")
 
     mass = []
     for step_text, value in STEP_MASS.findall(log):
@@ -192,6 +201,7 @@ def assess_log(log: str, n: int, steps: int, mass_rel_tol: float,
         "ended_steps": ended_steps, "step_mass": mass, "metrics": metrics,
         "online_metric_steps": online_steps,
         "amrex_version": amrex.group(1) if amrex else None,
+        "storage": storage_rows,
         "final_min_rho": final_metric.get("min_rho", minima.get(0)),
         "final_min_f": final_metric.get("min_f", min(
             (minima[q] for q in range(6, 25) if q in minima), default=None)),

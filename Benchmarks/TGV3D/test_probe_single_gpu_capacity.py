@@ -20,7 +20,9 @@ def metric(step: int, *, min_f: str = "0.01",
 
 
 def log(steps: int, *, online: bool, final_minima: bool = True) -> str:
-    rows = [f"Coarse STEP 1 ends. TIME = 1 Sum(Rho) = {CELLS}"]
+    rows = ["LBM_STORAGE mode=aa f_ncomp=19 f_ngrow=1 "
+            "macro_ncomp=4 macro_ngrow=0",
+            f"Coarse STEP 1 ends. TIME = 1 Sum(Rho) = {CELLS}"]
     if online:
         rows.extend((metric(1),
                      f"Coarse STEP {steps // 2} ends. TIME = {steps // 2}",
@@ -93,6 +95,11 @@ class CapacityParserTest(unittest.TestCase):
     def test_wrong_precision_fails(self):
         output = log(100, online=True).replace(
             "TGV_PRECISION real_bytes=8", "TGV_PRECISION real_bytes=4")
+        self.assertEqual(self.assess(output, 100, True)["status"], "failed")
+
+    def test_unexpected_storage_fails(self):
+        output = log(100, online=True).replace(
+            "LBM_STORAGE mode=aa", "LBM_STORAGE mode=two_buffer")
         self.assertEqual(self.assess(output, 100, True)["status"], "failed")
 
     def test_repeated_matching_precision_is_valid(self):
