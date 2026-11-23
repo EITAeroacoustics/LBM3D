@@ -30,6 +30,8 @@ python3 Benchmarks/TGV3D/run_tests.py \
 
 每轮使用**新的**运行目录。`--plan-only` 只生成计划与 `not_run` 报告，不调用 GPU。`--only CHECK` 可单独复跑失败项目；独立复跑的其余项目仍为 `not_run`，因此不能把它当作完整验收。扩展效率依赖本轮强弱扩展结果，需以完整模式复跑。`report.md` 保存逐项复跑命令，须为复跑指定尚不存在的目录。若 MPI 在 `MPI_Init` 前初始化 CUDA，按工作站设置使用 `rank_gpu.py`。GPU 映射固定为 1 卡 `0`、2 卡 `0,2`、4 卡 `0,1,2,3`；并记录拓扑、驱动、`nvcc`、MPI、CMake 缓存、输入及二进制 SHA-256。
 
+复跑时沿用 `environment.json` 记录的 `PATH`、`LD_LIBRARY_PATH` 和 `UCX_TLS`，以确保加载同一套 MPI/UCX 动态库。测试入口还会在结束时复核源码状态与输入文件哈希。
+
 ## 冻结测试矩阵
 
 | 项目 | 快速 | 完整 | 判据 |
