@@ -713,6 +713,8 @@ def main() -> None:
                 subprocess.SubprocessError) as error:
             outcome = {"status": "failed", "reason": str(error)}
         task.update(outcome)
+        if task.get("reason") == "pending":
+            task.pop("reason")
         write_json(root / "result.json", report)
         print(f"{task['id']}: {task['status']}", flush=True)
     statuses = [task["status"] for task in report["tasks"]]
