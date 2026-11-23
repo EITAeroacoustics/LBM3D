@@ -22,6 +22,8 @@ AMReXAdapter 组织 LBM、边界和诊断代码；LBM 核函数不依赖算例�
 
 TGV 容量模式由输入 `lbm3d.storage=aa` 选择。它只分配一份 19 分量、一层 ghost 的分布场及一份 4 分量、无 ghost 的宏观场；奇偶步交替解释同一份分布函数，并以方向性 halo 的 `Fill` 与反向 `ScatterAA` 交换实际需要的值。该路径目前要求单层、全周期、无 IBM 和外力、`lbmPhysicalParameters.nmac=4`，且关闭 plotfile、checkpoint 与 restart。默认双缓冲路径继续服务其他边界和层级配置。`lbm3d.tgv_metrics_interval` 设为正整数时，AA 路径在首步、指定间隔和末步输出在线质量、动能、正性及非有限值指标；设为 0 时，TGV 摘要程序只输出末步指标。
 
+AA 路径遇到多个入向远端通信邻居时，在等待方向性 halo 接收期间计算 FAB 内部宏观量，待 ghost 到齐后计算边界格点；单卡或单邻居仍按整块计算宏观量。两种调度都使用相同的一层方向性 halo 通信。
+
 公开入口是 `AMReXAdapter/AmrCoreLBM.H` 的 `AmrCoreLBM` 和 `AMReXAdapter/ProblemInit.H` 的 `ProblemInit`。`Boundary/IBM/MarkerIBParams.H` 供库内网格适配和 IBM 实现共享；`LBM/`、`Boundary/BC/`、`Diagnostics/`、`Utils/` 的头文件保持库内使用。依赖顺序为示例 → `lbm3d` → AMReX；库内由 AMReXAdapter 调用 LBM、Boundary、Diagnostics。各示例仅编译 `Examples/Common/main.cpp` 与各自的 `ProblemInit.cpp`，核心库源码只编译一次。
 
 三维 CUDA 构建：

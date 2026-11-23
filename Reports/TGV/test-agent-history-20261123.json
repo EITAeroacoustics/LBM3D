@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "runs": [
+    {
+      "root": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/quick-001",
+      "mode": "quick",
+      "commit": "984eb04bd87decf5e2190af3562b0153eaa48389",
+      "status": "passed",
+      "completed_utc": "2026-11-23T02:14:06.665522+00:00",
+      "plan": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/quick-001/plan.json",
+      "result": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/quick-001/result.json",
+      "report": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/quick-001/report.md"
+    },
+    {
+      "root": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/full-001",
+      "mode": "full",
+      "commit": "f462f14e4a45ce8275e82d9e15705ac5526506a3",
+      "status": "passed",
+      "completed_utc": "2026-11-23T02:30:39.488119+00:00",
+      "plan": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/full-001/plan.json",
+      "result": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/full-001/result.json",
+      "report": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/full-001/report.md"
+    },
+    {
+      "root": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/quick-002",
+      "mode": "quick",
+      "commit": "77984868e2949204a9602146839e2394c6b2abaa",
+      "status": "passed",
+      "completed_utc": "2026-11-23T02:33:06.160111+00:00",
+      "plan": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/quick-002/plan.json",
+      "result": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/quick-002/result.json",
+      "report": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/runs/quick-002/report.md"
+    }
+  ]
+}

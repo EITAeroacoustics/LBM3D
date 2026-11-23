@@ -1,0 +1,144 @@
+{
+  "host": "a-Default-string",
+  "python": "3.10.12",
+  "utc": "2026-11-23T02:15:20.099284+00:00",
+  "git": {
+    "source": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/source",
+    "commit": "f462f14e4a45ce8275e82d9e15705ac5526506a3",
+    "dirty": false,
+    "status": "",
+    "p1_reference_commit": "995813161540d2a09e57a6571c73ada3fe121c03"
+  },
+  "binaries": {
+    "summary_binary": {
+      "path": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/build-summary/lbm3d_tgv3d_summary",
+      "available": true,
+      "sha256": "2acf61b8c8d1b0db1210d42b4c33129cf59d61ea9d6d49a685d093e18fc2d8f1",
+      "cmake_cache": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/build-summary/CMakeCache.txt",
+      "cmake_cache_sha256": "cf2b4d77f5c893781b823d5e2474c4164adaf98aecf31f283f7530c908d97d16",
+      "options": {
+        "AMReX_DIR": "/home/hanbo/workspace/LBM/deps/amrex-26.11-install-3d-ucx-cuda/lib/cmake/AMReX",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CUDA_COMPILER": "/usr/local/cuda/bin/nvcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "LBM_ENABLE_IBM": "OFF",
+        "LBM_TIMING": "OFF"
+      }
+    },
+    "timing_binary": {
+      "path": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/build-timing/lbm3d_tgv3d",
+      "available": true,
+      "sha256": "434929c8005e958f4b15b8d4a47d6e709b36ccf7728de59465addf577843a6e4",
+      "cmake_cache": "/home/hanbo/workspace/LBM/deps/lbm3d-p2-final-20261123/build-timing/CMakeCache.txt",
+      "cmake_cache_sha256": "7c688ce3b2765199b3b09d2038fd348d9d252d3f5df9b5a1b51a1957596d0b26",
+      "options": {
+        "AMReX_DIR": "/home/hanbo/workspace/LBM/deps/amrex-26.11-install-3d-ucx-cuda/lib/cmake/AMReX",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CUDA_COMPILER": "/usr/local/cuda/bin/nvcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "LBM_ENABLE_IBM": "OFF",
+        "LBM_TIMING": "ON"
+      }
+    },
+    "baseline_summary_binary": {
+      "path": "/home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary",
+      "available": true,
+      "sha256": "f20ee2d1972d8ecd278c836bb05d6729f6b1ff81ccde37fd422b99c1ad23df84",
+      "cmake_cache": "/home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/CMakeCache.txt",
+      "cmake_cache_sha256": "7a39b9827772bb5d04b6606b3f90b8632679644c188b2f18315ca941791ccdc5",
+      "options": {
+        "AMReX_DIR": "/home/hanbo/workspace/LBM/deps/amrex-26.11-install-3d-ucx-cuda/lib/cmake/AMReX",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CUDA_COMPILER": "/usr/local/cuda/bin/nvcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "LBM_ENABLE_IBM": "ON",
+        "LBM_TIMING": "OFF"
+      }
+    }
+  },
+  "inputs_sha256": {
+    "inputs_physics_64": "cb92599365b352bc5daf02d2b1d4320048b0da1069a80224c169312a3b34b1f6",
+    "inputs_physics_128": "0ab865aae8bd14c569d7fdeda4187529aa8e4cfb048ff4a554229572aa5ffd75",
+    "inputs_strong_256": "e2133f763856abe868c6942643ccf224a5624497a3d2f037b023a8c3fb00fc81",
+    "inputs_weak_1gpu": "f5dea55260cf85f94e7267d3ce4b32bd0243f55285a6b66200e40d6479841576",
+    "inputs_weak_2gpu": "98cf2948f0d1ca95ce014ea5512a11c3001fe234e049664b34430554ad2b2650",
+    "inputs_weak_4gpu": "846a7df1cba8dbaa35acea244602482d6be141020fe2819c22980edf9bf2c6ed",
+    "reference_physics.csv": "f667ad4fb0440571f0eaa2a1cdb9f6285d218377d0496b32791e3ce080d94d02"
+  },
+  "gpu": {
+    "command": [
+      "nvidia-smi",
+      "--query-gpu=index,name,memory.total,memory.used,driver_version,uuid",
+      "--format=csv,noheader,nounits"
+    ],
+    "available": true,
+    "returncode": 0,
+    "output": "0, Tesla V100-SXM2-32GB, 32768, 5, 535.309.01, GPU-8b6d06ba-4747-be12-4474-5b0a6a51986a\n1, Tesla V100-SXM2-32GB, 32768, 5, 535.309.01, GPU-942e80eb-4323-68e6-a785-5411616f449c\n2, Tesla V100-SXM2-32GB, 32768, 5, 535.309.01, GPU-f6dcde85-cf4e-59ff-5179-bc9622219051\n3, Tesla V100-SXM2-32GB, 32768, 5, 535.309.01, GPU-af303b02-b13b-19be-c2d8-810bda2e4b00",
+    "gpus": [
+      {
+        "index": 0,
+        "name": "Tesla V100-SXM2-32GB",
+        "memory_total_mib": 32768,
+        "memory_used_mib": 5,
+        "driver": "535.309.01",
+        "uuid": "GPU-8b6d06ba-4747-be12-4474-5b0a6a51986a"
+      },
+      {
+        "index": 1,
+        "name": "Tesla V100-SXM2-32GB",
+        "memory_total_mib": 32768,
+        "memory_used_mib": 5,
+        "driver": "535.309.01",
+        "uuid": "GPU-942e80eb-4323-68e6-a785-5411616f449c"
+      },
+      {
+        "index": 2,
+        "name": "Tesla V100-SXM2-32GB",
+        "memory_total_mib": 32768,
+        "memory_used_mib": 5,
+        "driver": "535.309.01",
+        "uuid": "GPU-f6dcde85-cf4e-59ff-5179-bc9622219051"
+      },
+      {
+        "index": 3,
+        "name": "Tesla V100-SXM2-32GB",
+        "memory_total_mib": 32768,
+        "memory_used_mib": 5,
+        "driver": "535.309.01",
+        "uuid": "GPU-af303b02-b13b-19be-c2d8-810bda2e4b00"
+      }
+    ],
+    "topology": {
+      "command": [
+        "nvidia-smi",
+        "topo",
+        "-m"
+      ],
+      "available": true,
+      "returncode": 0,
+      "output": "\u001b[4mGPU0\tGPU1\tGPU2\tGPU3\tCPU Affinity\tNUMA Affinity\tGPU NUMA ID\u001b[0m\nGPU0\t X \tPHB\tSYS\tSYS\t0-13,28-41\t0\t\tN/A\nGPU1\tPHB\t X \tSYS\tSYS\t0-13,28-41\t0\t\tN/A\nGPU2\tSYS\tSYS\t X \tPHB\t14-27,42-55\t1\t\tN/A\nGPU3\tSYS\tSYS\tPHB\t X \t14-27,42-55\t1\t\tN/A\n\nLegend:\n\n  X    = Self\n  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)\n  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node\n  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)\n  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)\n  PIX  = Connection traversing at most a single PCIe bridge\n  NV#  = Connection traversing a bonded set of # NVLinks"
+    }
+  },
+  "cuda": {
+    "command": [
+      "nvcc",
+      "--version"
+    ],
+    "available": true,
+    "returncode": 0,
+    "output": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2023 NVIDIA Corporation\nBuilt on Tue_Aug_15_22:02:13_PDT_2023\nCuda compilation tools, release 12.2, V12.2.140\nBuild cuda_12.2.r12.2/compiler.33191640_0"
+  },
+  "mpi": {
+    "command": [
+      "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+      "--version"
+    ],
+    "available": true,
+    "returncode": 0,
+    "output": "mpirun (Open MPI) 4.1.8\n\nReport bugs to http://www.open-mpi.org/community/help/"
+  },
+  "cuda_visible_devices": null,
+  "ucx_tls": "self,sm,cuda_copy",
+  "ld_library_path": "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/lib:/home/hanbo/workspace/LBM/deps/ucx-1.21.1-cuda/lib:",
+  "path": "/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
+}
