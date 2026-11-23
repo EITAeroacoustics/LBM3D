@@ -20,6 +20,10 @@ using namespace amrex;
 
 void AmrCoreLBM::AdvancePhiAtLevel(int lev, Real time, Real dt_lev,
                                    int /*iteration*/, int /*ncycle*/) {
+  if (m_aa_storage) {
+    AdvanceAAAtLevel(lev);
+    return;
+  }
   // swap time slots
   std::swap(f_new[lev], f_old[lev]);
   std::swap(macro_new[lev], macro_old[lev]);

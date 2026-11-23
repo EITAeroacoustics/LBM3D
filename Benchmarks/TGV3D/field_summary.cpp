@@ -1,14 +1,17 @@
 #include <cstdint>
 #include <cstring>
+#include <cmath>
 #include <iomanip>
 
 #include <AMReX.H>
 #include <AMReX_Math.H>
+#include <AMReX_GpuContainers.H>
 #include <AMReX_MultiFab.H>
 #include <AMReX_ParReduce.H>
 #include <AMReX_ParallelContext.H>
 #include <AMReX_ParallelDescriptor.H>
 #include <AMReX_Print.H>
+#include <AMReX_ParmParse.H>
 
 #include <AmrCoreLBM.H>
 #include <ProblemInit.H>
@@ -17,6 +20,35 @@ void InitializeProblem(amrex::MultiFab& macro, amrex::Geometry const& geom,
                        amrex::Real nu);
 
 namespace {
+
+struct AAStencil {
+  amrex::GpuArray<int, 19> cx{};
+  amrex::GpuArray<int, 19> cy{};
+  amrex::GpuArray<int, 19> cz{};
+  amrex::GpuArray<int, 19> opposite{};
+};
+
+AAStencil ReadAAStencil() {
+  amrex::Vector<amrex::Real> cx, cy, cz;
+  amrex::ParmParse pp("lbm3d");
+  pp.getarr("dirx", cx);
+  pp.getarr("diry", cy);
+  pp.getarr("dirz", cz);
+  AMREX_ALWAYS_ASSERT(cx.size() == 19 && cy.size() == 19 && cz.size() == 19);
+  AAStencil result;
+  for (int q = 0; q < 19; ++q) {
+    result.cx[q] = static_cast<int>(cx[q]);
+    result.cy[q] = static_cast<int>(cy[q]);
+    result.cz[q] = static_cast<int>(cz[q]);
+    for (int p = 0; p < 19; ++p) {
+      if (cx[p] == -cx[q] && cy[p] == -cy[q] && cz[p] == -cz[q]) {
+        result.opposite[q] = p;
+        break;
+      }
+    }
+  }
+  return result;
+}
 
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 std::uint64_t value_bits(amrex::Real value) noexcept {
@@ -51,12 +83,54 @@ std::uint64_t field_hash(amrex::Real value, int i, int j, int k,
 } // namespace
 
 void PrintFieldSummary(amrex::MultiFab const& field, int lev,
-                       int source_comp, int output_comp) {
-  const auto sum = field.sum(source_comp);
-  const auto norm2 = field.norm2(source_comp);
-  const auto min = field.min(source_comp);
-  const auto max = field.max(source_comp);
+                       int source_comp, int output_comp,
+                       AAStencil const& stencil, bool flipped) {
+  amrex::Real sum;
+  amrex::Real norm2;
+  amrex::Real minimum;
+  amrex::Real maximum;
   auto const arrays = field.const_arrays();
+  if (flipped) {
+    auto const values = amrex::ParReduce(
+        amrex::TypeList<amrex::ReduceOpSum, amrex::ReduceOpSum,
+                        amrex::ReduceOpMin, amrex::ReduceOpMax>{},
+        amrex::TypeList<amrex::Real, amrex::Real,
+                        amrex::Real, amrex::Real>{},
+        field, amrex::IntVect(0),
+        [=] AMREX_GPU_DEVICE(int box, int i, int j, int k) noexcept
+            -> amrex::GpuTuple<amrex::Real, amrex::Real,
+                               amrex::Real, amrex::Real> {
+          int const sx = stencil.cx[source_comp];
+          int const sy = stencil.cy[source_comp];
+          int const sz = stencil.cz[source_comp];
+          amrex::Real const value = arrays[box](i - sx, j - sy, k - sz,
+                                                stencil.opposite[source_comp]);
+          return {value, value * value, value, value};
+        });
+    sum = amrex::get<0>(values);
+    amrex::Real squares = amrex::get<1>(values);
+    minimum = amrex::get<2>(values);
+    maximum = amrex::get<3>(values);
+#ifdef AMREX_USE_MPI
+    MPI_Comm const comm = amrex::ParallelContext::CommunicatorSub();
+    auto const real_type =
+        amrex::ParallelDescriptor::Mpi_typemap<amrex::Real>::type();
+    BL_MPI_REQUIRE(MPI_Allreduce(MPI_IN_PLACE, &sum, 1, real_type,
+                                 MPI_SUM, comm));
+    BL_MPI_REQUIRE(MPI_Allreduce(MPI_IN_PLACE, &squares, 1, real_type,
+                                 MPI_SUM, comm));
+    BL_MPI_REQUIRE(MPI_Allreduce(MPI_IN_PLACE, &minimum, 1, real_type,
+                                 MPI_MIN, comm));
+    BL_MPI_REQUIRE(MPI_Allreduce(MPI_IN_PLACE, &maximum, 1, real_type,
+                                 MPI_MAX, comm));
+#endif
+    norm2 = std::sqrt(squares);
+  } else {
+    sum = field.sum(source_comp);
+    norm2 = field.norm2(source_comp);
+    minimum = field.min(source_comp);
+    maximum = field.max(source_comp);
+  }
   // Use the plotfile component number in the coordinate-sensitive hash.
   auto const fingerprint = amrex::ParReduce(
       amrex::TypeList<amrex::ReduceOpSum, amrex::ReduceOpSum>{},
@@ -64,8 +138,17 @@ void PrintFieldSummary(amrex::MultiFab const& field, int lev,
       field, amrex::IntVect(0),
       [=] AMREX_GPU_DEVICE(int box, int i, int j, int k) noexcept
           -> amrex::GpuTuple<unsigned long long, unsigned long long> {
-        const auto hash = field_hash(arrays[box](i, j, k, source_comp),
-                                     i, j, k, output_comp);
+        amrex::Real value;
+        if (flipped) {
+          int const sx = stencil.cx[source_comp];
+          int const sy = stencil.cy[source_comp];
+          int const sz = stencil.cz[source_comp];
+          value = arrays[box](i - sx, j - sy, k - sz,
+                              stencil.opposite[source_comp]);
+        } else {
+          value = arrays[box](i, j, k, source_comp);
+        }
+        const auto hash = field_hash(value, i, j, k, output_comp);
         return {hash & 0xffffffffULL, hash >> 32};
       });
   unsigned long long hashes[2] = {amrex::get<0>(fingerprint),
@@ -78,7 +161,7 @@ void PrintFieldSummary(amrex::MultiFab const& field, int lev,
   amrex::Print() << std::setprecision(17)
                  << "FIELD_SUMMARY lev=" << lev << " comp=" << output_comp
                  << " sum=" << sum << " norm2=" << norm2
-                 << " min=" << min << " max=" << max
+                 << " min=" << minimum << " max=" << maximum
                  << " hash0=" << hashes[0] << " hash1=" << hashes[1]
                  << '\n';
 }
@@ -152,8 +235,42 @@ void PrintTgvMetrics(AmrCoreLBM const& solver) {
                                amrex::ParallelContext::CommunicatorSub()));
 #endif
   auto const cells = geom.Domain().numPts();
-  bool const nonfinite = macro.contains_nan() || macro.contains_inf() ||
-                         f.contains_nan() || f.contains_inf();
+  bool nonfinite = macro.contains_nan() || macro.contains_inf();
+  if (solver.UsesAAStorage()) {
+    AAStencil const stencil = ReadAAStencil();
+    bool const flipped = solver.IsAAFlipped();
+    auto const populations = f.const_arrays();
+    auto const bad = amrex::ParReduce(
+        amrex::TypeList<amrex::ReduceOpSum>{},
+        amrex::TypeList<unsigned long long>{},
+        f, amrex::IntVect(0),
+        [=] AMREX_GPU_DEVICE(int box, int i, int j, int k) noexcept
+            -> amrex::GpuTuple<unsigned long long> {
+          unsigned long long count = 0;
+          for (int q = 0; q < 19; ++q) {
+            amrex::Real value;
+            if (flipped) {
+              value = populations[box](i - stencil.cx[q],
+                                       j - stencil.cy[q],
+                                       k - stencil.cz[q],
+                                       stencil.opposite[q]);
+            } else {
+              value = populations[box](i, j, k, q);
+            }
+            count += !amrex::Math::isfinite(value);
+          }
+          return {count};
+        });
+    unsigned long long bad_count = bad;
+#ifdef AMREX_USE_MPI
+    BL_MPI_REQUIRE(MPI_Allreduce(MPI_IN_PLACE, &bad_count, 1,
+                                 MPI_UNSIGNED_LONG_LONG, MPI_SUM,
+                                 amrex::ParallelContext::CommunicatorSub()));
+#endif
+    nonfinite = nonfinite || bad_count != 0;
+  } else {
+    nonfinite = nonfinite || f.contains_nan() || f.contains_inf();
+  }
   amrex::Print() << "TGV_PRECISION real_bytes=" << sizeof(amrex::Real) << '\n';
   amrex::Print() << std::setprecision(17)
                  << "TGV_METRICS step=" << step
@@ -172,6 +289,8 @@ int main(int argc, char* argv[]) {
     AmrCoreLBM solver(InitializeProblem);
     solver.InitData();
     solver.Evolve();
+    AAStencil const aa_stencil =
+        solver.UsesAAStorage() ? ReadAAStencil() : AAStencil{};
 
     // Reduce resident state directly. PlotFileMF would duplicate all 25
     // components and defeat single-GPU capacity measurements.
@@ -179,14 +298,22 @@ int main(int argc, char* argv[]) {
       auto const& macro = solver.MacroState(lev);
       auto const& f = solver.DistributionState(lev);
       for (int comp = 0; comp < 4; ++comp) {
-        PrintFieldSummary(macro, lev, comp, comp);
+        PrintFieldSummary(macro, lev, comp, comp, aa_stencil, false);
       }
       for (int comp = 0; comp < f.nComp(); ++comp) {
-        PrintFieldSummary(f, lev, comp, 6 + comp);
+        PrintFieldSummary(f, lev, comp, 6 + comp, aa_stencil,
+                          solver.IsAAFlipped());
       }
     }
 #ifdef LBM_TGV_METRICS
-    PrintTgvMetrics(solver);
+    int online_interval = 0;
+    amrex::ParmParse("lbm3d").query("tgv_metrics_interval", online_interval);
+    if (solver.UsesAAStorage() && online_interval > 0) {
+      amrex::Print() << "TGV_PRECISION real_bytes="
+                     << sizeof(amrex::Real) << '\n';
+    } else {
+      PrintTgvMetrics(solver);
+    }
 #endif
   }
   amrex::Finalize();

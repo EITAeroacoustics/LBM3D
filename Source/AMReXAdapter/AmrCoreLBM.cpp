@@ -153,6 +153,31 @@ AmrCoreLBM::AmrCoreLBM(ProblemInit problem_init)
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
       nmac == 4 || nmac >= 6,
       "LBM3D requires four flow macros or six with derived fields.");
+  if (m_aa_storage) {
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        geom[0].isAllPeriodic() && nmac == 4 && !m_use_cylinder &&
+            m_ib_method == IBMMethodNone && !m_use_prescribed_force &&
+            m_force_eval_debug == 0 && plot_int < 0 && chk_int < 0 &&
+            restart_chkfile.empty(),
+        "lbm3d.storage=aa requires one periodic, unforced level, four "
+        "macros, and no plotfile, checkpoint, or restart.");
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        DirectionalHalo::SupportsStencil(dirx, diry, dirz),
+        "lbm3d.storage=aa requires a complete D3Q19 stencil.");
+    for (int q = 0; q < 19; ++q) {
+      int opposite = -1;
+      for (int p = 0; p < 19; ++p) {
+        if (dirx[p] == -dirx[q] && diry[p] == -diry[q] &&
+            dirz[p] == -dirz[q]) {
+          opposite = p;
+          break;
+        }
+      }
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(opposite >= 0,
+                                       "D3Q19 direction has no opposite.");
+      m_aa_opposite[q] = opposite;
+    }
+  }
   if (!m_use_cylinder && geom[0].isAllPeriodic()) { nghost = 1; }
 
   // Geometry on all levels has been defined already.
@@ -334,6 +359,7 @@ void AmrCoreLBM::Evolve() {
                                    "lbm3d.mass_check_interval must be positive");
   const Real wall_start = amrex::second();
   const int first_step = istep[0];
+  int last_tgv_metric_step = -1;
 
   for (int step = istep[0]; step < max_step && cur_time < stop_time; ++step) {
     amrex::Print() << "\nCoarse STEP " << step + 1 << " starts ..."
@@ -357,7 +383,6 @@ void AmrCoreLBM::Evolve() {
     if (check_mass) {
       sum_rho = macro_new[0].sum(0);
     }
-
     // Simple forcing validation: for a fully periodic box with spatially
     // uniform forcing and initially uniform fields, the domain-averaged
     // velocity should follow u(t) ~ (t/dt - 0.5) * Fx / rho (with Fx the
@@ -396,6 +421,14 @@ amrex::Print() << std::setprecision(12)
       amrex::Print() << " Sum(Rho) = " << sum_rho;
     }
     amrex::Print() << std::endl;
+    if (m_tgv_metrics_interval > 0 && m_aa_storage &&
+        ((step == first_step) ||
+         ((step + 1) % m_tgv_metrics_interval == 0) ||
+         (step + 1 == max_step) ||
+         (cur_time >= stop_time - 1.e-6 * dt[0]))) {
+      PrintAATgvMetrics(step + 1, cur_time);
+      last_tgv_metric_step = step + 1;
+    }
 
     // sync up time
     for (lev = 0; lev <= finest_level; ++lev) {
@@ -444,6 +477,11 @@ amrex::Print() << std::setprecision(12)
 
   }
 
+  if (m_tgv_metrics_interval > 0 && m_aa_storage &&
+      istep[0] != last_tgv_metric_step) {
+    PrintAATgvMetrics(istep[0], cur_time);
+  }
+
   if (plot_int > 0 && istep[0] > last_plot_file_step) {
     for (int lev_plot = 0; lev_plot <= finest_level; ++lev_plot) {
       UpdateDerivedMacroFields(lev_plot, t_new[lev_plot]);
@@ -468,7 +506,9 @@ void AmrCoreLBM::InitData() {
     // were written by the problem setup.
     for (int lev = 0; lev <= finest_level; ++lev) {
       UpdateDerivedMacroFields(lev, time);
-      MultiFab::Copy(macro_old[lev], macro_new[lev], 0, 0, nmac, nghost);
+      if (!m_aa_storage) {
+        MultiFab::Copy(macro_old[lev], macro_new[lev], 0, 0, nmac, nghost);
+      }
     }
     if (m_use_cylinder && m_ls) {
       for (int lev = 0; lev <= finest_level; ++lev) {
@@ -686,9 +726,16 @@ void AmrCoreLBM::MakeNewLevelFromScratch(int lev, Real time, const BoxArray &ba,
   amrex::Print() << "Making new level " << lev << std::endl;
 
   f_new[lev].define(ba, dm, ndir, nghost);
-  f_old[lev].define(ba, dm, ndir, nghost);
-  macro_new[lev].define(ba, dm, nmac, nghost);
-  macro_old[lev].define(ba, dm, nmac, nghost);
+  macro_new[lev].define(ba, dm, nmac, m_aa_storage ? 0 : nghost);
+  if (!m_aa_storage) {
+    f_old[lev].define(ba, dm, ndir, nghost);
+    macro_old[lev].define(ba, dm, nmac, nghost);
+  } else {
+    amrex::Print() << "LBM_STORAGE mode=aa f_ncomp=" << f_new[lev].nComp()
+                   << " f_ngrow=" << f_new[lev].nGrow()
+                   << " macro_ncomp=" << macro_new[lev].nComp()
+                   << " macro_ngrow=" << macro_new[lev].nGrow() << '\n';
+  }
 
   if (m_use_cylinder) {
     // --- Level-set φ on this level ---
@@ -710,7 +757,9 @@ void AmrCoreLBM::MakeNewLevelFromScratch(int lev, Real time, const BoxArray &ba,
 
   UpdateDerivedMacroFields(lev, time);
 
-  MultiFab::Copy(macro_old[lev], macro_new[lev], 0, 0, nmac, nghost);
+  if (!m_aa_storage) {
+    MultiFab::Copy(macro_old[lev], macro_new[lev], 0, 0, nmac, nghost);
+  }
 
   InitEquilibrium();
 }
@@ -926,11 +975,31 @@ void AmrCoreLBM::ReadParameters() {
       ParmParse pp("lbm3d");
 
       pp.query("ndir", ndir);
+      std::string storage = "two_buffer";
+      pp.query("storage", storage);
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+          storage == "two_buffer" || storage == "aa",
+          "lbm3d.storage must be two_buffer or aa.");
+      m_aa_storage = storage == "aa";
+      pp.query("tgv_metrics_interval", m_tgv_metrics_interval);
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+          m_tgv_metrics_interval >= 0,
+          "lbm3d.tgv_metrics_interval must be nonnegative.");
       pp.queryarr("wis", wis);
       pp.queryarr("wim", wim);
       pp.queryarr("dirx", dirx);
       pp.queryarr("diry", diry);
       pp.queryarr("dirz", dirz);
+      if (m_aa_storage) {
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+            wis.size() == 19 && wim.size() == 19,
+            "lbm3d.storage=aa requires 19 stencil weights.");
+        for (Real const denominator : wim) {
+          AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+              denominator != Real(0.0),
+              "lbm3d.storage=aa has a zero stencil weight denominator.");
+        }
+      }
       wi.resize(wis.size());
       for (size_t idvs = 0; idvs < wis.size(); idvs++) {
         wi[idvs] = wis[idvs] / wim[idvs];
@@ -1392,7 +1461,6 @@ void AmrCoreLBM::InitEquilibrium() {
 
   for (int lev = finest_level; lev >= 0; --lev) {
     MultiFab &curF = f_new[lev];
-    MultiFab &curFo = f_old[lev];
     MultiFab &curMacro = macro_new[lev];
 
 #ifdef AMREX_USE_OMP
@@ -1400,7 +1468,7 @@ void AmrCoreLBM::InitEquilibrium() {
 #endif
     for (MFIter mfi(curF, TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-      const Box &bx = mfi.fabbox();
+      const Box &bx = m_aa_storage ? mfi.validbox() : mfi.fabbox();
 
       auto const rho = curMacro[mfi].const_array(0);
       auto const ux = curMacro[mfi].const_array(1);
@@ -1408,7 +1476,9 @@ void AmrCoreLBM::InitEquilibrium() {
       auto const uz = curMacro[mfi].const_array(3);
 
       auto const f = curF[mfi].array();
-      auto const fo = curFo[mfi].array();
+      Array4<Real> fo;
+      if (!m_aa_storage) { fo = f_old[lev][mfi].array(); }
+      bool const aa_storage = m_aa_storage;
 
       amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j,
                                                   int k) noexcept {
@@ -1423,7 +1493,7 @@ void AmrCoreLBM::InitEquilibrium() {
           Real feq = wi_d[q] * r *
                      (amrex::Real(1.0) + amrex::Real(3.0) * cu + amrex::Real(4.5) * cu * cu - amrex::Real(1.5) * u2);
           f(i, j, k, q) = feq;
-          fo(i, j, k, q) = feq;
+          if (!aa_storage) { fo(i, j, k, q) = feq; }
         }
       });
     }

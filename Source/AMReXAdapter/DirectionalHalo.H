@@ -37,10 +37,13 @@ public:
   DirectionalHalo(amrex::MultiFab const& f, amrex::Geometry const& geom,
                   amrex::Vector<amrex::Real> const& dirx,
                   amrex::Vector<amrex::Real> const& diry,
-                  amrex::Vector<amrex::Real> const& dirz);
+                  amrex::Vector<amrex::Real> const& dirz,
+                  bool aa_pattern = false);
 
-  [[nodiscard]] bool matches(amrex::MultiFab const& f) const;
+  [[nodiscard]] bool matches(amrex::MultiFab const& f,
+                             bool aa_pattern = false) const;
   void Fill(amrex::MultiFab& f);
+  void ScatterAA(amrex::MultiFab& f);
 
 private:
   struct Segment {
@@ -71,19 +74,25 @@ private:
   amrex::DistributionMapping m_distribution;
   bool m_serial_local = false;
   bool m_serial_recv = false;
+  bool m_aa_pattern = false;
+  bool m_reverse_local_separate = false;
   std::array<std::array<int, 3>, 19> m_direction{};
   std::vector<Segment> m_local;
+  std::vector<Segment> m_reverse_local;
   std::vector<Segment> m_send;
   std::vector<Segment> m_recv;
   std::vector<Peer> m_send_peers;
   std::vector<Peer> m_recv_peers;
   amrex::Long m_local_count = 0;
+  amrex::Long m_reverse_local_count = 0;
   amrex::Long m_send_count = 0;
   amrex::Long m_recv_count = 0;
   amrex::Gpu::HostVector<lbm3d::detail::DirectionalHaloTag> m_local_host_tags;
+  amrex::Gpu::HostVector<lbm3d::detail::DirectionalHaloTag> m_reverse_local_host_tags;
   amrex::Gpu::HostVector<lbm3d::detail::DirectionalHaloTag> m_send_host_tags;
   amrex::Gpu::HostVector<lbm3d::detail::DirectionalHaloTag> m_recv_host_tags;
   amrex::Gpu::DeviceVector<lbm3d::detail::DirectionalHaloTag> m_local_tags;
+  amrex::Gpu::DeviceVector<lbm3d::detail::DirectionalHaloTag> m_reverse_local_tags;
   amrex::Gpu::DeviceVector<lbm3d::detail::DirectionalHaloTag> m_send_tags;
   amrex::Gpu::DeviceVector<lbm3d::detail::DirectionalHaloTag> m_recv_tags;
   amrex::Gpu::DeviceVector<amrex::Real> m_send_buffer;

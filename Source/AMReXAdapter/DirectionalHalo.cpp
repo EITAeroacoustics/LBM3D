@@ -42,8 +42,16 @@ void LaunchDirectionalHalo(Long total_cells, int ntags,
       } else if (operation == 1) {
         tag.dst(i, j, k, q) = tag.src(i + tag.shift[0], j + tag.shift[1],
                                       k + tag.shift[2], q);
-      } else {
+      } else if (operation == 2) {
         tag.dst(i, j, k, q) = buffer[buffer_index];
+      } else if (operation == 3) {
+        buffer[buffer_index] = tag.src(i, j, k, q);
+      } else if (operation == 4) {
+        tag.dst(i + tag.shift[0], j + tag.shift[1],
+                k + tag.shift[2], q) = tag.src(i, j, k, q);
+      } else {
+        tag.dst(i + tag.shift[0], j + tag.shift[1],
+                k + tag.shift[2], q) = buffer[buffer_index];
       }
     }
   });
@@ -81,8 +89,10 @@ bool DirectionalHalo::SupportsStencil(Vector<Real> const& dirx,
 DirectionalHalo::DirectionalHalo(MultiFab const& f, Geometry const& geom,
                                  Vector<Real> const& dirx,
                                  Vector<Real> const& diry,
-                                 Vector<Real> const& dirz)
-    : m_boxes(f.boxArray()), m_distribution(f.DistributionMap()) {
+                                 Vector<Real> const& dirz,
+                                 bool aa_pattern)
+    : m_boxes(f.boxArray()), m_distribution(f.DistributionMap()),
+      m_aa_pattern(aa_pattern) {
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(SupportsStencil(dirx, diry, dirz),
                                    "DirectionalHalo requires D3Q19.");
   AMREX_ALWAYS_ASSERT_WITH_MESSAGE(f.nComp() == 19,
@@ -106,6 +116,20 @@ DirectionalHalo::DirectionalHalo(MultiFab const& f, Geometry const& geom,
     generic_local_count += tag.dbox.numPts() * f.nComp();
     AddTag(m_local, tag, m_boxes[tag.dstIndex], m_local_count);
   }
+#ifdef BL_USE_TEAM
+  // Forward copies write each rank's ghost FABs. The AA reverse copy writes
+  // the original source valid FABs, which may belong to another team rank.
+  m_reverse_local_separate = m_aa_pattern &&
+                             ParallelDescriptor::TeamSize() > 1;
+  if (m_reverse_local_separate) {
+    for (auto const& tag : *fb.m_LocTags) {
+      if (m_distribution[tag.srcIndex] == ParallelDescriptor::MyProc()) {
+        AddTag(m_reverse_local, tag, m_boxes[tag.dstIndex],
+               m_reverse_local_count);
+      }
+    }
+  }
+#endif
   for (auto const& [rank, tags] : *fb.m_SndTags) {
     Peer peer{rank, m_send_count, 0};
     for (auto const& tag : tags) {
@@ -126,9 +150,11 @@ DirectionalHalo::DirectionalHalo(MultiFab const& f, Geometry const& geom,
   }
 
   m_local_host_tags.resize(m_local.size());
+  m_reverse_local_host_tags.resize(m_reverse_local.size());
   m_send_host_tags.resize(m_send.size());
   m_recv_host_tags.resize(m_recv.size());
   m_local_tags.resize(m_local.size());
+  m_reverse_local_tags.resize(m_reverse_local.size());
   m_send_tags.resize(m_send.size());
   m_recv_tags.resize(m_recv.size());
   m_send_buffer.resize(m_send_count);
@@ -146,13 +172,37 @@ DirectionalHalo::DirectionalHalo(MultiFab const& f, Geometry const& geom,
           << m_recv_count << '/' << generic_recv_count << '\n';
 }
 
-bool DirectionalHalo::matches(MultiFab const& f) const {
-  return m_boxes == f.boxArray() && m_distribution == f.DistributionMap();
+bool DirectionalHalo::matches(MultiFab const& f, bool aa_pattern) const {
+  return m_boxes == f.boxArray() && m_distribution == f.DistributionMap() &&
+         m_aa_pattern == aa_pattern;
 }
 
 void DirectionalHalo::AddTag(std::vector<Segment>& segments,
                              FabArrayBase::CopyComTag const& tag,
                              Box const& dst_valid, Long& count) {
+  if (m_aa_pattern) {
+    // An AA odd step reads and later writes the same shifted locations.
+    // A direction that crosses one face cannot reach the full face strip
+    // when it also moves in a tangential direction. Sending that unused
+    // strip back would overwrite a valid value with stale ghost data.
+    for (int q = 0; q < 19; ++q) {
+      Box shifted = dst_valid;
+      for (int d = 0; d < 3; ++d) {
+        shifted.shift(d, m_direction[q][d]);
+      }
+      Box const bx = tag.dbox & shifted;
+      if (!bx.ok()) { continue; }
+      Segment segment;
+      segment.tag = tag;
+      segment.box = bx;
+      segment.offset = count;
+      segment.q[0] = q;
+      segment.nq = 1;
+      count += bx.numPts();
+      segments.push_back(segment);
+    }
+    return;
+  }
   for (int sx = -1; sx <= 1; ++sx) {
     for (int sy = -1; sy <= 1; ++sy) {
       for (int sz = -1; sz <= 1; ++sz) {
@@ -178,8 +228,7 @@ void DirectionalHalo::AddTag(std::vector<Segment>& segments,
         for (int q = 0; q < 19; ++q) {
           bool needed = true;
           for (int d = 0; d < 3; ++d) {
-            if ((side[d] < 0 && m_direction[q][d] != 1) ||
-                (side[d] > 0 && m_direction[q][d] != -1)) {
+            if (side[d] != 0 && m_direction[q][d] != -side[d]) {
               needed = false;
             }
           }
@@ -205,8 +254,16 @@ void DirectionalHalo::CopySegments(MultiFab& f,
   for (std::size_t t = 0; t < segments.size(); ++t) {
     auto const& segment = segments[t];
     auto& tag = host_tags[t];
-    if (operation != 2) { tag.src = f.const_array(segment.tag.srcIndex); }
-    if (operation != 0) { tag.dst = f.array(segment.tag.dstIndex); }
+    if (operation == 0 || operation == 1) {
+      tag.src = f.const_array(segment.tag.srcIndex);
+    } else if (operation == 3 || operation == 4) {
+      tag.src = f.const_array(segment.tag.dstIndex);
+    }
+    if (operation == 1 || operation == 2) {
+      tag.dst = f.array(segment.tag.dstIndex);
+    } else if (operation == 4 || operation == 5) {
+      tag.dst = f.array(segment.tag.srcIndex);
+    }
     tag.offset = segment.offset;
     tag.cell_offset = serial ? 0 : total_cells;
     tag.npts = segment.box.numPts();
@@ -304,6 +361,84 @@ void DirectionalHalo::Fill(MultiFab& f) {
 #endif
   CopySegments(f, m_recv, m_recv_host_tags, m_recv_tags,
                m_recv_buffer.data(), 2, m_serial_recv);
+  Gpu::streamSynchronize();
+#ifdef BL_USE_TEAM
+  if (ParallelDescriptor::TeamSize() > 1) {
+    ParallelDescriptor::MyTeam().MemoryBarrier();
+  }
+#endif
+}
+
+void DirectionalHalo::ScatterAA(MultiFab& f) {
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_aa_pattern,
+                                   "ScatterAA requires AA halo directions.");
+#ifdef BL_USE_TEAM
+  if (ParallelDescriptor::TeamSize() > 1) {
+    Gpu::streamSynchronize();
+    ParallelDescriptor::MyTeam().MemoryBarrier();
+  }
+#endif
+#ifdef AMREX_USE_MPI
+  bool const device_mpi = ParallelDescriptor::UseGpuAwareMpi();
+  int const tag = ParallelDescriptor::SeqNum();
+  MPI_Comm const comm = ParallelContext::CommunicatorSub();
+  std::vector<ParallelDescriptor::Message> receives;
+  receives.reserve(m_send_peers.size());
+  for (auto const& peer : m_send_peers) {
+    int const rank = ParallelContext::global_to_local_rank(peer.rank);
+    Real* const buffer = device_mpi ? m_send_buffer.data()
+                                    : m_send_host_buffer.data();
+    receives.push_back(ParallelDescriptor::Arecv(
+        buffer + peer.offset, peer.count, rank, tag, comm));
+  }
+#endif
+
+  CopySegments(f, m_recv, m_recv_host_tags, m_recv_tags,
+               m_recv_buffer.data(), 3, false);
+  if (!m_recv.empty()) {
+    Gpu::streamSynchronize();
+#ifdef AMREX_USE_MPI
+    if (!device_mpi) {
+      Gpu::copyAsync(Gpu::deviceToHost, m_recv_buffer.begin(),
+                     m_recv_buffer.end(), m_recv_host_buffer.begin());
+      Gpu::streamSynchronize();
+    }
+#endif
+  }
+
+#ifdef AMREX_USE_MPI
+  std::vector<ParallelDescriptor::Message> sends;
+  sends.reserve(m_recv_peers.size());
+  for (auto const& peer : m_recv_peers) {
+    int const rank = ParallelContext::global_to_local_rank(peer.rank);
+    Real* const buffer = device_mpi ? m_recv_buffer.data()
+                                    : m_recv_host_buffer.data();
+    sends.push_back(ParallelDescriptor::Asend(
+        buffer + peer.offset, peer.count, rank, tag, comm));
+  }
+#endif
+
+  if (m_reverse_local_separate) {
+    CopySegments(f, m_reverse_local, m_reverse_local_host_tags,
+                 m_reverse_local_tags, nullptr, 4, m_serial_local);
+  } else {
+    CopySegments(f, m_local, m_local_host_tags, m_local_tags, nullptr, 4,
+                 m_serial_local);
+  }
+
+#ifdef AMREX_USE_MPI
+  for (auto& receive : receives) { receive.wait(); }
+  for (auto& send : sends) { send.wait(); }
+#endif
+  Gpu::streamSynchronize();
+#ifdef AMREX_USE_MPI
+  if (!device_mpi && !m_send.empty()) {
+    Gpu::copyAsync(Gpu::hostToDevice, m_send_host_buffer.begin(),
+                   m_send_host_buffer.end(), m_send_buffer.begin());
+  }
+#endif
+  CopySegments(f, m_send, m_send_host_tags, m_send_tags,
+               m_send_buffer.data(), 5, m_serial_recv);
   Gpu::streamSynchronize();
 #ifdef BL_USE_TEAM
   if (ParallelDescriptor::TeamSize() > 1) {
