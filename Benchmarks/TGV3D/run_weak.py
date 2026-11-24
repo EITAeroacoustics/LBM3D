@@ -1,4 +1,4 @@
-"""Measure 1/2/4 GPU TGV3D weak scaling with 256^3 cells per GPU."""
+"""Measure 1/2/4 GPU TGV3D weak scaling with 512^3 cells per GPU."""
 
 import argparse
 import hashlib
@@ -44,7 +44,7 @@ def main() -> None:
     args = parser.parse_args()
 
     binary = args.binary.resolve()
-    inputs = {ranks: Path(__file__).with_name(f"inputs_weak_{ranks}gpu").resolve()
+    inputs = {ranks: Path(__file__).with_name(f"inputs_weak_512_{ranks}gpu").resolve()
               for ranks in CONFIGS}
     args.run_root.mkdir(parents=True, exist_ok=True)
     runs = []
@@ -106,8 +106,8 @@ def main() -> None:
               "input_options": args.input_option,
               "input_sha256": {str(ranks): sha256(path)
                                for ranks, path in inputs.items()},
-              "cells_per_gpu": 256**3, "max_grid_size": 64,
-              "blocking_factor": 8, "cell_size": [0.25, 0.25, 0.25],
+              "cells_per_gpu": 512**3, "max_grid_size": 64,
+              "blocking_factor": 8, "cell_size": [0.125, 0.125, 0.125],
               "warmup_steps": 100, "timed_steps": 500,
               "run_order": [list(order) for order in RUN_ORDER[:args.repeats]],
               "runs": runs, "summary": summary}

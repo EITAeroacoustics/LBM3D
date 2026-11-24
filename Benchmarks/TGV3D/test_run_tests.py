@@ -48,7 +48,7 @@ class TestTgvAgent(unittest.TestCase):
             log = directory / "run.log"
             log.write_text("LBM_DIRECTIONAL_HALO active=1\n"
                            "Coarse STEP 600 ends. TIME = 600 DT = 1 "
-                           "Sum(Rho) = 16777216\n"
+                           f"Sum(Rho) = {run_tests.CONFIG['scaling']['weak_cells_per_gpu']}\n"
                            "AMReX (26.11) finalized\n")
             row = {"gpus": 1, "repeat": 1, "log": str(log),
                    "log_sha256": hashlib.sha256(log.read_bytes()).hexdigest()}

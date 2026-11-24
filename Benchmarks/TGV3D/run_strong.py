@@ -1,4 +1,4 @@
-"""Run and summarize the original-core 256^3 strong-scaling baseline."""
+"""Measure 1/2/4 GPU TGV3D strong scaling on a fixed grid."""
 
 import argparse
 import hashlib

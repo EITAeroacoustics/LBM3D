@@ -2,7 +2,7 @@
 
 P1 后的无全场持续测试统一入口和判据见 [TESTS.md](TESTS.md)。
 
-这是周期方盒 `[0,64]^3`、均匀网格、`amr.max_level=0`、无 IBM 的可复用案例。初始速度为
+这是单层均匀网格、全周期、无 IBM 的可复用案例。物理精度与强扩展使用方盒 `[0,64]^3`；弱扩展按 GPU 数增加周期域。初始速度为
 
 ```text
 ux =  U0 sin(kx x) cos(ky y) cos(kz z)
@@ -10,7 +10,7 @@ uy = -U0 cos(kx x) sin(ky y) cos(kz z)
 uz =  0
 ```
 
-其中 `kx=ky=kz=2π/64`、`U0=0.02`、`rho0=1`、`nu=0.06`。初始压力扰动是 `rho0 U0²/16 (cos(2kx x)+cos(2ky y))(cos(2kz z)+2)`，密度按 `rho=rho0+p/(1/3)` 设定。初始场在单元中心采样。无外力，D3Q19 权重和方向写在输入文件中。理论初始平均动能约为 `U0²/8=5e-5`，平均密度为 1。
+其中 `kx`、`ky`、`kz` 分别为各轴域长对应的 `2π/L`；基础方盒三者均为 `2π/64`。`U0=0.02`、`rho0=1`、`nu=0.06`。初始压力扰动是 `rho0 U0²/16 (cos(2kx x)+cos(2ky y))(cos(2kz z)+2)`，密度按 `rho=rho0+p/(1/3)` 设定。初始场在单元中心采样。无外力，D3Q19 权重和方向写在输入文件中。理论初始平均动能约为 `U0²/8=5e-5`，平均密度为 1。
 
 `inputs_physics_64` 是入库的原始输入。用 `make_inputs.py` 可生成其他网格；入库的 `inputs_physics_128`、`inputs_strong_256`、`inputs_capacity_256`、`inputs_bitwise_128` 是对应的固定版本。物理检查的 64³、128³ 分别推进 64、128 步，因为原求解器使用 `dt=dx`；两个网格都在物理时间 0、32、64 写 plotfile。强扩展输入不写 plotfile，推进 600 步；前 100 步预热，后 500 步统计。容量输入只推进 10 步。逐位探测推进 10 步，写出步 0 和 10 的 plotfile。
 
@@ -37,7 +37,7 @@ CUDA_VISIBLE_DEVICES=0 /path/to/ilbmrex_baseline /path/to/inputs_physics_64 > ru
 
 ## P1 之后的测试输出
 
-本目录中的物理、逐位与稳定性输入及脚本用于复现 P1 冻结验收，部分会写全场 plotfile。按后续测试约定，新发起的日常回归和测试智能体运行不得使用这些写盘配置，也不得写全场 checkpoint。强扩展输入 `inputs_strong_256` 已设置 `amr.plot_int = -1`、`amr.chk_int = -1`。后续测试体系将以求解时标量归约、紧凑逐位指纹或进程间比较和日志替代全场文件，并记录输出关闭状态。
+本目录中的物理、逐位与稳定性输入及脚本用于复现 P1 冻结验收，部分会写全场 plotfile。按后续测试约定，新发起的日常回归和测试智能体运行不得使用这些写盘配置，也不得写全场 checkpoint。强扩展输入 `inputs_strong_256` 与当前的 `inputs_strong_512` 均关闭全场输出。持续测试体系使用求解时标量归约、紧凑逐位指纹或进程间比较和日志，并记录输出关闭状态。
 
 P2 单卡容量验收使用 `probe_single_gpu_capacity.py`。默认测试 536³＝153,990,656 个格点，保持 `max_grid_size=64`、`blocking_factor=8`，以 `lbm3d.storage=aa` 使用单分布函数存储，关闭 plotfile 和 checkpoint。脚本先运行 10 步，再以同一二进制启动独立的 100 步进程；记录二进制与输入校验值、显存峰值、AMReX arena、完成步数和在线数值指标。仅两次运行均通过且长程运行在首步、中间步、末步给出质量、动能、正性及非有限值诊断时才判定容量达标；诊断缺失记为未完成。调用形式为 `python3 probe_single_gpu_capacity.py 二进制 本目录 独立运行目录 报告.json`，可用 `--n`、`--steps`、`--gpu-index`、`--mass-rel-tol` 调整测试参数。[集成版 536³/100 步结果](../../Reports/Capacity/p2-aa-536-capacity-20261123.json)已通过，P1 的 V100 容量结果见[历史单卡容量报告](../../Reports/Capacity/single-gpu.md)。
 
@@ -47,7 +47,9 @@ P2 无全场精度回归使用 `check_precision_no_fields.py`。以 P1 双精度
 
 多卡通信改动的无全场写盘回归使用 `lbm3d_tgv3d_summary` 和 `compare_field_summary.py`。给脚本传入原版、优化版二进制、`inputs_physics_128`、独立运行目录和报告 JSON 路径；脚本固定运行 10 步并覆盖 `amr.plot_int=-1`、`amr.chk_int=-1`，在 1/2/4 卡上比较最终密度、速度及 19 个分布函数分量的求和、二范数、极值，以及由全局坐标与浮点位模式组成的位置敏感整数指纹。CUDA-aware MPI 可传 `--mpirun`、`--mpi-options`、`--rank-wrapper`，仅优化版使用的输入开关可重复传 `--optimized-option`。脚本检查没有全场文件。派生涡量与压力在无输出运行中不刷新，故不纳入比较。紧凑统计与指纹一致可检测数值回归，但不等同于全场逐位证明；[本轮结果](../../Reports/Performance/multigpu-communication.md)保留命令、二进制与输入校验值。
 
-计算弱扩展使用 `inputs_weak_{1,2,4}gpu` 和 `run_weak.py`：每卡固定 256³、网格块 64、阻塞因子 8，各方向 `dx=0.25`；全局网格依次为 256×256×256、256×256×512、256×512×512。运行 `python3 run_weak.py /path/to/lbm3d_tgv3d /path/to/runs /path/to/weak.json`，默认三轮交错测量，按预热 100 步后的 500 步最慢 MPI 进程耗时计算中位数和 `T1/TN`。`run_strong.py` 也按相同顺序交错运行。脚本记录命令、校验值并检查无 plotfile/checkpoint。配合同一二进制的 `run_strong.py` 报告，`check_scaling.py strong.json weak.json` 要求每档至少三轮、相同计算选项、无全场文件，再检查双卡和四卡的强、弱效率是否都严格超过 85%；单轮筛选可显式设 `--min-repeats 1`。扩大物理域后的 TGV 波长不同，弱扩展只用于计算效率比较；[基线与重叠试验](../../Reports/Performance/scaling-overlap-assessment.md)给出实际数据。
+当前 FP64 AA 扩展矩阵使用 `inputs_strong_512` 与 `inputs_weak_512_{1,2,4}gpu`。强扩展固定全域 512³；弱扩展每卡固定 512³，1/2/4 卡全局网格依次为 512×512×512、512×512×1024、512×1024×1024，域长依次为 64×64×64、64×64×128、64×128×128；各方向 `dx=0.125`。网格块仍为 64、阻塞因子仍为 8。旧的 `inputs_strong_256` 与 `inputs_weak_{1,2,4}gpu` 保留供历史结果复核。
+
+运行 `python3 run_weak.py /path/to/lbm3d_tgv3d /path/to/runs /path/to/weak.json`，默认三轮交错测量，按预热 100 步后的 500 步最慢 MPI 进程耗时计算中位数和 `T1/TN`。`run_strong.py` 使用 `inputs_strong_512` 并按相同顺序交错运行。脚本记录命令、校验值并检查无 plotfile/checkpoint。配合同一二进制的 `run_strong.py` 报告，`check_scaling.py strong.json weak.json` 要求每档至少三轮、相同计算选项、无全场文件，再检查双卡和四卡的强、弱效率是否都严格超过 85%；单轮筛选可显式设 `--min-repeats 1`。扩大物理域后的 TGV 波长不同，弱扩展只用于计算效率比较；[旧 256³ 扩展记录](../../Reports/TGV/p2-tgv-acceptance-20261123.md)保留原始实测值。
 
 两种扩展脚本都接受 `--mpirun`、`--mpi-options`、`--rank-wrapper`、`--mass-check-interval` 和可重复的 `--input-option`；使用可能在 `MPI_Init` 初始化 CUDA 的 MPI 时，传 `rank_gpu.py` 使每个进程在进入求解器前只看到分配给自己的 GPU。求解器默认每 100 步做一次全局质量检查，且总在首步和末步检查；需要逐步诊断时设置 `lbm3d.mass_check_interval=1`。扩展测量建议显式传 `--mass-check-interval 100`，让报告记录这一条件。MPI 栈与拓扑参数应按工作站实际配置，见[CUDA-aware MPI 对照](../../Reports/Performance/gpu-aware-mpi-results.md)。
 

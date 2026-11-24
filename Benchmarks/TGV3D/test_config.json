@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "agent_version": "1.0",
+  "agent_version": "1.1",
   "p1_reference_commit": "995813161540d2a09e57a6571c73ada3fe121c03",
   "hardware": {
     "gpu_name_contains": "V100",
@@ -18,8 +18,8 @@
   },
   "capacity": {"grid": 536, "cells": 153990656, "pilot_steps": 10, "sustained_steps": 100},
   "scaling": {
-    "strong_grid": 256,
-    "weak_cells_per_gpu": 16777216,
+    "strong_grid": 512,
+    "weak_cells_per_gpu": 134217728,
     "repeats": 3,
     "warmup_steps": 100,
     "timed_steps": 500,

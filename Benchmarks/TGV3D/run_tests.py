@@ -28,7 +28,7 @@ import run_strong
 import run_weak
 
 
-VERSION = "1.0"
+VERSION = "1.1"
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE.parents[1]
 CONFIG_PATH = HERE / "test_config.json"
@@ -130,8 +130,8 @@ def environment(args: argparse.Namespace) -> dict:
                 ("summary_binary", "timing_binary", "baseline_summary_binary")}
     inputs = {path.name: sha256(path) for path in
               [*(HERE / f"inputs_physics_{n}" for n in (64, 128)),
-               HERE / "inputs_strong_256",
-               *(HERE / f"inputs_weak_{n}gpu" for n in (1, 2, 4)),
+               HERE / "inputs_strong_512", HERE / "inputs_strong_256",
+               *(HERE / f"inputs_weak_512_{n}gpu" for n in (1, 2, 4)),
                HERE / "reference_physics.csv"]}
     return {"host": platform.node(), "python": platform.python_version(),
             "utc": datetime.now(timezone.utc).isoformat(),
@@ -200,7 +200,7 @@ def commands(args: argparse.Namespace, root: Path) -> dict[str, list[list[str]]]
                         "--mass-rel-tol",
                         str(MASS_TOL), "--real-bytes", "8")],
         "strong": [script_command("run_strong.py", timed,
-                       str(HERE / "inputs_strong_256"), str(root / "strong"),
+                       str(HERE / "inputs_strong_512"), str(root / "strong"),
                        str(root / "strong.json"), "--repeats",
                        str(CONFIG["scaling"]["repeats"]),
                        "--mass-check-interval",
@@ -277,12 +277,11 @@ def make_plan(args: argparse.Namespace, root: Path, inventory: dict) -> dict:
             "hardware_scope": "4 x Tesla V100-SXM2-32GB; GPU maps 0 / 0,2 / 0,1,2,3",
             "reference": {"historical_commit": P1_COMMIT,
                           "baseline_binary_commit_verified": False,
-                          "physics": "reference_physics.csv",
-                          "strong": "Reports/P1/tgv-modular-strong-256.json"},
+                          "physics": "reference_physics.csv"},
             "criteria": {"physics": "nine frozen P1 checks on 64^3 and 128^3",
                          "compact": "23 positive/finite FP64 components; equal coordinate fingerprints across 1/2/4 GPU, numeric absolute difference <=1e-9; 10 and 11 steps",
                          "capacity": "536^3 >150M, 10-step pilot and >=100 steps, positive finite online diagnostics and measured peak GPU memory",
-                         "scaling": "three repeats per 1/2/4 GPU, 100 warmup + 500 timed steps; strong T1/(N*TN), weak T1/TN, each 2/4 GPU efficiency >0.85",
+                         "scaling": "strong 512^3 total, weak 512^3 per GPU; three repeats per 1/2/4 GPU, 100 warmup + 500 timed steps; strong T1/(N*TN), weak T1/TN, each 2/4 GPU efficiency >0.85",
                          "stability": f"one GPU, 256^3, >= {args.stability_seconds:g} s, online finite/positive metrics"},
             "no_full_field": True, "tasks": tasks}
 
@@ -543,14 +542,6 @@ def check_task(task: str, args: argparse.Namespace, root: Path) -> dict:
             passed = (len(report.get("runs", [])) == 9 and diagnostics_passed and
                       report.get("binary_sha256") == sha256(args.timing_binary))
             result["summary"] = report.get("summary")
-            if task == "strong" and passed:
-                p1_path = SOURCE / "Reports/P1/tgv-modular-strong-256.json"
-                p1 = json.loads(p1_path.read_text())
-                result["p1_historical_step_time_ratio"] = {
-                    str(n): report["summary"][str(n)]["median_sec_per_step"] /
-                    p1["summary"][str(n)]["median_sec_per_step"]
-                    for n in (1, 2, 4)}
-                result["p1_reference_sha256"] = sha256(p1_path)
         result["status"] = ("passed" if result["returncode"] == 0 and passed
                             else "failed")
     else:
@@ -587,21 +578,19 @@ def markdown(plan: dict, report: dict) -> str:
         weak = tasks["weak"]
         assessment = tasks.get("scaling", {}).get("assessment") or {}
         lines += ["", "## Performance", "",
-                  "| GPU | Strong ms/step | Weak ms/step | Strong efficiency | Weak efficiency | P1 strong time ratio |",
-                  "| ---: | ---: | ---: | ---: | ---: | ---: |"]
+                  "| GPU | Strong ms/step | Weak ms/step | Strong efficiency | Weak efficiency |",
+                  "| ---: | ---: | ---: | ---: | ---: |"]
         for n in (1, 2, 4):
             key = str(n)
             strong_ms = 1000 * strong["summary"][key]["median_sec_per_step"]
             weak_ms = 1000 * weak["summary"][key]["median_sec_per_step"]
             strong_eff = assessment.get("strong", {}).get(key)
             weak_eff = assessment.get("weak", {}).get(key)
-            p1_ratio = strong.get("p1_historical_step_time_ratio", {}).get(key)
             strong_text = f"{strong_eff:.1%}" if strong_eff is not None else "—"
             weak_text = f"{weak_eff:.1%}" if weak_eff is not None else "—"
-            p1_text = f"{p1_ratio:.3f}" if p1_ratio is not None else "—"
             lines.append(f"| {n} | {strong_ms:.3f} | {weak_ms:.3f} | "
-                         f"{strong_text} | {weak_text} | {p1_text} |")
-        lines += ["", "P1 ratios compare historical wall time only. The >85% "
+                         f"{strong_text} | {weak_text} |")
+        lines += ["", "The >85% "
                   "efficiency gate uses this run's own single-GPU median."]
     lines += ["", "## Reproduce", ""]
     for task in report["tasks"]:
