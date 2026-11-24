@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "runs": [
+    {
+      "root": "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002",
+      "mode": "full",
+      "commit": "b1ac7633ac3392ed99dbee3febff7453e4f93260",
+      "status": "passed",
+      "completed_utc": "2026-11-24T01:07:42.445130+00:00",
+      "plan": "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/plan.json",
+      "result": "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/result.json",
+      "report": "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/report.md"
+    }
+  ]
+}

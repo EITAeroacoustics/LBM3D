@@ -1,0 +1,435 @@
+{
+  "schema_version": 1,
+  "agent_version": "1.1",
+  "config": "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/test_config.json",
+  "config_sha256": "ee21d70d190c1ed8f3c5db257bcb604e021a3c319573789de868a16c5b9822b0",
+  "mode": "full",
+  "created_utc": "2026-11-24T00:33:10.165808+00:00",
+  "source_commit": "b1ac7633ac3392ed99dbee3febff7453e4f93260",
+  "hardware_scope": "4 x Tesla V100-SXM2-32GB; GPU maps 0 / 0,2 / 0,1,2,3",
+  "reference": {
+    "historical_commit": "995813161540d2a09e57a6571c73ada3fe121c03",
+    "baseline_binary_commit_verified": false,
+    "physics": "reference_physics.csv"
+  },
+  "criteria": {
+    "physics": "nine frozen P1 checks on 64^3 and 128^3",
+    "compact": "23 positive/finite FP64 components; equal coordinate fingerprints across 1/2/4 GPU, numeric absolute difference <=1e-9; 10 and 11 steps",
+    "capacity": "536^3 >150M, 10-step pilot and >=100 steps, positive finite online diagnostics and measured peak GPU memory",
+    "scaling": "strong 512^3 total, weak 512^3 per GPU; three repeats per 1/2/4 GPU, 100 warmup + 500 timed steps; strong T1/(N*TN), weak T1/TN, each 2/4 GPU efficiency >0.85",
+    "stability": "one GPU, 256^3, >= 600 s, online finite/positive metrics"
+  },
+  "no_full_field": true,
+  "tasks": [
+    {
+      "id": "build_summary",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake",
+          "--build",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary",
+          "--target",
+          "lbm3d_tgv3d_summary"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only build_summary --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "quick_precision",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_64",
+          "max_step=0",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4"
+        ],
+        [
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_64",
+          "max_step=32",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4"
+        ],
+        [
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_64",
+          "max_step=64",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4"
+        ],
+        [
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_128",
+          "max_step=0",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4"
+        ],
+        [
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_128",
+          "max_step=64",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4"
+        ],
+        [
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_128",
+          "max_step=128",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only quick_precision --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "compact_even",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_128",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4",
+          "max_step=10",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1"
+        ],
+        [
+          "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+          "--mca",
+          "pml",
+          "ucx",
+          "--mca",
+          "pml_ucx_tls",
+          "any",
+          "--mca",
+          "btl",
+          "^uct",
+          "--map-by",
+          "ppr:1:numa",
+          "--bind-to",
+          "numa",
+          "-np",
+          "2",
+          "python3",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_128",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4",
+          "max_step=10",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1"
+        ],
+        [
+          "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+          "--mca",
+          "pml",
+          "ucx",
+          "--mca",
+          "pml_ucx_tls",
+          "any",
+          "--mca",
+          "btl",
+          "^uct",
+          "--map-by",
+          "ppr:2:numa",
+          "--bind-to",
+          "numa",
+          "-np",
+          "4",
+          "python3",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_128",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4",
+          "max_step=10",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only compact_even --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "compact_odd",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_128",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4",
+          "max_step=11",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1"
+        ],
+        [
+          "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+          "--mca",
+          "pml",
+          "ucx",
+          "--mca",
+          "pml_ucx_tls",
+          "any",
+          "--mca",
+          "btl",
+          "^uct",
+          "--map-by",
+          "ppr:1:numa",
+          "--bind-to",
+          "numa",
+          "-np",
+          "2",
+          "python3",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_128",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4",
+          "max_step=11",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1"
+        ],
+        [
+          "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+          "--mca",
+          "pml",
+          "ucx",
+          "--mca",
+          "pml_ucx_tls",
+          "any",
+          "--mca",
+          "btl",
+          "^uct",
+          "--map-by",
+          "ppr:2:numa",
+          "--bind-to",
+          "numa",
+          "-np",
+          "4",
+          "python3",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_physics_128",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4",
+          "max_step=11",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only compact_odd --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "build_timing",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake",
+          "--build",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing",
+          "--target",
+          "lbm3d_tgv3d"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only build_timing --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "full_precision",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/check_precision_no_fields.py",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/full_precision",
+          "--candidate-precision",
+          "fp64",
+          "--candidate-option",
+          "lbm3d.storage=aa",
+          "--candidate-option",
+          "lbmPhysicalParameters.nmac=4"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only full_precision --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "capacity",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/probe_single_gpu_capacity.py",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/capacity",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/capacity.json",
+          "--n",
+          "536",
+          "--steps",
+          "100",
+          "--mass-rel-tol",
+          "1e-08",
+          "--real-bytes",
+          "8"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only capacity --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "strong",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_strong.py",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_strong_512",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/strong",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/strong.json",
+          "--repeats",
+          "3",
+          "--mass-check-interval",
+          "100",
+          "--mpirun",
+          "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+          "--mpi-options",
+          "--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct",
+          "--rank-wrapper",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py",
+          "--input-option",
+          "lbm3d.storage=aa",
+          "--input-option",
+          "lbmPhysicalParameters.nmac=4"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only strong --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "weak",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_weak.py",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/weak",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/weak.json",
+          "--repeats",
+          "3",
+          "--mass-check-interval",
+          "100",
+          "--mpirun",
+          "/home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun",
+          "--mpi-options",
+          "--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct",
+          "--rank-wrapper",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py",
+          "--input-option",
+          "lbm3d.storage=aa",
+          "--input-option",
+          "lbmPhysicalParameters.nmac=4"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only weak --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "scaling",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/check_scaling.py",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/strong.json",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002/weak.json",
+          "--target",
+          "0.85",
+          "--min-repeats",
+          "3"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    },
+    {
+      "id": "stability",
+      "selected": true,
+      "status": "not_run",
+      "reason": "pending",
+      "commands": [
+        [
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary",
+          "/home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/inputs_strong_256",
+          "max_step=100000000",
+          "stop_time=1.e30",
+          "amr.plot_int=-1",
+          "amr.chk_int=-1",
+          "lbm3d.wall_time_limit_s=600",
+          "lbm3d.tgv_metrics_interval=100",
+          "lbm3d.mass_check_interval=1",
+          "lbm3d.storage=aa",
+          "lbmPhysicalParameters.nmac=4"
+        ]
+      ],
+      "planned_action": "run",
+      "planned_reason": null,
+      "rerun_command": "/usr/bin/python3 /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/run_tests.py --mode full --run-root /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/runs/full-002-retry --only stability --summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary/lbm3d_tgv3d_summary --timing-binary /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing/lbm3d_tgv3d --baseline-summary-binary /home/hanbo/workspace/LBM/deps/lbm3d-p1-metrics-baseline-20261123/build/lbm3d_tgv3d_summary --summary-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-summary --timing-build-dir /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/build-timing --rank-wrapper /home/hanbo/workspace/LBM/deps/lbm3d-tgv512-20261124/source/Benchmarks/TGV3D/rank_gpu.py --mpirun /home/hanbo/workspace/LBM/deps/openmpi-4.1.8-ucx-cuda/bin/mpirun --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' --cmake /home/hanbo/workspace/LBM/deps/cmake-3.30.9-linux-x86_64/bin/cmake --stability-seconds 600 --max-gpu-used-mib 1024"
+    }
+  ]
+}
