@@ -11,7 +11,7 @@ python3 Benchmarks/TGV3D/run_tests.py \
   --mode quick \
   --summary-binary /path/to/summary-build/lbm3d_tgv3d_summary \
   --mpirun mpirun \
-  --mpi-options '--mca pml ucx' \
+  --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' \
   --rank-wrapper Benchmarks/TGV3D/rank_gpu.py \
   --run-root /path/to/test-runs/quick-001
 ```
@@ -23,7 +23,7 @@ python3 Benchmarks/TGV3D/run_tests.py \
   --baseline-summary-binary /path/to/p1-build/lbm3d_tgv3d_summary \
   --timing-binary /path/to/timing-build/lbm3d_tgv3d \
   --mpirun mpirun \
-  --mpi-options '--mca pml ucx' \
+  --mpi-options '--mca pml ucx --mca pml_ucx_tls any --mca btl ^uct' \
   --rank-wrapper Benchmarks/TGV3D/rank_gpu.py \
   --run-root /path/to/test-runs/full-001
 ```
@@ -49,5 +49,7 @@ python3 Benchmarks/TGV3D/run_tests.py \
 完整硬件验收适用于工作站的 4 张 V100 32 GB，且本入口只验收 FP64 AA 路线。缺少所需 GPU、二进制、P1 对照或 MPI 时相关项为 `not_run`；GPU 初始占用超过配置上限时也不启动。FP32 历史筛选仍由独立脚本与报告记录，不进入本轮验收。容量与扩展结果仅在目标硬件上给出正式判定。效率分母只取**本轮同一计时二进制、512³ 规模**的单卡中位步时。所传 P1 摘要二进制的 SHA-256 会记录，但其与 P1 提交的源码关系仍标为未核实。
 
 当前 512³ 扩展矩阵只用于单层全周期 FP64 AA 流体性能；64³/128³ 数值精度、128³ 奇偶步多卡一致性和 536³ 单卡容量仍按各自冻结规模执行。先前 256³ 强扩展与每卡 256³ 弱扩展的实测结果保留在 [P2 TGV 验收记录](../../Reports/TGV/p2-tgv-acceptance-20261123.md)，不作为新矩阵的效率分母。
+
+512³ 的补充物理检查使用 `check_large_precision.py SUMMARY_BINARY inputs_strong_512 NEW_RUN_ROOT --gpu 0`。它在物理时间 0、32、64 检查质量、动能、正性和有限性，并以冻结的 128³ 动能作 1% 网格一致性参考；该参考不是解析真值。脚本仅保存在线标量、23 分量摘要、日志和 JSON，不写全场。
 
 所有运行命令显式覆盖 `amr.plot_int=-1`、`amr.chk_int=-1`，并检查没有 plotfile、checkpoint、HDF5 或 ADIOS 全场文件。P1 历史写盘入口 `run_p1.py` 与 `run_stability.py` 不在本体系中调用。紧凑位置指纹可检出多数值差异，但不等同于保存整个流场后逐格逐位比较。

@@ -1,4 +1,4 @@
-# D3Q19 periodic TGV weak scaling: 2 GPUs, 256^3 cells per GPU.
+# D3Q19 periodic TGV weak scaling: 2 GPUs, 512^3 cells per GPU.
 # dx = dy = dz = 0.125; 100 warmup + 500 timed steps; no full-field output.
 max_step = 600
 stop_time = 1.e30
